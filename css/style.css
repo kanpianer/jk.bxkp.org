@@ -214,7 +214,7 @@ a:hover {
 	grid-template-columns: repeat(2, 1fr);
 	gap: 1rem;
 	justify-content: center;
-	justify-items: stretch;
+	justify-items: center;
 	max-width: 40rem;
 	margin: 0 auto;
 }
@@ -397,6 +397,7 @@ a:hover {
 	.button-stack {
 		grid-template-columns: 1fr;
 		gap: 0.75rem;
+		justify-items: center;
 	}
 	/* Reset last button centering for mobile single column */
 	.button-stack .button:nth-child(odd):last-child {
