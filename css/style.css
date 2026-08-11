@@ -134,6 +134,19 @@ h1 {
 	word-wrap:break-word;
 	overflow-wrap:break-word;
 }
+h1 a,
+:root.theme-dark h1 a,
+:root.theme-auto h1 a {
+	color:#ffffff;
+	text-decoration:none;
+	transition:opacity 0.2s ease;
+}
+h1 a:hover,
+:root.theme-dark h1 a:hover,
+:root.theme-auto h1 a:hover {
+	color:#ffffff;
+	opacity:0.8;
+}
 body {
 	font-size:var(--scale-1);           /* 20px */
   	line-height:1.6;
