@@ -72,6 +72,66 @@
 	font-size:1.125rem;    				/* 18px */
     font-weight:400;
 	line-height:1.6;
+	overflow-x: hidden;
+}
+
+/* Dynamic Sky Background */
+.sky-container {
+    position: fixed;
+    top: -5%;
+    left: -5%;
+    width: 110vw;
+    height: 110vh;
+    z-index: -2;
+    animation: panSky 120s ease-in-out infinite alternate;
+}
+
+.dynamic-bg {
+    width: 100%;
+    height: 100%;
+    background: url('../images/anime_sky_bg.jpg') no-repeat center center;
+    background-size: cover;
+    animation: animeTremble 6s ease-in-out infinite;
+    transform-origin: center;
+}
+
+@keyframes panSky {
+    0% {
+        transform: translate(0, 0) scale(1.0);
+    }
+    100% {
+        transform: translate(-3vw, -2vh) scale(1.1);
+    }
+}
+
+@keyframes animeTremble {
+    0%, 100% { transform: translate(0px, 0px) scale(1.0); }
+    33% { transform: translate(-1px, 1px) scale(1.01); }
+    66% { transform: translate(1px, -1px) scale(1.005); }
+}
+
+/* Airplane Animation */
+.airplane {
+    position: fixed;
+    top: 25%; 
+    left: -150px;
+    width: 120px;
+    z-index: -1;
+    animation: flyAirplane 35s linear infinite;
+    pointer-events: none;
+    opacity: 0.9;
+}
+
+@keyframes flyAirplane {
+    0% {
+        transform: translate(-150px, 0px) rotate(2deg);
+    }
+    50% {
+        transform: translate(50vw, -20px) rotate(0deg);
+    }
+    100% {
+        transform: translate(calc(100vw + 300px), 10px) rotate(1deg);
+    }
 }
 
 /* Typography
@@ -143,6 +203,7 @@ h1 a:not(.button),
 	color: #ffffff;
 	text-decoration: none;
 	transition: color 0.2s ease;
+	text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 h1 a:hover,
 h1 a:not(.button):hover,
@@ -160,6 +221,8 @@ body {
 	margin:0 0 var(--spacing-xl) 0;
 	font-size:var(--scale-1);
 	line-height:1.6;
+	color: #ffffff;
+	text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 
 /* Container spacing */
@@ -249,9 +312,11 @@ a:hover {
 	font-weight:700;
 	text-decoration:none;
 	white-space:normal;
-	background-color:#ffffff;
+	background-color:rgba(255, 255, 255, 0.5);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
 	color:#1a1a1a;
-	border:1px solid rgba(0,0,0,0.1);
+	border:1px solid rgba(255, 255, 255, 0.6);
 	border-radius:0.5rem;
 	cursor:pointer;
 	box-sizing:border-box;
@@ -259,12 +324,17 @@ a:hover {
 	text-align:center;
 	line-height:1.3;
 	box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-	transition: background-color 0.4s ease, border-color 0.3s ease, box-shadow 0.2s ease;
+	text-shadow: none;
+	transition: all 0.3s ease;
 }
 
 .button:hover,button:hover {
-	background-color:transparent;
-	border-color: #1a1a1a;
+	background-color:rgba(45, 156, 240, 0.5);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
+	border-color: #ffffff;
+	color: #ffffff;
+	text-shadow: none;
 	box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
@@ -277,6 +347,25 @@ a:hover {
 	font-size: var(--scale-0);
 	margin: var(--spacing-l) 0;
 	padding: var(--spacing-s) 0;
+	color: #ffffff;
+	text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.middle-footer a,
+footer a,
+:root.theme-dark .middle-footer a,
+:root.theme-auto .middle-footer a {
+	color: #ffffff !important;
+	text-decoration: underline;
+	transition: opacity 0.2s ease;
+}
+
+.middle-footer a:hover,
+footer a:hover,
+:root.theme-dark .middle-footer a:hover,
+:root.theme-auto .middle-footer a:hover {
+	color: #ffffff !important;
+	opacity: 0.8;
 }
 
 /* Facebook Link - inline-block to restrict click area */
@@ -337,14 +426,21 @@ a:hover {
 }
 :root.theme-dark .button,
 :root.theme-dark button {
-	background-color:#2d2d2d;
-	color:#ffffff;
-	border-color:rgba(255,255,255,0.15);
+	background-color:rgba(255, 255, 255, 0.5);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
+	color:#1a1a1a;
+	border:1px solid rgba(255, 255, 255, 0.6);
+	text-shadow: none;
 }
 :root.theme-dark .button:hover,
 :root.theme-dark button:hover {
-	background-color:transparent;
+	background-color:rgba(45, 156, 240, 0.5);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
 	border-color:#ffffff;
+	color:#ffffff;
+	text-shadow: none;
 }
 :root.theme-dark a:not(.button) {
 	color:#4899F7;
@@ -367,14 +463,21 @@ a:hover {
 }
 :root.theme-auto .button,
 :root.theme-auto button {
-	background-color:#2d2d2d;
-	color:#ffffff;
-	border-color:rgba(255,255,255,0.15);
+	background-color:rgba(255, 255, 255, 0.5);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
+	color:#1a1a1a;
+	border:1px solid rgba(255, 255, 255, 0.6);
+	text-shadow: none;
 }
 :root.theme-auto .button:hover,
 :root.theme-auto button:hover {
-	background-color:transparent;
+	background-color:rgba(45, 156, 240, 0.5);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
 	border-color:#ffffff;
+	color:#ffffff;
+	text-shadow: none;
 }
 :root.theme-auto :focus-visible {
     outline: 2px solid #4899F7;
@@ -426,6 +529,10 @@ a:hover {
 	.middle-footer {
 		margin: var(--spacing-m) 0;
 		padding: var(--spacing-xs) 0;
+	}
+	/* Reduce airplane size on mobile */
+	.airplane {
+		width: 80px;
 	}
 }
 

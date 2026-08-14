@@ -9,17 +9,26 @@
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 /* Only include brand-specific button styling here */
 .button,button {
-  color:var(--button-text,#000000);
-  background-color:var(--button-background,transparent);
-	border:var(--button-border,none);
-	transition:filter 0.2s ease,transform 0.2s ease;
+  color:var(--button-text,#1a1a1a);
+  background-color:var(--button-background,rgba(255, 255, 255, 0.5));
+  border:var(--button-border,1px solid rgba(255, 255, 255, 0.6));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  text-shadow: none !important;
+  transition:all 0.3s ease;
 }
 
 /* Global Button Hover Effect
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 .button:hover,button:hover {
-	filter:brightness(90%);
-	transform:translateY(-1px);
+  background-color:rgba(45, 156, 240, 0.5) !important;
+  color:#ffffff !important;
+  border-color:#ffffff !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  text-shadow: none !important;
+  transform:translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
 /* Button Icons
@@ -39,9 +48,9 @@
 }
 /* xzwl */
 .button.button-xzwl {
-	--button-text:#ffffff;
-	--button-background:#232627;
-	--button-border:1px solid #ffffff;
+	--button-text:#1a1a1a;
+	--button-background:rgba(255, 255, 255, 0.5);
+	--button-border:1px solid rgba(255, 255, 255, 0.6);
 }
 
 /* suda */

@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100">
+    <defs>
+        <linearGradient id="redBody" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#E63946"/>
+            <stop offset="70%" stop-color="#C1121F"/>
+            <stop offset="100%" stop-color="#780000"/>
+        </linearGradient>
+    </defs>
+
+    <!-- 1. Far Pontoon -->
+    <path d="M 50 80 C 50 75, 100 75, 110 80 C 100 85, 50 85, 50 80 Z" fill="#991111" stroke="#330000" stroke-width="1"/>
+    <!-- Far Struts -->
+    <line x1="75" y1="65" x2="65" y2="80" stroke="#333" stroke-width="2"/>
+    <line x1="95" y1="65" x2="95" y2="80" stroke="#333" stroke-width="2"/>
+
+    <!-- 2. Fuselage -->
+    <!-- Pointy back, rounded front -->
+    <path d="M 20 55 C 40 50, 90 50, 140 55 C 160 55, 160 65, 140 70 C 90 75, 40 70, 20 55 Z" fill="url(#redBody)" stroke="#330000" stroke-width="1.5"/>
+
+    <!-- 3. Cockpit & Pilot -->
+    <path d="M 85 53 C 90 55, 100 55, 105 53 L 105 48 C 100 48, 90 48, 85 48 Z" fill="#111"/> <!-- Cockpit hole -->
+    <!-- Pilot Head -->
+    <circle cx="95" cy="45" r="5" fill="#f4a261"/>
+    <circle cx="97" cy="45" r="2" fill="#000"/> <!-- Goggles -->
+    <path d="M 98 44 L 102 44" stroke="#fff" stroke-width="1"/> <!-- Goggle reflection -->
+    <rect x="91" y="48" width="8" height="5" fill="#a0522d"/> <!-- Scarf / jacket -->
+    <!-- Red scarf trailing in wind -->
+    <path d="M 91 49 C 80 48, 70 52, 60 49" fill="none" stroke="#e63946" stroke-width="2" stroke-linecap="round"/>
+
+    <!-- 4. Tail -->
+    <!-- Horizontal stabilizer -->
+    <path d="M 15 55 L 35 55 L 30 60 L 15 60 Z" fill="#C1121F" stroke="#330000" stroke-width="1.5"/>
+    <!-- Vertical Fin -->
+    <path d="M 30 55 L 15 35 C 25 35, 30 40, 35 55 Z" fill="#ffffff" stroke="#330000" stroke-width="1"/>
+    <!-- Italian Flag on Tail -->
+    <path d="M 20 42 L 23 42 L 25 55 L 22 55 Z" fill="#2a9d8f"/> <!-- Green -->
+    <path d="M 26 42 L 29 42 L 31 55 L 28 55 Z" fill="#e63946"/> <!-- Red -->
+
+    <!-- 5. Main Wing Struts -->
+    <!-- From fuselage up to wing -->
+    <line x1="80" y1="53" x2="85" y2="35" stroke="#333" stroke-width="2"/>
+    <line x1="110" y1="53" x2="105" y2="35" stroke="#333" stroke-width="2"/>
+
+    <!-- 6. Main Wing -->
+    <!-- Swept back cream colored wing -->
+    <path d="M 60 35 C 80 32, 120 32, 140 35 C 135 40, 75 40, 60 35 Z" fill="#fdf0d5" stroke="#b08968" stroke-width="1.5"/>
+
+    <!-- 7. Engine Pod (On top of wing) -->
+    <!-- Rounded wood-colored pod -->
+    <path d="M 85 28 C 85 22, 120 22, 125 28 C 120 34, 85 34, 85 28 Z" fill="#9c6644" stroke="#5c3a21" stroke-width="1.5"/>
+    <rect x="120" y="24" width="8" height="8" fill="#7f7f7f" stroke="#333" stroke-width="1"/> <!-- Engine block front -->
+
+    <!-- 8. Propeller -->
+    <circle cx="128" cy="28" r="2" fill="#222"/>
+    <ellipse cx="128" cy="28" rx="2" ry="22" fill="rgba(255, 255, 255, 0.8)"/>
+    <ellipse cx="128" cy="28" rx="1.5" ry="18" fill="rgba(200, 200, 200, 0.4)"/>
+    <path d="M 128 28 L 129 8 L 127 48 Z" fill="rgba(0,0,0,0.1)"/> <!-- Subtle blur line -->
+
+    <!-- 9. Near Pontoon -->
+    <path d="M 60 90 C 60 82, 130 82, 140 90 C 130 98, 60 98, 60 90 Z" fill="url(#redBody)" stroke="#330000" stroke-width="1.5"/>
+    <!-- Near Struts -->
+    <line x1="85" y1="68" x2="80" y2="90" stroke="#333" stroke-width="2.5"/>
+    <line x1="115" y1="68" x2="110" y2="90" stroke="#333" stroke-width="2.5"/>
+    <!-- Additional bracing wire -->
+    <line x1="85" y1="68" x2="110" y2="90" stroke="#333" stroke-width="0.5"/>
+    <line x1="115" y1="68" x2="80" y2="90" stroke="#333" stroke-width="0.5"/>
+</svg>
