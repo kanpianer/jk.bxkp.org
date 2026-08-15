@@ -116,16 +116,24 @@
 }
 
 /* Airplane Animation */
-.airplane {
+.airplane-wrapper {
     position: fixed;
     top: 25%; 
     left: -150px;
     width: 120px;
     z-index: 0;
     animation: flyAirplane 35s linear infinite;
+    pointer-events: none;
+}
+
+.airplane {
+    width: 100%;
+    display: block;
     pointer-events: auto;
     opacity: 0.9;
-    cursor: crosshair;
+    cursor: default;
+    user-select: none;
+    -webkit-user-drag: none;
 }
 
 @keyframes flyAirplane {

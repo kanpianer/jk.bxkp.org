@@ -55,7 +55,9 @@
     <div class="sky-container">
         <div class="dynamic-bg"></div>
     </div>
-    <img src="images/airplane.svg" class="airplane" alt="airplane" aria-hidden="true">
+    <div class="airplane-wrapper">
+        <img src="images/airplane.svg" class="airplane" alt="airplane" aria-hidden="true" draggable="false">
+    </div>
 
     <div class="container">
         <div class="column">
@@ -254,7 +256,7 @@
           isRewinding = true;
           if (runner) Matter.Runner.stop(runner);
 
-          const rewindFrames = 60; // 1 second at 60fps
+          const rewindFrames = 120; // 2 seconds at 60fps
           let currentFrame = 0;
 
           function rewindTick() {
@@ -326,38 +328,46 @@
               Matter.Engine.clear(engine);
           }
           
+          const wrapper = document.querySelector('.airplane-wrapper');
+          if (wrapper) wrapper.style.animationPlayState = 'running';
+          
           domBodies.length = 0;
           hasCrashed = false;
           cardsFallen = false;
           isRewinding = false;
       }
 
-      airplane.addEventListener('mouseenter', () => {
+      airplane.addEventListener('mouseenter', (event) => {
           if (hasCrashed) return;
           hasCrashed = true;
 
+          const wrapper = airplane.parentElement;
+          if (wrapper && wrapper.classList.contains('airplane-wrapper')) {
+              wrapper.style.animationPlayState = 'paused';
+          }
+
           const unrotatedRect = airplane.getBoundingClientRect();
           
-          airplane.style.animation = 'none';
-          airplane.style.left = unrotatedRect.left + 'px';
-          airplane.style.top = unrotatedRect.top + 'px';
-          airplane.style.transform = 'none';
+          // Calculate where the mouse touched the airplane horizontally
+          const hitX = event.clientX - unrotatedRect.left;
+          // ratio from -1 (left edge/tail) to 1 (right edge/nose)
+          let ratio = (hitX / unrotatedRect.width) * 2 - 1;
+          ratio = Math.max(-1, Math.min(1, ratio));
           
-          requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                  airplane.style.transition = 'transform 0.2s ease-in-out';
-                  airplane.style.transform = 'rotate(90deg)';
-                  
-                  setTimeout(() => {
-                      initPhysics();
-                      airplane.style.transition = 'none';
-                      const planeBody = addDomBodyWithRect(airplane, unrotatedRect, { density: 0.05, restitution: 0.3 });
-                      
-                      Matter.Body.setAngle(planeBody, Math.PI / 2);
-                      Matter.Body.setAngularVelocity(planeBody, (Math.random() > 0.5 ? 1 : -1) * 0.1);
-                  }, 250);
-              });
-          });
+          // Map ratio to angle: hitting nose (1) -> 90deg (nose down), hitting tail (-1) -> -90deg (nose up)
+          const targetAngleDeg = ratio * 90;
+          const targetAngleRad = targetAngleDeg * (Math.PI / 180);
+          
+          airplane.style.transition = 'transform 0.2s ease-in-out';
+          airplane.style.transform = `rotate(${targetAngleDeg}deg)`;
+          
+          setTimeout(() => {
+              initPhysics();
+              airplane.style.transition = 'none';
+              const planeBody = addDomBodyWithRect(airplane, unrotatedRect, { density: 0.05, restitution: 0.3 });
+              
+              Matter.Body.setAngle(planeBody, targetAngleRad);
+          }, 250);
       });
 
       airplane.addEventListener('click', () => {
