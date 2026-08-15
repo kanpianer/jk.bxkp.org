@@ -239,7 +239,14 @@
           });
 
           Matter.World.add(world, body);
-          domBodies.push({ body, el, placeholder, width: rect.width, height: rect.height, history: [] });
+          domBodies.push({ 
+              body, 
+              el, 
+              placeholder, 
+              width: rect.width, 
+              height: rect.height, 
+              history: [{ x: rect.left, y: rect.top, angle: 0 }] 
+          });
           return body;
       }
 
@@ -247,17 +254,46 @@
           isRewinding = true;
           if (runner) Matter.Runner.stop(runner);
 
+          const rewindFrames = 60; // 1 second at 60fps
+          let currentFrame = 0;
+
           function rewindTick() {
-              let moreFrames = false;
+              currentFrame++;
+              const progress = currentFrame / rewindFrames;
+              const easeProgress = progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
               for (let db of domBodies) {
-                  const frame = db.history.pop();
-                  if (frame) {
-                      moreFrames = true;
+                  const hLen = db.history.length;
+                  if (hLen === 0) continue;
+                  
+                  if (hLen === 1) {
+                      const frame = db.history[0];
                       db.el.style.transform = `translate(${frame.x}px, ${frame.y}px) rotate(${frame.angle}rad)`;
+                      continue;
                   }
+
+                  let exactIndex = (1 - easeProgress) * (hLen - 1);
+                  exactIndex = Math.max(0, Math.min(hLen - 1, exactIndex));
+                  
+                  const indexFloor = Math.floor(exactIndex);
+                  const indexCeil = Math.ceil(exactIndex);
+                  const weight = exactIndex - indexFloor;
+
+                  const frameF = db.history[indexFloor];
+                  const frameC = db.history[indexCeil];
+                  
+                  const x = frameF.x * (1 - weight) + frameC.x * weight;
+                  const y = frameF.y * (1 - weight) + frameC.y * weight;
+                  
+                  let diff = frameC.angle - frameF.angle;
+                  while (diff < -Math.PI) diff += 2 * Math.PI;
+                  while (diff > Math.PI) diff -= 2 * Math.PI;
+                  const angle = frameF.angle + diff * weight;
+
+                  db.el.style.transform = `translate(${x}px, ${y}px) rotate(${angle}rad)`;
               }
               
-              if (moreFrames) {
+              if (currentFrame < rewindFrames) {
                   requestAnimationFrame(rewindTick);
               } else {
                   restoreOriginalState();
