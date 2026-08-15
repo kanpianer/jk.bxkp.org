@@ -160,11 +160,18 @@
       const airplane = document.querySelector('.airplane');
       let hasCrashed = false;
       let cardsFallen = false;
+      let isRewinding = false;
       
-      let engine, world;
+      let engine, world, runner;
       const domBodies = [];
 
       function initPhysics() {
+          if (engine) {
+              Matter.World.clear(engine.world);
+              Matter.Engine.clear(engine);
+              if (runner) Matter.Runner.stop(runner);
+          }
+
           const Engine = Matter.Engine,
                 World = Matter.World,
                 Bodies = Matter.Bodies,
@@ -173,27 +180,30 @@
           engine = Engine.create();
           world = engine.world;
 
-          // Create ground and invisible walls relative to the viewport
           const w = window.innerWidth;
           const h = window.innerHeight;
-          // ground: top edge exactly at viewport bottom
           const ground = Bodies.rectangle(w/2, h + 50, w + 200, 100, { isStatic: true, friction: 0.8 });
           const leftWall = Bodies.rectangle(-50, h/2, 100, h * 2, { isStatic: true });
           const rightWall = Bodies.rectangle(w + 50, h/2, 100, h * 2, { isStatic: true });
           
           World.add(world, [ground, leftWall, rightWall]);
 
-          // Sync loop: update DOM elements to match physics bodies
           Matter.Events.on(engine, 'afterUpdate', () => {
+              if (isRewinding) return;
               for (let db of domBodies) {
-                  const { body, el, width, height } = db;
-                  const x = body.position.x - width / 2;
-                  const y = body.position.y - height / 2;
+                  const { body, el, width, height, history } = db;
+                  
+                  // For compound bodies, parts[1] is the geometric center of the main rectangle
+                  const mainPart = body.parts.length > 1 ? body.parts[1] : body;
+                  const x = mainPart.position.x - width / 2;
+                  const y = mainPart.position.y - height / 2;
+                  
                   el.style.transform = `translate(${x}px, ${y}px) rotate(${body.angle}rad)`;
+                  history.push({ x, y, angle: body.angle });
               }
           });
 
-          const runner = Runner.create();
+          runner = Runner.create();
           Runner.run(runner, engine);
       }
 
@@ -202,9 +212,9 @@
           const yCenter = rect.top + rect.height / 2;
 
           const isFixed = window.getComputedStyle(el).position === 'fixed';
+          let placeholder = null;
           if (!isFixed) {
-              // Add placeholder so layout doesn't collapse
-              const placeholder = document.createElement('div');
+              placeholder = document.createElement('div');
               placeholder.style.width = rect.width + 'px';
               placeholder.style.height = rect.height + 'px';
               el.parentNode.insertBefore(placeholder, el);
@@ -212,7 +222,6 @@
 
           document.body.appendChild(el);
 
-          // Force absolute positioning relative to viewport
           el.style.position = 'fixed';
           el.style.left = '0';
           el.style.top = '0';
@@ -223,15 +232,68 @@
           el.style.animation = 'none';
 
           const body = Matter.Bodies.rectangle(xCenter, yCenter, rect.width, rect.height, {
-              restitution: 0.4, // bounciness
+              restitution: 0.4,
               friction: 0.8,
-              frictionAir: 0.02, // slightly slows down falls
+              frictionAir: 0.02,
               ...options
           });
 
           Matter.World.add(world, body);
-          domBodies.push({ body, el, width: rect.width, height: rect.height });
+          domBodies.push({ body, el, placeholder, width: rect.width, height: rect.height, history: [] });
           return body;
+      }
+
+      function startRewind() {
+          isRewinding = true;
+          if (runner) Matter.Runner.stop(runner);
+
+          function rewindTick() {
+              let moreFrames = false;
+              for (let db of domBodies) {
+                  const frame = db.history.pop();
+                  if (frame) {
+                      moreFrames = true;
+                      db.el.style.transform = `translate(${frame.x}px, ${frame.y}px) rotate(${frame.angle}rad)`;
+                  }
+              }
+              
+              if (moreFrames) {
+                  requestAnimationFrame(rewindTick);
+              } else {
+                  restoreOriginalState();
+              }
+          }
+          requestAnimationFrame(rewindTick);
+      }
+
+      function restoreOriginalState() {
+          for (let db of domBodies) {
+              const { el, placeholder } = db;
+              
+              el.style.position = '';
+              el.style.left = '';
+              el.style.top = '';
+              el.style.margin = '';
+              el.style.width = '';
+              el.style.height = '';
+              el.style.transform = '';
+              el.style.transition = '';
+              el.style.animation = '';
+              
+              if (placeholder && placeholder.parentNode) {
+                  placeholder.parentNode.replaceChild(el, placeholder);
+              }
+          }
+          
+          if (engine) {
+              Matter.World.clear(engine.world);
+              Matter.Engine.clear(engine);
+          }
+          
+          domBodies.length = 0;
+          hasCrashed = false;
+          cardsFallen = false;
+          isRewinding = false;
       }
 
       airplane.addEventListener('mouseenter', () => {
@@ -247,19 +309,15 @@
           
           requestAnimationFrame(() => {
               requestAnimationFrame(() => {
-                  // 1. Mechanical nose down
                   airplane.style.transition = 'transform 0.2s ease-in-out';
                   airplane.style.transform = 'rotate(90deg)';
                   
-                  // 2. Hand over to realistic physics fall
                   setTimeout(() => {
                       initPhysics();
                       airplane.style.transition = 'none';
                       const planeBody = addDomBodyWithRect(airplane, unrotatedRect, { density: 0.05, restitution: 0.3 });
                       
-                      // Set body to match the 90deg rotation we just animated
                       Matter.Body.setAngle(planeBody, Math.PI / 2);
-                      // Add random tumble momentum
                       Matter.Body.setAngularVelocity(planeBody, (Math.random() > 0.5 ? 1 : -1) * 0.1);
                   }, 250);
               });
@@ -267,20 +325,48 @@
       });
 
       airplane.addEventListener('click', () => {
-          if (!hasCrashed || cardsFallen) return;
-          cardsFallen = true;
+          if (!hasCrashed) return;
 
-          const cards = document.querySelectorAll('.button');
-          cards.forEach((card, i) => {
-              setTimeout(() => {
-                  const rect = card.getBoundingClientRect();
-                  const body = addDomBodyWithRect(card, rect, { density: 0.02, restitution: 0.2 });
-                  
-                  // Give an initial chaotic pop
-                  Matter.Body.setAngularVelocity(body, (Math.random() - 0.5) * 0.15);
-                  Matter.Body.setVelocity(body, { x: (Math.random() - 0.5) * 2, y: -2 });
-              }, i * 80);
-          });
+          if (!cardsFallen) {
+              cardsFallen = true;
+              const cardsArray = Array.from(document.querySelectorAll('.button'));
+              
+              // Shuffle array for random drop order
+              for (let i = cardsArray.length - 1; i > 0; i--) {
+                  const j = Math.floor(Math.random() * (i + 1));
+                  [cardsArray[i], cardsArray[j]] = [cardsArray[j], cardsArray[i]];
+              }
+
+              cardsArray.forEach((card, i) => {
+                  setTimeout(() => {
+                      const rect = card.getBoundingClientRect();
+                      const body = addDomBodyWithRect(card, rect, { density: 0.005, restitution: 0.2 });
+                      
+                      // Random point on the card (relative to its center)
+                      const offsetX = (Math.random() - 0.5) * rect.width;
+                      const offsetY = (Math.random() - 0.5) * rect.height;
+                      const forcePosition = {
+                          x: body.position.x + offsetX,
+                          y: body.position.y + offsetY
+                      };
+                      
+                      // Downward angled force
+                      // Force magnitude proportional to mass, kept very small for a natural fall
+                      const forceMagnitude = body.mass * (0.001 + Math.random() * 0.002);
+                      // Random angle pointing downwards: between 45 degrees (PI/4) and 135 degrees (3PI/4)
+                      const forceAngle = Math.PI / 4 + Math.random() * (Math.PI / 2);
+                      
+                      const forceVector = {
+                          x: forceMagnitude * Math.cos(forceAngle),
+                          y: forceMagnitude * Math.sin(forceAngle)
+                      };
+                      
+                      Matter.Body.applyForce(body, forcePosition, forceVector);
+                  }, i * 120);
+              });
+          } else if (!isRewinding) {
+              startRewind();
+          }
       });
     </script>
 </body>
