@@ -22,6 +22,7 @@
 	padding:3rem 1.25rem 0 1.25rem;
 	box-sizing:border-box;
 	z-index: 1;
+	pointer-events: none;
 }
 .container-left {
 	position:relative;
@@ -120,15 +121,16 @@
     top: 25%; 
     left: -150px;
     width: 120px;
-    z-index: -1;
+    z-index: 0;
     animation: flyAirplane 35s linear infinite;
-    pointer-events: none;
+    pointer-events: auto;
     opacity: 0.9;
+    cursor: crosshair;
 }
 
 @keyframes flyAirplane {
     0% {
-        transform: translate(-150px, 0px) rotate(2deg);
+        transform: translate(0px, 0px) rotate(2deg);
     }
     50% {
         transform: translate(50vw, -20px) rotate(0deg);
@@ -197,6 +199,7 @@ h1 {
 	letter-spacing:-0.02em;
 	word-wrap:break-word;
 	overflow-wrap:break-word;
+	pointer-events: auto;
 }
 h1 a,
 h1 a:not(.button),
@@ -227,6 +230,7 @@ body {
 	line-height:1.6;
 	color: #ffffff;
 	text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+	pointer-events: auto;
 }
 
 /* Container spacing */
@@ -266,6 +270,7 @@ footer {
   a {
 	color:#2457F5;
 	text-decoration:underline;
+	pointer-events: auto;
 }
 a:hover {
 	color:#083BDA;
@@ -330,6 +335,7 @@ a:hover {
 	box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 	text-shadow: none;
 	transition: all 0.3s ease;
+	pointer-events: auto;
 }
 
 .button:hover,button:hover {

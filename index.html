@@ -155,6 +155,134 @@
     </div>
   </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <script>
+      const airplane = document.querySelector('.airplane');
+      let hasCrashed = false;
+      let cardsFallen = false;
+      
+      let engine, world;
+      const domBodies = [];
+
+      function initPhysics() {
+          const Engine = Matter.Engine,
+                World = Matter.World,
+                Bodies = Matter.Bodies,
+                Runner = Matter.Runner;
+          
+          engine = Engine.create();
+          world = engine.world;
+
+          // Create ground and invisible walls relative to the viewport
+          const w = window.innerWidth;
+          const h = window.innerHeight;
+          // ground: top edge exactly at viewport bottom
+          const ground = Bodies.rectangle(w/2, h + 50, w + 200, 100, { isStatic: true, friction: 0.8 });
+          const leftWall = Bodies.rectangle(-50, h/2, 100, h * 2, { isStatic: true });
+          const rightWall = Bodies.rectangle(w + 50, h/2, 100, h * 2, { isStatic: true });
+          
+          World.add(world, [ground, leftWall, rightWall]);
+
+          // Sync loop: update DOM elements to match physics bodies
+          Matter.Events.on(engine, 'afterUpdate', () => {
+              for (let db of domBodies) {
+                  const { body, el, width, height } = db;
+                  const x = body.position.x - width / 2;
+                  const y = body.position.y - height / 2;
+                  el.style.transform = `translate(${x}px, ${y}px) rotate(${body.angle}rad)`;
+              }
+          });
+
+          const runner = Runner.create();
+          Runner.run(runner, engine);
+      }
+
+      function addDomBodyWithRect(el, rect, options = {}) {
+          const xCenter = rect.left + rect.width / 2;
+          const yCenter = rect.top + rect.height / 2;
+
+          const isFixed = window.getComputedStyle(el).position === 'fixed';
+          if (!isFixed) {
+              // Add placeholder so layout doesn't collapse
+              const placeholder = document.createElement('div');
+              placeholder.style.width = rect.width + 'px';
+              placeholder.style.height = rect.height + 'px';
+              el.parentNode.insertBefore(placeholder, el);
+          }
+
+          document.body.appendChild(el);
+
+          // Force absolute positioning relative to viewport
+          el.style.position = 'fixed';
+          el.style.left = '0';
+          el.style.top = '0';
+          el.style.margin = '0';
+          el.style.width = rect.width + 'px';
+          el.style.height = rect.height + 'px';
+          el.style.transition = 'none';
+          el.style.animation = 'none';
+
+          const body = Matter.Bodies.rectangle(xCenter, yCenter, rect.width, rect.height, {
+              restitution: 0.4, // bounciness
+              friction: 0.8,
+              frictionAir: 0.02, // slightly slows down falls
+              ...options
+          });
+
+          Matter.World.add(world, body);
+          domBodies.push({ body, el, width: rect.width, height: rect.height });
+          return body;
+      }
+
+      airplane.addEventListener('mouseenter', () => {
+          if (hasCrashed) return;
+          hasCrashed = true;
+
+          const unrotatedRect = airplane.getBoundingClientRect();
+          
+          airplane.style.animation = 'none';
+          airplane.style.left = unrotatedRect.left + 'px';
+          airplane.style.top = unrotatedRect.top + 'px';
+          airplane.style.transform = 'none';
+          
+          requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                  // 1. Mechanical nose down
+                  airplane.style.transition = 'transform 0.2s ease-in-out';
+                  airplane.style.transform = 'rotate(90deg)';
+                  
+                  // 2. Hand over to realistic physics fall
+                  setTimeout(() => {
+                      initPhysics();
+                      airplane.style.transition = 'none';
+                      const planeBody = addDomBodyWithRect(airplane, unrotatedRect, { density: 0.05, restitution: 0.3 });
+                      
+                      // Set body to match the 90deg rotation we just animated
+                      Matter.Body.setAngle(planeBody, Math.PI / 2);
+                      // Add random tumble momentum
+                      Matter.Body.setAngularVelocity(planeBody, (Math.random() > 0.5 ? 1 : -1) * 0.1);
+                  }, 250);
+              });
+          });
+      });
+
+      airplane.addEventListener('click', () => {
+          if (!hasCrashed || cardsFallen) return;
+          cardsFallen = true;
+
+          const cards = document.querySelectorAll('.button');
+          cards.forEach((card, i) => {
+              setTimeout(() => {
+                  const rect = card.getBoundingClientRect();
+                  const body = addDomBodyWithRect(card, rect, { density: 0.02, restitution: 0.2 });
+                  
+                  // Give an initial chaotic pop
+                  Matter.Body.setAngularVelocity(body, (Math.random() - 0.5) * 0.15);
+                  Matter.Body.setVelocity(body, { x: (Math.random() - 0.5) * 2, y: -2 });
+              }, i * 80);
+          });
+      });
+    </script>
 </body>
 
 </html>
