@@ -55,6 +55,10 @@
     <div class="sky-container">
         <div class="dynamic-bg"></div>
     </div>
+    
+    <!-- Interactive Brownian Motion Bubbles Layer -->
+    <canvas id="bubble-canvas"></canvas>
+
     <div class="airplane-wrapper">
         <img src="images/airplane.svg" class="airplane" alt="airplane" aria-hidden="true" draggable="false">
     </div>
@@ -334,6 +338,15 @@
           el.style.transition = 'none';
           el.style.animation = 'none';
 
+          if (el.classList.contains('airplane')) {
+              el.style.zIndex = '2';
+              el.style.pointerEvents = 'auto';
+              el.style.cursor = 'pointer';
+          } else {
+              el.style.zIndex = '3';
+              el.style.pointerEvents = 'auto';
+          }
+
           const body = Matter.Bodies.rectangle(xCenter, yCenter, rect.width, rect.height, {
               restitution: 0.4,
               friction: 0.8,
@@ -418,6 +431,9 @@
               el.style.transform = '';
               el.style.transition = '';
               el.style.animation = '';
+              el.style.zIndex = '';
+              el.style.cursor = '';
+              el.style.pointerEvents = '';
               
               if (placeholder && placeholder.parentNode) {
                   placeholder.parentNode.replaceChild(el, placeholder);
@@ -485,7 +501,7 @@
           }
       }, { passive: true });
 
-      airplane.addEventListener('click', () => {
+      function handleAirplaneClick() {
           if (!hasCrashed) return;
           if (Date.now() - lastCrashTime < 350) return; // Prevent touch synthesized click
 
@@ -527,8 +543,16 @@
           } else if (!isRewinding) {
               startRewind();
           }
+      }
+
+      airplane.addEventListener('click', handleAirplaneClick);
+      airplane.addEventListener('touchend', (e) => {
+          if (hasCrashed) {
+              handleAirplaneClick();
+          }
       });
     </script>
+    <script src="js/bubbles.js"></script>
 </body>
 
 </html>

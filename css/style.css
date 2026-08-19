@@ -21,7 +21,7 @@
 	margin:0 auto;
 	padding:3rem 1.25rem 0 1.25rem;
 	box-sizing:border-box;
-	z-index: 2;
+	z-index: 3;
 	pointer-events: none;
 }
 .container-left {
@@ -115,13 +115,24 @@
     66% { transform: translate(1px, -1px) scale(1.005); }
 }
 
+/* Interactive Brownian Bubbles Canvas */
+#bubble-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+    pointer-events: auto;
+}
+
 /* Airplane Animation */
 .airplane-wrapper {
     position: fixed;
     top: 25%; 
     left: 0;
     width: 120px;
-    z-index: 1;
+    z-index: 2;
     animation: flyAirplane 35s linear infinite;
     pointer-events: none;
     will-change: transform;
@@ -132,9 +143,11 @@
     display: block;
     pointer-events: auto;
     opacity: 0.9;
-    cursor: default;
+    cursor: pointer;
     user-select: none;
     -webkit-user-drag: none;
+    z-index: 2;
+    position: relative;
 }
 
 @keyframes flyAirplane {
