@@ -9,9 +9,9 @@
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 /* Only include brand-specific button styling here */
 .button,button {
-  color:var(--button-text,#1a1a1a);
-  background-color:var(--button-background,rgba(255, 255, 255, 0.5));
-  border:var(--button-border,1px solid rgba(255, 255, 255, 0.6));
+  color:var(--button-text,#ffffff);
+  background-color:var(--button-background,rgba(45, 156, 240, 0.5));
+  border:var(--button-border,1px solid #ffffff);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   text-shadow: none !important;
@@ -21,9 +21,9 @@
 /* Global Button Hover Effect
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 .button:hover,button:hover {
-  background-color:rgba(45, 156, 240, 0.5) !important;
-  color:#ffffff !important;
-  border-color:#ffffff !important;
+  background-color:rgba(255, 255, 255, 0.5) !important;
+  color:#1a1a1a !important;
+  border-color:rgba(255, 255, 255, 0.6) !important;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   text-shadow: none !important;
@@ -48,9 +48,9 @@
 }
 /* xzwl */
 .button.button-xzwl {
-	--button-text:#1a1a1a;
-	--button-background:rgba(255, 255, 255, 0.5);
-	--button-border:1px solid rgba(255, 255, 255, 0.6);
+	--button-text:#ffffff;
+	--button-background:rgba(45, 156, 240, 0.5);
+	--button-border:1px solid #ffffff;
 }
 
 /* suda */

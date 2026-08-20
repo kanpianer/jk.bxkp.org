@@ -24,28 +24,37 @@
     <meta name="keywords" content="your name, industry, and specialties">
 
     <!-- Canonical URL - Helps prevent duplicate content issues -->
-    <meta rel="canonical" href="https://yourwebsite.com">
+    <link rel="canonical" href="https://tz.bxkp.org/">
 
     <!-- Author Information -->
-    <meta name="author" content="Your Name">
+    <meta name="author" content="不想看牌">
 
     <!-- Stylesheets -->
     <link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/brands.css">
 
-<!-- Open Graph / Facebook -->
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://tz.bxkp.org/">
-<meta property="og:title" content="不想看牌">
-<meta property="og:description" content="包含家宽的 VPS☁️ 和机场✈️">
-<meta property="og:image" content="https://tz.bxkp.org/images/og-preview.png">
-<!-- Twitter -->
-<meta property="twitter:card" content="summary_large_image">
-<meta property="twitter:url" content="https://tz.bxkp.org/">
-<meta property="twitter:title" content="不想看牌">
-<meta property="twitter:description" content="包含家宽的 VPS☁️ 和机场✈️">
-<meta property="twitter:image" content="https://tz.bxkp.org/images/og-preview.png">
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://tz.bxkp.org/">
+    <meta property="og:site_name" content="不想看牌">
+    <meta property="og:title" content="不想看牌">
+    <meta property="og:description" content="包含家宽的 VPS☁️ 和机场✈️">
+    <meta property="og:image" content="https://tz.bxkp.org/images/og-preview.png">
+    <meta property="og:image:secure_url" content="https://tz.bxkp.org/images/og-preview.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="2528">
+    <meta property="og:image:height" content="1686">
+    <meta property="og:image:alt" content="不想看牌 - 包含家宽的 VPS 和机场">
+    <meta property="og:locale" content="zh_CN">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://tz.bxkp.org/">
+    <meta name="twitter:title" content="不想看牌">
+    <meta name="twitter:description" content="包含家宽的 VPS☁️ 和机场✈️">
+    <meta name="twitter:image" content="https://tz.bxkp.org/images/og-preview.png">
+    <meta name="twitter:image:alt" content="不想看牌 - 包含家宽的 VPS 和机场">
 
   </head>
 
@@ -345,6 +354,7 @@
           } else {
               el.style.zIndex = '3';
               el.style.pointerEvents = 'auto';
+              el.style.cursor = 'pointer';
           }
 
           const body = Matter.Bodies.rectangle(xCenter, yCenter, rect.width, rect.height, {
@@ -501,9 +511,16 @@
           }
       }, { passive: true });
 
-      function handleAirplaneClick() {
-          if (!hasCrashed) return;
+      function handleAirplaneClick(e) {
+          if (!hasCrashed) {
+              triggerCrash(e ? e.clientX : undefined, e ? e.clientY : undefined);
+              return;
+          }
           if (Date.now() - lastCrashTime < 350) return; // Prevent touch synthesized click
+          if (e) {
+              e.preventDefault();
+              e.stopPropagation();
+          }
 
           if (!cardsFallen) {
               cardsFallen = true;
@@ -545,11 +562,32 @@
           }
       }
 
+      function handleCardClick(e) {
+          if (cardsFallen) {
+              if (e) {
+                  e.preventDefault();
+                  e.stopPropagation();
+              }
+              if (!isRewinding) {
+                  startRewind();
+              }
+          }
+      }
+
       airplane.addEventListener('click', handleAirplaneClick);
       airplane.addEventListener('touchend', (e) => {
           if (hasCrashed) {
-              handleAirplaneClick();
+              handleAirplaneClick(e);
           }
+      });
+
+      document.querySelectorAll('.button').forEach(btn => {
+          btn.addEventListener('click', handleCardClick);
+          btn.addEventListener('touchend', (e) => {
+              if (cardsFallen) {
+                  handleCardClick(e);
+              }
+          });
       });
     </script>
     <script src="js/bubbles.js"></script>

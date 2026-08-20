@@ -343,11 +343,11 @@ a:hover {
 	font-weight:700;
 	text-decoration:none;
 	white-space:normal;
-	background-color:rgba(255, 255, 255, 0.5);
+	background-color:rgba(45, 156, 240, 0.5);
 	backdrop-filter: blur(10px);
 	-webkit-backdrop-filter: blur(10px);
-	color:#1a1a1a;
-	border:1px solid rgba(255, 255, 255, 0.6);
+	color:#ffffff;
+	border:1px solid #ffffff;
 	border-radius:0.5rem;
 	cursor:pointer;
 	box-sizing:border-box;
@@ -361,11 +361,11 @@ a:hover {
 }
 
 .button:hover,button:hover {
-	background-color:rgba(45, 156, 240, 0.5);
+	background-color:rgba(255, 255, 255, 0.5);
 	backdrop-filter: blur(10px);
 	-webkit-backdrop-filter: blur(10px);
-	border-color: #ffffff;
-	color: #ffffff;
+	border-color: rgba(255, 255, 255, 0.6);
+	color: #1a1a1a;
 	text-shadow: none;
 	box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
@@ -458,20 +458,20 @@ footer a:hover,
 }
 :root.theme-dark .button,
 :root.theme-dark button {
-	background-color:rgba(255, 255, 255, 0.5);
+	background-color:rgba(45, 156, 240, 0.5);
 	backdrop-filter: blur(10px);
 	-webkit-backdrop-filter: blur(10px);
-	color:#1a1a1a;
-	border:1px solid rgba(255, 255, 255, 0.6);
+	color:#ffffff;
+	border:1px solid #ffffff;
 	text-shadow: none;
 }
 :root.theme-dark .button:hover,
 :root.theme-dark button:hover {
-	background-color:rgba(45, 156, 240, 0.5);
+	background-color:rgba(255, 255, 255, 0.5);
 	backdrop-filter: blur(10px);
 	-webkit-backdrop-filter: blur(10px);
-	border-color:#ffffff;
-	color:#ffffff;
+	border-color:rgba(255, 255, 255, 0.6);
+	color:#1a1a1a;
 	text-shadow: none;
 }
 :root.theme-dark a:not(.button) {
@@ -496,20 +496,20 @@ footer a:hover,
 }
 :root.theme-auto .button,
 :root.theme-auto button {
-	background-color:rgba(255, 255, 255, 0.5);
+	background-color:rgba(45, 156, 240, 0.5);
 	backdrop-filter: blur(10px);
 	-webkit-backdrop-filter: blur(10px);
-	color:#1a1a1a;
-	border:1px solid rgba(255, 255, 255, 0.6);
+	color:#ffffff;
+	border:1px solid #ffffff;
 	text-shadow: none;
 }
 :root.theme-auto .button:hover,
 :root.theme-auto button:hover {
-	background-color:rgba(45, 156, 240, 0.5);
+	background-color:rgba(255, 255, 255, 0.5);
 	backdrop-filter: blur(10px);
 	-webkit-backdrop-filter: blur(10px);
-	border-color:#ffffff;
-	color:#ffffff;
+	border-color:rgba(255, 255, 255, 0.6);
+	color:#1a1a1a;
 	text-shadow: none;
 }
 :root.theme-auto :focus-visible {

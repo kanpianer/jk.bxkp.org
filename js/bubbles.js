@@ -177,32 +177,40 @@
             this.r = r;
             this.baseR = r;
 
-            // Slow, graceful Brownian initial drift velocity
-            this.vx = (Math.random() - 0.5) * 0.15;
-            this.vy = (Math.random() - 0.5) * 0.15;
+            // Very slow initial drift velocity
+            this.vx = (Math.random() - 0.5) * 0.03;
+            this.vy = (Math.random() - 0.5) * 0.03;
 
             // Internal wobble phase
             this.wobblePhase = Math.random() * Math.PI * 2;
-            this.wobbleSpeed = 0.006 + Math.random() * 0.008;
+            this.wobbleSpeed = 0.003 + Math.random() * 0.004;
+
+            // Squeeze & contact tracking
+            this.squeezeFactor = 0;
+            this.contactCount = 0;
 
             // Flattened boundary radii per vertex
             this.radii = new Float32Array(VERTEX_COUNT);
         }
 
         applyBrownian() {
-            // Very gentle slow continuous random walk
-            const scale = 0.025;
+            // When bubbles squeeze against each other, their motion slows down to an extreme crawl (流动速度降到极慢)
+            const squeezeDamp = Math.max(0.004, 1 / (1 + this.squeezeFactor * 25 + this.contactCount * 4.0));
+
+            // Ultra-gentle Brownian random walk scaled down by squeeze damping
+            const scale = 0.003 * squeezeDamp;
             this.vx += (Math.random() - 0.5) * scale;
-            this.vy += (Math.random() - 0.5) * scale - 0.001;
+            this.vy += (Math.random() - 0.5) * scale - 0.00005 * squeezeDamp;
 
-            // Fluid damping
-            this.vx *= 0.972;
-            this.vy *= 0.972;
+            // Heavy viscous drag when crowded / squeezed
+            const fluidDamping = 0.92 - (1 - squeezeDamp) * 0.25;
+            this.vx *= fluidDamping;
+            this.vy *= fluidDamping;
 
-            // Slow speed clamp
+            // Strict speed clamp: free bubble ~0.08 px/frame, crowded/squeezed bubble ~0.002 - 0.008 px/frame (extremely slow!)
             const speed = Math.hypot(this.vx, this.vy);
-            const maxSpeed = 0.38;
-            if (speed > maxSpeed) {
+            const maxSpeed = 0.08 * squeezeDamp;
+            if (speed > maxSpeed && speed > 0.000001) {
                 this.vx = (this.vx / speed) * maxSpeed;
                 this.vy = (this.vy / speed) * maxSpeed;
             }
@@ -210,7 +218,7 @@
             this.x += this.vx;
             this.y += this.vy;
 
-            this.wobblePhase += this.wobbleSpeed;
+            this.wobblePhase += this.wobbleSpeed * (0.1 + 0.9 * squeezeDamp);
         }
 
         constrainBounds(w, h) {
@@ -547,13 +555,20 @@
             }
 
             // Run initial relaxation iterations so bubbles settle into dense honeycomb foam
-            for (let iter = 0; iter < 55; iter++) {
-                this.resolveCollisions();
+            for (let iter = 0; iter < 80; iter++) {
+                this.resolveCollisions(0.85);
                 this.bubbles.forEach(b => b.constrainBounds(this.width, this.height));
             }
+            // Zero out initial velocities after layout relaxation
+            this.bubbles.forEach(b => {
+                b.vx = (Math.random() - 0.5) * 0.02;
+                b.vy = (Math.random() - 0.5) * 0.02;
+                b.squeezeFactor = 0;
+                b.contactCount = 0;
+            });
         }
 
-        resolveCollisions() {
+        resolveCollisions(separationFactor = 0.30) {
             this.grid.clear();
             const len = this.bubbles.length;
             for (let i = 0; i < len; i++) {
@@ -574,9 +589,16 @@
                     const dist = Math.hypot(dx, dy);
                     const minDist = b1.r + b2.r;
 
-                    // Strictly push apart when overlapping
+                    // Strictly push apart when overlapping & measure squeezing
                     if (dist < minDist && dist > 0.0001) {
                         const overlap = minDist - dist;
+                        const compression = overlap / minDist;
+
+                        b1.squeezeFactor += compression;
+                        b1.contactCount++;
+                        b2.squeezeFactor += compression;
+                        b2.contactCount++;
+
                         const nx = dx / dist;
                         const ny = dy / dist;
 
@@ -586,23 +608,29 @@
                         const r1 = m2 / totalM;
                         const r2 = m1 / totalM;
 
-                        b1.x -= nx * overlap * r1;
-                        b1.y -= ny * overlap * r1;
-                        b2.x += nx * overlap * r2;
-                        b2.y += ny * overlap * r2;
+                        const sep = overlap * separationFactor;
+                        b1.x -= nx * sep * r1;
+                        b1.y -= ny * sep * r1;
+                        b2.x += nx * sep * r2;
+                        b2.y += ny * sep * r2;
 
-                        // Impulse exchange
+                        // Eliminate approach velocity (inelastic squeeze without bouncing)
                         const dvx = b1.vx - b2.vx;
                         const dvy = b1.vy - b2.vy;
                         const normV = dvx * nx + dvy * ny;
 
                         if (normV > 0) {
-                            const impulse = normV * 0.3;
-                            b1.vx -= nx * impulse;
-                            b1.vy -= ny * impulse;
-                            b2.vx += nx * impulse;
-                            b2.vy += ny * impulse;
+                            b1.vx -= nx * normV * r1;
+                            b1.vy -= ny * normV * r1;
+                            b2.vx += nx * normV * r2;
+                            b2.vy += ny * normV * r2;
                         }
+
+                        // High viscous contact damping between squeezing bubbles
+                        b1.vx *= 0.75;
+                        b1.vy *= 0.75;
+                        b2.vx *= 0.75;
+                        b2.vy *= 0.75;
                     }
                 }
             }
@@ -702,16 +730,25 @@
         animate() {
             this.ctx.clearRect(0, 0, this.width, this.height);
 
-            // 1. Physics update: Slow Brownian motion
+            // 1. Reset squeeze tracking and resolve collisions
             const bLen = this.bubbles.length;
+            for (let i = 0; i < bLen; i++) {
+                this.bubbles[i].squeezeFactor = 0;
+                this.bubbles[i].contactCount = 0;
+            }
+            this.resolveCollisions(0.30);
+
+            // 2. Physics update: Ultra-slow Brownian motion adjusted by squeeze factor
             for (let i = 0; i < bLen; i++) {
                 this.bubbles[i].applyBrownian();
                 this.bubbles[i].constrainBounds(this.width, this.height);
             }
 
-            // 2. Strict non-overlapping collision resolution
-            this.resolveCollisions();
-            this.resolveCollisions();
+            // 3. Post-movement relaxation pass
+            this.resolveCollisions(0.20);
+            for (let i = 0; i < bLen; i++) {
+                this.bubbles[i].constrainBounds(this.width, this.height);
+            }
 
             // 3. Rebuild spatial grid for neighbor queries and squeeze deformation
             this.grid.clear();
