@@ -244,8 +244,9 @@
             const wobble = 1 + Math.sin(this.wobblePhase) * 0.012;
             const currentR = this.r * wobble;
 
+            const targetRadii = new Float32Array(VERTEX_COUNT);
             for (let k = 0; k < VERTEX_COUNT; k++) {
-                this.radii[k] = currentR;
+                targetRadii[k] = currentR;
             }
 
             // 1. Plateau contact membrane truncation against touching neighbors (minimal gap tight foam)
@@ -269,8 +270,8 @@
                         const cosP = COS_TABLE[k] * nx + SIN_TABLE[k] * ny;
                         if (cosP > 0.01) {
                             const lPlane = dContact / cosP;
-                            if (lPlane < this.radii[k]) {
-                                this.radii[k] = lPlane;
+                            if (lPlane < targetRadii[k]) {
+                                targetRadii[k] = lPlane;
                             }
                         }
                     }
@@ -289,20 +290,26 @@
 
                 if (cosA < -0.01 && dLeft < this.r + 2) {
                     const l = dLeft / -cosA;
-                    if (l < this.radii[k]) this.radii[k] = l;
+                    if (l < targetRadii[k]) targetRadii[k] = l;
                 }
                 if (cosA > 0.01 && dRight < this.r + 2) {
                     const l = dRight / cosA;
-                    if (l < this.radii[k]) this.radii[k] = l;
+                    if (l < targetRadii[k]) targetRadii[k] = l;
                 }
                 if (sinA < -0.01 && dTop < this.r + 2) {
                     const l = dTop / -sinA;
-                    if (l < this.radii[k]) this.radii[k] = l;
+                    if (l < targetRadii[k]) targetRadii[k] = l;
                 }
                 if (sinA > 0.01 && dBottom < this.r + 2) {
                     const l = dBottom / sinA;
-                    if (l < this.radii[k]) this.radii[k] = l;
+                    if (l < targetRadii[k]) targetRadii[k] = l;
                 }
+            }
+
+            // Smooth radii interpolation to prevent high-frequency jitter
+            for (let k = 0; k < VERTEX_COUNT; k++) {
+                if (this.radii[k] === 0) this.radii[k] = targetRadii[k];
+                this.radii[k] += (targetRadii[k] - this.radii[k]) * 0.15;
             }
         }
 
@@ -736,7 +743,7 @@
                 this.bubbles[i].squeezeFactor = 0;
                 this.bubbles[i].contactCount = 0;
             }
-            this.resolveCollisions(0.30);
+            this.resolveCollisions(0.05);
 
             // 2. Physics update: Ultra-slow Brownian motion adjusted by squeeze factor
             for (let i = 0; i < bLen; i++) {
