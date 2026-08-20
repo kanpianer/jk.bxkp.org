@@ -33,7 +33,7 @@
             }
         }
 
-        playPop(radius, minR = 14, maxR = 48) {
+        playPop(radius, minR = 30, maxR = 100) {
             try {
                 this.init();
                 if (!this.ctx) return;
@@ -160,7 +160,7 @@
     }
 
     // Geometry vertex resolution for Plateau contact membrane deformation
-    const VERTEX_COUNT = 32;
+    const VERTEX_COUNT = 24;
     const COS_TABLE = new Float32Array(VERTEX_COUNT);
     const SIN_TABLE = new Float32Array(VERTEX_COUNT);
     for (let k = 0; k < VERTEX_COUNT; k++) {
@@ -480,7 +480,7 @@
             this.width = 0;
             this.height = 0;
             this.dpr = Math.min(window.devicePixelRatio || 1, 2);
-            this.grid = new SpatialGrid(55);
+            this.grid = new SpatialGrid(100);
 
             // Preload Background Image for Optical Refraction
             this.bgImage = new Image();
@@ -511,7 +511,7 @@
             this.canvas.style.height = `${this.height}px`;
 
             this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
-            this.grid.cellSize = 55;
+            this.grid.cellSize = 100;
 
             this.bubbles.forEach(b => {
                 b.constrainBounds(this.width, this.height);
@@ -521,7 +521,7 @@
         populateBubbles() {
             // Ultra-dense full screen packing: minimal gaps
             const area = this.width * this.height;
-            const targetCount = Math.max(90, Math.floor(area / 1850));
+            const targetCount = Math.max(52, Math.floor(area / 6150));
 
             this.bubbles = [];
 
@@ -538,11 +538,11 @@
                     const rand = Math.random();
                     let r;
                     if (rand < 0.12) {
-                        r = 36 + Math.random() * 12; // Large (36-48px)
+                        r = 75 + Math.random() * 25; // Large (75-100px)
                     } else if (rand < 0.70) {
-                        r = 22 + Math.random() * 13; // Medium (22-35px)
+                        r = 45 + Math.random() * 25; // Medium (45-70px)
                     } else {
-                        r = 14 + Math.random() * 8;  // Small (14-22px)
+                        r = 30 + Math.random() * 15;  // Small (30-45px)
                     }
 
                     const baseX = (cIdx + 0.5) * stepX + (Math.random() - 0.5) * stepX * 0.6;
@@ -555,7 +555,7 @@
             }
 
             // Run initial relaxation iterations so bubbles settle into dense honeycomb foam
-            for (let iter = 0; iter < 80; iter++) {
+            for (let iter = 0; iter < 50; iter++) {
                 this.resolveCollisions(0.85);
                 this.bubbles.forEach(b => b.constrainBounds(this.width, this.height));
             }
@@ -644,8 +644,8 @@
                     // Play realistic pop audio
                     this.sound.playPop(b.r);
 
-                    // 1. Instant Film Rupture: Shattered droplet mist (20-30 micro particles)
-                    const particleCount = Math.floor(18 + (b.r / 48) * 12);
+                    // 1. Instant Film Rupture: Shattered droplet mist (12-20 micro particles)
+                    const particleCount = Math.floor(12 + (b.r / 100) * 8);
                     for (let j = 0; j < particleCount; j++) {
                         const angle = Math.random() * Math.PI * 2;
                         const spawnR = b.r * (0.8 + Math.random() * 0.3);
@@ -741,12 +741,6 @@
             // 2. Physics update: Ultra-slow Brownian motion adjusted by squeeze factor
             for (let i = 0; i < bLen; i++) {
                 this.bubbles[i].applyBrownian();
-                this.bubbles[i].constrainBounds(this.width, this.height);
-            }
-
-            // 3. Post-movement relaxation pass
-            this.resolveCollisions(0.20);
-            for (let i = 0; i < bLen; i++) {
                 this.bubbles[i].constrainBounds(this.width, this.height);
             }
 
