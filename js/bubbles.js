@@ -540,7 +540,7 @@
             // Ultra-dense full screen packing: minimal gaps
             const area = this.width * this.height;
             let targetCount = Math.max(52, Math.floor(area / 6150));
-            targetCount = Math.floor(targetCount * 0.95); // Reduce by 5%
+            targetCount = Math.floor(targetCount * 1.045); // Increased by 10% (from previous -5% baseline)
 
             this.bubbles = [];
 
