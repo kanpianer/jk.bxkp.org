@@ -531,15 +531,6 @@
               cardsFallen = true;
               const cardsArray = Array.from(document.querySelectorAll('.button'));
               
-              const cardBodies = new Map();
-              // First, add all cards to the physics world as static bodies 
-              // so they can act as obstacles for cards falling from above
-              cardsArray.forEach(card => {
-                  const rect = card.getBoundingClientRect();
-                  const body = addDomBodyWithRect(card, rect, { density: 0.005, restitution: 0.2, isStatic: true });
-                  cardBodies.set(card, body);
-              });
-
               // Shuffle array for random drop order
               for (let i = cardsArray.length - 1; i > 0; i--) {
                   const j = Math.floor(Math.random() * (i + 1));
@@ -548,10 +539,9 @@
 
               cardsArray.forEach((card, i) => {
                   setTimeout(() => {
-                      const body = cardBodies.get(card);
-                      Matter.Body.setStatic(body, false);
-                      
                       const rect = card.getBoundingClientRect();
+                      const body = addDomBodyWithRect(card, rect, { density: 0.005, restitution: 0.2 });
+                      
                       // Random point on the card (relative to its center)
                       const offsetX = (Math.random() - 0.5) * rect.width;
                       const offsetY = (Math.random() - 0.5) * rect.height;
