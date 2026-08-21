@@ -39,25 +39,33 @@
                 if (!this.ctx) return;
 
                 const now = this.ctx.currentTime;
-                const ratio = Math.max(0, Math.min(1, (radius - minR) / (maxR - minR)));
 
-                // Natural bubble pop pitch sweep
-                const startFreq = 1450 - ratio * 950 + (Math.random() - 0.5) * 80;
-                const endFreq = 280 - ratio * 160 + (Math.random() - 0.5) * 30;
-                const duration = 0.035 + ratio * 0.025; // 35ms to 60ms
+                // Pentatonic scale frequencies
+                const scale = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00, 1046.50, 1174.66, 1318.51, 1567.98];
+                const baseFreq = scale[Math.floor(Math.random() * scale.length)];
+                
+                const timbres = ['sine', 'triangle', 'square', 'sawtooth'];
+                const timbre = timbres[Math.floor(Math.random() * timbres.length)];
+
+                const duration = 0.04 + Math.random() * 0.03; // 40ms to 70ms
 
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
                 const filter = this.ctx.createBiquadFilter();
 
+                // Lowpass filter to soften harsh waveforms
                 filter.type = 'lowpass';
-                filter.frequency.setValueAtTime(startFreq * 2.5, now);
+                filter.frequency.setValueAtTime(baseFreq * 3, now);
+                filter.frequency.exponentialRampToValueAtTime(baseFreq * 0.5, now + duration);
 
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(startFreq, now);
-                osc.frequency.exponentialRampToValueAtTime(Math.max(25, endFreq), now + duration);
+                osc.type = timbre;
+                // Quick pitch drop for a percussive "pop" feel
+                osc.frequency.setValueAtTime(baseFreq * 1.5, now);
+                osc.frequency.exponentialRampToValueAtTime(baseFreq, now + duration * 0.5);
 
-                gain.gain.setValueAtTime(0.40, now);
+                // For square/sawtooth, lower the volume to avoid being too loud
+                const maxVol = (timbre === 'square' || timbre === 'sawtooth') ? 0.2 : 0.45;
+                gain.gain.setValueAtTime(maxVol, now);
                 gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
                 osc.connect(filter);
@@ -70,20 +78,23 @@
                 // High transient click
                 const snapOsc = this.ctx.createOscillator();
                 const snapGain = this.ctx.createGain();
-                const snapDur = 0.009;
+                const snapDur = 0.012;
 
-                snapOsc.type = 'triangle';
-                snapOsc.frequency.setValueAtTime(startFreq * 1.8, now);
-                snapOsc.frequency.exponentialRampToValueAtTime(endFreq * 2.2, now + snapDur);
+                const snapTimbres = ['triangle', 'sine', 'square'];
+                snapOsc.type = snapTimbres[Math.floor(Math.random() * snapTimbres.length)];
+                
+                snapOsc.frequency.setValueAtTime(baseFreq * 2.5, now);
+                snapOsc.frequency.exponentialRampToValueAtTime(baseFreq * 1.5, now + snapDur);
 
-                snapGain.gain.setValueAtTime(0.30, now);
+                const snapVol = snapOsc.type === 'square' ? 0.15 : 0.3;
+                snapGain.gain.setValueAtTime(snapVol, now);
                 snapGain.gain.exponentialRampToValueAtTime(0.0001, now + snapDur);
 
                 snapOsc.connect(snapGain);
                 snapGain.connect(this.ctx.destination);
 
                 snapOsc.start(now);
-                snapOsc.stop(now + snapDur + 0.004);
+                snapOsc.stop(now + snapDur + 0.01);
             } catch (e) {
                 // Ignore audio context restriction errors
             }
@@ -528,7 +539,8 @@
         populateBubbles() {
             // Ultra-dense full screen packing: minimal gaps
             const area = this.width * this.height;
-            const targetCount = Math.max(52, Math.floor(area / 6150));
+            let targetCount = Math.max(52, Math.floor(area / 6150));
+            targetCount = Math.floor(targetCount * 0.95); // Reduce by 5%
 
             this.bubbles = [];
 
