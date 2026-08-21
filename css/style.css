@@ -645,3 +645,10 @@ ul li {
   color: inherit;
 }
 
+/* 引入 LXGW WenKai 字体 */
+h1,
+.container p,
+.middle-footer,
+.button {
+  font-family: 'LXGW WenKai', "Open Sans", system-ui, sans-serif;
+}
