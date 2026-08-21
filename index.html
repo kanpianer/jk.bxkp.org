@@ -568,13 +568,11 @@
       }
 
       function handleCardClick(e) {
-          if (cardsFallen) {
+          // 允许卡片点击后跳转链接，不再阻止默认行为和触发回退
+          if (cardsFallen && isRewinding) {
               if (e) {
                   e.preventDefault();
                   e.stopPropagation();
-              }
-              if (!isRewinding) {
-                  startRewind();
               }
           }
       }
