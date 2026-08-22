@@ -199,6 +199,10 @@
             this.vx = (Math.random() - 0.5) * 0.03;
             this.vy = (Math.random() - 0.5) * 0.03;
 
+            // Persistent drift direction for when the bubble is isolated
+            this.driftAngle = Math.random() * Math.PI * 2;
+            this.driftSpeed = 0.01 + Math.random() * 0.015;
+
             // Internal wobble phase
             this.wobblePhase = Math.random() * Math.PI * 2;
             this.wobbleSpeed = 0.003 + Math.random() * 0.004;
@@ -215,19 +219,27 @@
             // When bubbles squeeze against each other, their motion slows down to an extreme crawl (流动速度降到极慢)
             const squeezeDamp = Math.max(0.004, 1 / (1 + this.squeezeFactor * 25 + this.contactCount * 4.0));
 
-            // Ultra-gentle Brownian random walk scaled down by squeeze damping
-            const scale = 0.003 * squeezeDamp;
-            this.vx += (Math.random() - 0.5) * scale;
-            this.vy += (Math.random() - 0.5) * scale - 0.00005 * squeezeDamp;
+            // Slowly rotate the drift angle
+            this.driftAngle += (Math.random() - 0.5) * 0.05;
+            
+            // Add continuous thrust for isolated floating, scaled down when squeezed
+            const thrust = this.driftSpeed * squeezeDamp;
+            this.vx += Math.cos(this.driftAngle) * thrust;
+            this.vy += Math.sin(this.driftAngle) * thrust - 0.005 * squeezeDamp; // slight upward buoyancy
 
-            // Heavy viscous drag when crowded / squeezed
-            const fluidDamping = 0.92 - (1 - squeezeDamp) * 0.25;
+            // Ultra-gentle Brownian random walk scaled down by squeeze damping
+            const scale = 0.005 * squeezeDamp;
+            this.vx += (Math.random() - 0.5) * scale;
+            this.vy += (Math.random() - 0.5) * scale;
+
+            // Heavy viscous drag when crowded / squeezed, lighter drag when free
+            const fluidDamping = 0.96 - (1 - squeezeDamp) * 0.25;
             this.vx *= fluidDamping;
             this.vy *= fluidDamping;
 
-            // Strict speed clamp: free bubble ~0.08 px/frame, crowded/squeezed bubble ~0.002 - 0.008 px/frame (extremely slow!)
+            // Strict speed clamp: free bubble ~0.4 px/frame, crowded/squeezed bubble ~0.0016 px/frame
             const speed = Math.hypot(this.vx, this.vy);
-            const maxSpeed = 0.08 * squeezeDamp;
+            const maxSpeed = 0.4 * squeezeDamp;
             if (speed > maxSpeed && speed > 0.000001) {
                 this.vx = (this.vx / speed) * maxSpeed;
                 this.vy = (this.vy / speed) * maxSpeed;
