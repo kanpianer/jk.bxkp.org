@@ -19,6 +19,13 @@
     class BubbleSoundSynthesizer {
         constructor() {
             this.ctx = null;
+            this.summerMelody = [
+                392.00, 440.00, 493.88, 392.00, 587.33, 493.88,
+                440.00, 392.00, 440.00, 493.88, 392.00, 293.66,
+                329.63, 293.66, 329.63, 392.00, 329.63, 293.66,
+                261.63, 246.94, 261.63, 293.66, 246.94, 196.00
+            ];
+            this.noteIndex = 0;
         }
 
         init() {
@@ -40,9 +47,9 @@
 
                 const now = this.ctx.currentTime;
 
-                // Pentatonic scale frequencies
-                const scale = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00, 1046.50, 1174.66, 1318.51, 1567.98];
-                const baseFreq = scale[Math.floor(Math.random() * scale.length)];
+                // Joe Hisaishi's Summer melody played sequentially
+                const baseFreq = this.summerMelody[this.noteIndex % this.summerMelody.length];
+                this.noteIndex++;
                 
                 const timbres = ['sine', 'triangle', 'square', 'sawtooth'];
                 const timbre = timbres[Math.floor(Math.random() * timbres.length)];
