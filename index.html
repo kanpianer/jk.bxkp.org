@@ -67,13 +67,7 @@
 
 <body>
 
-    <!-- Dynamic Sky Background -->
-    <div class="sky-container">
-        <div class="dynamic-bg"></div>
-    </div>
 
-    <!-- Interactive Brownian Motion Bubbles Layer -->
-    <canvas id="bubble-canvas"></canvas>
 
     <div class="airplane-wrapper">
         <img src="images/airplane.svg" class="airplane" alt="airplane" aria-hidden="true" draggable="false">
@@ -228,6 +222,14 @@
 
         </div>
     </div>
+
+    <!-- Dynamic Sky Background -->
+    <div class="sky-container">
+        <div class="dynamic-bg"></div>
+    </div>
+
+    <!-- Interactive Brownian Motion Bubbles Layer -->
+    <canvas id="bubble-canvas"></canvas>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <script>
@@ -640,7 +642,7 @@
             });
         });
     </script>
-    <script src="js/bubbles.js"></script>
+    <script src="js/bubbles.js" defer></script>
 </body>
 
 </html>
