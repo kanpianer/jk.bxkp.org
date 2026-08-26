@@ -51,12 +51,14 @@
             textureLoader.load(
                 'images/anime_sky_bg.jpg',
                 (texture) => {
+                    texture.wrapS = THREE.MirroredRepeatWrapping;
+                    texture.wrapT = THREE.MirroredRepeatWrapping;
                     texture.minFilter = THREE.LinearFilter;
                     texture.magFilter = THREE.LinearFilter;
                     texture.generateMipmaps = false;
 
-                    const imageWidth = texture.image ? texture.image.width : 2560;
-                    const imageHeight = texture.image ? texture.image.height : 1440;
+                    const imageWidth = texture.image ? (texture.image.naturalWidth || texture.image.width) : 2560;
+                    const imageHeight = texture.image ? (texture.image.naturalHeight || texture.image.height) : 1440;
 
                     this.createSkyMaterial(texture, imageWidth, imageHeight);
                     this.bindEvents();
@@ -121,17 +123,19 @@
                     return 130.0 * dot(m, g);
                 }
 
-                // Aspect ratio preserving cover UV mapping
+                // Aspect ratio preserving cover UV mapping with overscan safety margin
                 vec2 getCoverUV(vec2 uv, vec2 screenRes, vec2 imgRes) {
                     float sAspect = screenRes.x / screenRes.y;
                     float iAspect = imgRes.x / imgRes.y;
-                    vec2 coverUV = uv;
+                    // 8% overscan safety margin to ensure parallax, drift and curl noise never touch image borders
+                    float margin = 1.08;
+                    vec2 coverUV = (uv - 0.5) / margin + 0.5;
                     if (sAspect > iAspect) {
                         float scale = sAspect / iAspect;
-                        coverUV.y = (uv.y - 0.5) / scale + 0.5;
+                        coverUV.y = (coverUV.y - 0.5) / scale + 0.5;
                     } else {
                         float scale = iAspect / sAspect;
-                        coverUV.x = (uv.x - 0.5) / scale + 0.5;
+                        coverUV.x = (coverUV.x - 0.5) / scale + 0.5;
                     }
                     return coverUV;
                 }
@@ -139,29 +143,9 @@
                 void main() {
                     vec2 baseUV = getCoverUV(vUv, uResolution, uImageResolution);
 
-                    // Clamp base UV inside texture boundaries
-                    baseUV = clamp(baseUV, 0.001, 0.999);
-
-                    // Sample initial color to evaluate depth & cloud presence
-                    vec4 sampleCol = texture2D(uTexture, baseUV);
-
-                    // Color Analysis for Depth & Cloud Mask Extraction
-                    float maxC = max(sampleCol.r, max(sampleCol.g, sampleCol.b));
-                    float minC = min(sampleCol.r, min(sampleCol.g, sampleCol.b));
-                    float sat = (maxC > 0.001) ? (maxC - minC) / maxC : 0.0;
-                    float lum = dot(sampleCol.rgb, vec3(0.299, 0.587, 0.114));
-
-                    // Sky is saturated blue with low red; clouds are brighter with lower saturation
-                    float blueDominance = clamp((sampleCol.b - sampleCol.r) * 2.2, 0.0, 1.0);
-                    float cloudMask = smoothstep(0.44, 0.82, lum) * (1.0 - smoothstep(0.42, 0.88, sat));
-                    cloudMask = clamp(cloudMask * (1.0 - blueDominance * 0.65) + smoothstep(0.70, 0.98, lum) * 0.45, 0.0, 1.0);
-
-                    // 2.5D Depth Field (0.0 = Distant Sky, 1.0 = Foreground Near Clouds)
-                    float depth = cloudMask * (0.35 + 0.65 * (1.0 - baseUV.y * 0.5) + smoothstep(0.75, 1.0, lum) * 0.3);
-                    depth = clamp(depth, 0.0, 1.0);
-
                     // 1. 2.5D Interactive Mouse Parallax (3D Window Effect)
-                    vec2 parallaxOffset = uMouse * (depth * 0.018);
+                    float depth = clamp(1.0 - baseUV.y * 0.4, 0.0, 1.0);
+                    vec2 parallaxOffset = uMouse * (depth * 0.015);
                     vec2 uv = baseUV + parallaxOffset;
 
                     // 2. Multi-Octave Organic Curl Noise Fluid Motion (Cloud Billowing & Breathing)
@@ -180,22 +164,23 @@
                         snoise(vec2(nCoord.x * 2.4 + t * 0.30, nCoord.y * 2.4 - t * 0.25))
                     );
 
-                    vec2 totalFlow = (flow1 * 0.68 + flow2 * 0.32) * 0.009 * cloudMask;
+                    vec2 totalFlow = (flow1 * 0.68 + flow2 * 0.32) * 0.008;
 
-                    // 3. Differential Gentle Wind Drift (Layered horizontal drift)
+                    // 3. Autonomous Periodic Layered Wave Floating (Never diverges or drifts off-screen)
                     vec2 windDrift = vec2(
-                        sin(uTime * 0.08 + uv.y * 1.5) * 0.002 + uTime * 0.0006 * (0.3 + depth * 0.7),
-                        cos(uTime * 0.06 + uv.x * 1.8) * 0.0015
-                    ) * cloudMask;
+                        (sin(uTime * 0.22 + uv.y * 2.0) * 0.012 + cos(uTime * 0.14 + uv.x * 1.2) * 0.008) * (0.4 + depth * 0.6),
+                        (cos(uTime * 0.26 + uv.x * 1.5) * 0.008 + sin(uTime * 0.16) * 0.005) * (0.3 + depth * 0.7)
+                    );
 
                     // Final distorted sample coordinates
-                    vec2 finalUV = clamp(uv + totalFlow + windDrift, 0.001, 0.999);
+                    vec2 finalUV = uv + totalFlow + windDrift;
 
                     vec4 finalColor = texture2D(uTexture, finalUV);
 
                     // 4. Subtle Sunlit Crest Breathing Shimmer (Warm sunlight subsurface scattering)
-                    float crest = smoothstep(0.85, 1.0, lum) * cloudMask;
-                    float sunShimmer = sin(uTime * 1.0 + finalUV.x * 3.5 + finalUV.y * 2.5) * 0.035 * crest;
+                    float lum = dot(finalColor.rgb, vec3(0.299, 0.587, 0.114));
+                    float crest = smoothstep(0.85, 1.0, lum);
+                    float sunShimmer = sin(uTime * 1.0 + finalUV.x * 3.5 + finalUV.y * 2.5) * 0.03 * crest;
                     finalColor.rgb += vec3(1.0, 0.97, 0.90) * sunShimmer;
 
                     gl_FragColor = finalColor;
