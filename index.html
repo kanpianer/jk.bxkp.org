@@ -399,6 +399,7 @@
             el.style.height = rect.height + 'px';
             el.style.transition = 'none';
             el.style.animation = 'none';
+            el.style.transform = `translate(${rect.left}px, ${rect.top}px)`;
 
             if (el.classList.contains('airplane')) {
                 el.style.zIndex = '2';
@@ -528,28 +529,21 @@
                 wrapper.style.animationPlayState = 'paused';
             }
 
-            const unrotatedRect = airplane.getBoundingClientRect();
+            const rect = airplane.getBoundingClientRect();
 
-            let ratio = 0;
-            if (clientX !== undefined) {
-                const hitX = clientX - unrotatedRect.left;
-                ratio = (hitX / unrotatedRect.width) * 2 - 1;
-                ratio = Math.max(-1, Math.min(1, ratio));
-            }
+            initPhysics();
+            airplane.style.transition = 'none';
+            const planeBody = addDomBodyWithRect(airplane, rect, {
+                density: 0.05,
+                restitution: 0.15,
+                friction: 0.8,
+                frictionAir: 0.02
+            });
 
-            const targetAngleDeg = ratio * 90;
-            const targetAngleRad = targetAngleDeg * (Math.PI / 180);
-
-            airplane.style.transition = 'transform 0.2s ease-in-out';
-            airplane.style.transform = `rotate(${targetAngleDeg}deg)`;
-
-            setTimeout(() => {
-                initPhysics();
-                airplane.style.transition = 'none';
-                const planeBody = addDomBodyWithRect(airplane, unrotatedRect, { density: 0.05, restitution: 0.3 });
-
-                Matter.Body.setAngle(planeBody, targetAngleRad);
-            }, 250);
+            // Zero initial velocity & angle for immediate in-place vertical dropping
+            Matter.Body.setVelocity(planeBody, { x: 0, y: 0 });
+            Matter.Body.setAngularVelocity(planeBody, 0.01);
+            Matter.Body.setAngle(planeBody, 0);
         }
 
         airplane.addEventListener('mouseenter', (event) => {
