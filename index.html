@@ -223,9 +223,9 @@
         </div>
     </div>
 
-    <!-- Dynamic Sky Background -->
-    <div class="sky-container">
-        <div class="dynamic-bg"></div>
+    <!-- 2.5D Living Anime Sky Background -->
+    <div id="sky-canvas-container" class="sky-container">
+        <canvas id="sky-canvas"></canvas>
     </div>
 
 
@@ -641,7 +641,9 @@
             });
         });
     </script>
-
+    <!-- Three.js & Living Anime Sky Shader -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="js/sky.js" defer></script>
 </body>
 
 </html>

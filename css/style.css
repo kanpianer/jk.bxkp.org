@@ -76,43 +76,26 @@
 	overflow-x: hidden;
 }
 
-/* Dynamic Sky Background */
+/* 2.5D Living Anime Sky Canvas */
 .sky-container {
     position: fixed;
-    top: -5%;
-    left: -5%;
-    width: 110vw;
-    height: 110vh;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
     z-index: 0;
     pointer-events: none;
-    animation: panSky 120s ease-in-out infinite alternate;
+    overflow: hidden;
 }
 
-.dynamic-bg {
+#sky-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    background-color: #2b5c8f;
-    background-image: url('../images/anime_sky_bg.jpg');
-    background-repeat: no-repeat;
-    background-position: center center;
-    background-size: cover;
-    animation: animeTremble 6s ease-in-out infinite;
-    transform-origin: center;
-}
-
-@keyframes panSky {
-    0% {
-        transform: translate(0, 0) scale(1.0);
-    }
-    100% {
-        transform: translate(-3vw, -2vh) scale(1.1);
-    }
-}
-
-@keyframes animeTremble {
-    0%, 100% { transform: translate(0px, 0px) scale(1.0); }
-    33% { transform: translate(-1px, 1px) scale(1.01); }
-    66% { transform: translate(1px, -1px) scale(1.005); }
+    display: block;
+    pointer-events: none;
 }
 
 /* Airplane Animation */
