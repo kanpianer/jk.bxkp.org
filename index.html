@@ -200,7 +200,7 @@
                 <!-- AaITR -->
                 <a class="button button-xzwl" href="https://www.aaitr.com/aff.php?aff=578" target="_blank"
                     rel="noopener" role="button"><img class="icon" aria-hidden="true" src="images/icons/aaitr.svg"
-                        alt="aaitr Logo">AaITR☁️</a>
+                        alt="aaitr Logo">#AaITR☁️</a>
 
                 <!-- 干杯CLOUD -->
                 <a class="button button-xzwl" href="https://usvps24.com/r/YMJLG4LH" target="_blank" rel="noopener"
@@ -232,6 +232,32 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <script>
+        // 自动解析卡片名称前的 # 符号并赋予副标题高亮样式
+        function initHighlightedButtons() {
+            document.querySelectorAll('.button').forEach(btn => {
+                const childNodes = Array.from(btn.childNodes);
+                for (const node of childNodes) {
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        const trimmed = node.textContent.trim();
+                        if (trimmed.startsWith('#') || trimmed.startsWith('＃')) {
+                            const cleanText = trimmed.replace(/^[#＃]\s*/, '');
+                            const span = document.createElement('span');
+                            span.className = 'highlight-title';
+                            span.textContent = cleanText;
+                            node.parentNode.replaceChild(span, node);
+                        }
+                    } else if (node.nodeType === Node.ELEMENT_NODE && !node.classList.contains('icon')) {
+                        const trimmed = node.textContent.trim();
+                        if (trimmed.startsWith('#') || trimmed.startsWith('＃')) {
+                            node.classList.add('highlight-title');
+                            node.textContent = trimmed.replace(/^[#＃]\s*/, '');
+                        }
+                    }
+                }
+            });
+        }
+        initHighlightedButtons();
+
         const airplane = document.querySelector('.airplane');
         let hasCrashed = false;
         let cardsFallen = false;
