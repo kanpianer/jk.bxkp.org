@@ -161,7 +161,7 @@
                 <!-- ReCloud -->
                 <a class="button button-xzwl" href="https://oneprovide.net/aff.php?aff=352" target="_blank" rel="noopener"
                     role="button"><img class="icon" aria-hidden="true" src="images/icons/recloud.svg"
-                        alt="ganbei Logo">#ReCloud☁️</a>
+                        alt="ReCloud Logo">#ReCloud☁️</a>
               
                 <!-- Voluri -->
                 <a class="button button-xzwl" href="https://voluri.net/aff.php?aff=27" target="_blank" rel="noopener"
@@ -173,35 +173,35 @@
                     rel="noopener" role="button"><img class="icon" aria-hidden="true" src="images/icons/ridc.svg"
                         alt="Residential-IDC Logo">#Residential-IDC☁️</a>
 
+                <!-- ZoroCloud -->
+                <a class="button button-xzwl" href="https://my.zorocloud.com/aff.php?aff=1371" target="_blank"
+                    rel="noopener" role="button"><img class="icon" aria-hidden="true" src="images/icons/zorocloud.png"
+                        alt="ZoroCloud Logo">#ZoroCloud☁️</a>
+
+                <!-- 学长网络 -->
+                <a class="button button-xzwl" href="https://xuezhangvps.shop/aff.php?aff=130" target="_blank"
+                    rel="noopener" role="button"><img class="icon" aria-hidden="true" src="images/icons/xzwl.png"
+                        alt="xzwl Logo">#学长网络☁️</a>
+
                 <!-- OHNO -->
                 <a class="button button-xzwl" href="https://ohno.icu/aff.php?aff=38" target="_blank" rel="noopener"
                     role="button"><img class="icon" aria-hidden="true" src="images/icons/ohno.png"
-                        alt="voluri Logo">OHNO☁️</a>
+                        alt="OHNO Logo">OHNO☁️</a>
 
                 <!-- Lamhosting -->
                 <a class="button button-xzwl" href="https://lamhosting.com/aff.php?aff=368" target="_blank" rel="noopener"
                     role="button"><img class="icon" aria-hidden="true" src="images/icons/lamhosting.svg"
-                        alt="voluri Logo">Lamhosting☁️</a>
+                        alt="Lamhosting Logo">Lamhosting☁️</a>
               
                 <!-- 丽萨主机 LisaHost -->
                 <a class="button button-xzwl" href="https://lisahost.com/aff.php?aff=13422" target="_blank"
                     rel="noopener" role="button"><img class="icon" aria-hidden="true" src="images/icons/lisa.ico"
                         alt="lisahost Logo">丽萨主机☁️</a>
 
-                <!-- ZoroCloud -->
-                <a class="button button-xzwl" href="https://my.zorocloud.com/aff.php?aff=1371" target="_blank"
-                    rel="noopener" role="button"><img class="icon" aria-hidden="true" src="images/icons/zorocloud.png"
-                        alt="ZoroCloud Logo">#ZoroCloud☁️</a>
-
                 <!-- IDC.DO --
                 <a class="button button-xzwl" href="https://idc.do/aff.php?aff=41" target="_blank" rel="noopener"
                     role="button"><img class="icon" aria-hidden="true" src="images/icons/idc.do.png"
                         alt="idc.do Logo">IDC.DO☁️</a>
-
-                <!-- 学长网络 -->
-                <a class="button button-xzwl" href="https://xuezhangvps.shop/aff.php?aff=130" target="_blank"
-                    rel="noopener" role="button"><img class="icon" aria-hidden="true" src="images/icons/xzwl.png"
-                        alt="zxwl Logo">#学长网络☁️</a>
 
                 <!-- qq.pw -->
                 <a class="button button-xzwl" href="https://qq.pw/index.php" target="_blank" rel="noopener"
@@ -216,7 +216,7 @@
                 <!-- Blossom Host -->
                 <a class="button button-xzwl" href="https://blossomhost.us" target="_blank"
                     rel="noopener" role="button"><img class="icon" aria-hidden="true" src="images/icons/blossomhost.png"
-                        alt="suda Logo">Blossom Host☁️</a>
+                        alt="Blossom Host Logo">Blossom Host☁️</a>
 
                 <!-- BOILCLOUD --
                 <a class="button button-xzwl" href="https://cloud.boil.network/index.php" target="_blank" rel="noopener"
@@ -248,9 +248,71 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <script>
-        // 自动解析卡片名称前的 # 符号并赋予副标题高亮样式
-        function initHighlightedButtons() {
-            document.querySelectorAll('.button').forEach(btn => {
+        // 自动解析卡片分类与高亮，并确保高亮（带 #）卡片自动排在对应分类（机场 ✈️ 和 VPS ☁️）的最前面
+        function initAndSortButtons() {
+            const container = document.querySelector('.button-stack');
+            if (!container) return;
+
+            const buttons = Array.from(container.querySelectorAll('.button'));
+
+            function getCategory(btn) {
+                const text = btn.textContent;
+                if (text.includes('✈️') || text.includes('✈')) return 0; // 机场
+                if (text.includes('☁️') || text.includes('☁')) return 1; // VPS
+                return 2; // 其他
+            }
+
+            function isHighlighted(btn) {
+                if (btn.querySelector('.highlight-title')) return true;
+                const childNodes = Array.from(btn.childNodes);
+                for (const node of childNodes) {
+                    const text = node.textContent.trim();
+                    if (text.startsWith('#') || text.startsWith('＃')) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            // 按分类分组，高亮卡片排在各自组的最前面，同时保持同组内的原有先后顺序
+            const groups = {
+                airportHigh: [],
+                airportNormal: [],
+                vpsHigh: [],
+                vpsNormal: [],
+                otherHigh: [],
+                otherNormal: []
+            };
+
+            buttons.forEach(btn => {
+                const cat = getCategory(btn);
+                const high = isHighlighted(btn);
+                if (cat === 0) {
+                    if (high) groups.airportHigh.push(btn);
+                    else groups.airportNormal.push(btn);
+                } else if (cat === 1) {
+                    if (high) groups.vpsHigh.push(btn);
+                    else groups.vpsNormal.push(btn);
+                } else {
+                    if (high) groups.otherHigh.push(btn);
+                    else groups.otherNormal.push(btn);
+                }
+            });
+
+            const sortedButtons = [
+                ...groups.airportHigh,
+                ...groups.airportNormal,
+                ...groups.vpsHigh,
+                ...groups.vpsNormal,
+                ...groups.otherHigh,
+                ...groups.otherNormal
+            ];
+
+            // 重新在 DOM 容器中挂载排序后的卡片
+            sortedButtons.forEach(btn => container.appendChild(btn));
+
+            // 解析卡片名称前的 # 符号并赋予副标题高亮样式
+            sortedButtons.forEach(btn => {
                 const childNodes = Array.from(btn.childNodes);
                 for (const node of childNodes) {
                     if (node.nodeType === Node.TEXT_NODE) {
@@ -272,7 +334,7 @@
                 }
             });
         }
-        initHighlightedButtons();
+        initAndSortButtons();
 
         const airplane = document.querySelector('.airplane');
         let hasCrashed = false;
