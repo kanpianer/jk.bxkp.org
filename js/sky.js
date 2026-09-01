@@ -33,14 +33,6 @@
             this.renderer.setSize(this.width, this.height);
             this.renderer.setPixelRatio(this.dpr);
 
-            // Mouse / Pointer Parallax
-            this.mouse = {
-                x: 0,
-                y: 0,
-                targetX: 0,
-                targetY: 0
-            };
-
             this.clock = new THREE.Clock();
 
             this.init();
@@ -87,7 +79,6 @@
                 uniform vec2 uResolution;
                 uniform vec2 uImageResolution;
                 uniform float uTime;
-                uniform vec2 uMouse;
 
                 varying vec2 vUv;
 
@@ -127,7 +118,7 @@
                 vec2 getCoverUV(vec2 uv, vec2 screenRes, vec2 imgRes) {
                     float sAspect = screenRes.x / screenRes.y;
                     float iAspect = imgRes.x / imgRes.y;
-                    // 8% overscan safety margin to ensure parallax, drift and curl noise never touch image borders
+                    // 8% overscan safety margin to ensure drift and curl noise never touch image borders
                     float margin = 1.08;
                     vec2 coverUV = (uv - 0.5) / margin + 0.5;
                     if (sAspect > iAspect) {
@@ -141,14 +132,10 @@
                 }
 
                 void main() {
-                    vec2 baseUV = getCoverUV(vUv, uResolution, uImageResolution);
+                    vec2 uv = getCoverUV(vUv, uResolution, uImageResolution);
+                    float depth = clamp(1.0 - uv.y * 0.4, 0.0, 1.0);
 
-                    // 1. 2.5D Interactive Mouse Parallax (3D Window Effect)
-                    float depth = clamp(1.0 - baseUV.y * 0.4, 0.0, 1.0);
-                    vec2 parallaxOffset = uMouse * (depth * 0.015);
-                    vec2 uv = baseUV + parallaxOffset;
-
-                    // 2. Multi-Octave Organic Curl Noise Fluid Motion (Cloud Billowing & Breathing)
+                    // 1. Multi-Octave Organic Curl Noise Fluid Motion (Cloud Billowing & Breathing)
                     float t = uTime * 0.18;
                     vec2 nCoord = uv * 3.2;
 
@@ -166,7 +153,7 @@
 
                     vec2 totalFlow = (flow1 * 0.68 + flow2 * 0.32) * 0.008;
 
-                    // 3. Autonomous Periodic Layered Wave Floating (Never diverges or drifts off-screen)
+                    // 2. Autonomous Periodic Layered Wave Floating (Never diverges or drifts off-screen)
                     vec2 windDrift = vec2(
                         (sin(uTime * 0.22 + uv.y * 2.0) * 0.012 + cos(uTime * 0.14 + uv.x * 1.2) * 0.008) * (0.4 + depth * 0.6),
                         (cos(uTime * 0.26 + uv.x * 1.5) * 0.008 + sin(uTime * 0.16) * 0.005) * (0.3 + depth * 0.7)
@@ -177,7 +164,7 @@
 
                     vec4 finalColor = texture2D(uTexture, finalUV);
 
-                    // 4. Subtle Sunlit Crest Breathing Shimmer (Warm sunlight subsurface scattering)
+                    // 3. Subtle Sunlit Crest Breathing Shimmer (Warm sunlight subsurface scattering)
                     float lum = dot(finalColor.rgb, vec3(0.299, 0.587, 0.114));
                     float crest = smoothstep(0.85, 1.0, lum);
                     float sunShimmer = sin(uTime * 1.0 + finalUV.x * 3.5 + finalUV.y * 2.5) * 0.03 * crest;
@@ -191,8 +178,7 @@
                 uTexture: { value: texture },
                 uResolution: { value: new THREE.Vector2(this.width, this.height) },
                 uImageResolution: { value: new THREE.Vector2(imgW, imgH) },
-                uTime: { value: 0 },
-                uMouse: { value: new THREE.Vector2(0, 0) }
+                uTime: { value: 0 }
             };
 
             const geo = new THREE.PlaneGeometry(2, 2);
@@ -210,37 +196,6 @@
 
         bindEvents() {
             window.addEventListener('resize', this.onWindowResize.bind(this), { passive: true });
-
-            const updatePointer = (clientX, clientY) => {
-                const ndcX = (clientX / window.innerWidth) * 2.0 - 1.0;
-                const ndcY = -(clientY / window.innerHeight) * 2.0 + 1.0;
-                this.mouse.targetX = ndcX;
-                this.mouse.targetY = ndcY;
-            };
-
-            window.addEventListener('pointermove', (e) => {
-                updatePointer(e.clientX, e.clientY);
-            }, { passive: true });
-
-            window.addEventListener('mousemove', (e) => {
-                updatePointer(e.clientX, e.clientY);
-            }, { passive: true });
-
-            window.addEventListener('touchmove', (e) => {
-                if (e.touches && e.touches[0]) {
-                    updatePointer(e.touches[0].clientX, e.touches[0].clientY);
-                }
-            }, { passive: true });
-
-            // Device orientation for mobile 3D tilt parallax
-            if (window.DeviceOrientationEvent) {
-                window.addEventListener('deviceorientation', (e) => {
-                    if (e.gamma !== null && e.beta !== null) {
-                        this.mouse.targetX = Math.max(-1.0, Math.min(1.0, e.gamma / 30.0));
-                        this.mouse.targetY = Math.max(-1.0, Math.min(1.0, (e.beta - 40.0) / 30.0));
-                    }
-                }, { passive: true });
-            }
         }
 
         onWindowResize() {
@@ -259,13 +214,8 @@
 
             const elapsedTime = this.clock.getElapsedTime();
 
-            // Smooth mouse parallax damping
-            this.mouse.x += (this.mouse.targetX - this.mouse.x) * 0.05;
-            this.mouse.y += (this.mouse.targetY - this.mouse.y) * 0.05;
-
             if (this.uniforms) {
                 this.uniforms.uTime.value = elapsedTime;
-                this.uniforms.uMouse.value.set(this.mouse.x, this.mouse.y);
             }
 
             this.renderer.render(this.scene, this.camera);
