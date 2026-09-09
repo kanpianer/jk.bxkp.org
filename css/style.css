@@ -96,6 +96,9 @@
     height: 100%;
     display: block;
     pointer-events: none;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateZ(0);
 }
 
 /* Airplane Animation */

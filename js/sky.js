@@ -19,7 +19,7 @@
 
             this.width = window.innerWidth;
             this.height = window.innerHeight;
-            this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+            this.dpr = Math.min(window.devicePixelRatio || 1, 2.5);
 
             // Three.js Scene Setup
             this.scene = new THREE.Scene();
@@ -45,12 +45,19 @@
                 (texture) => {
                     texture.wrapS = THREE.MirroredRepeatWrapping;
                     texture.wrapT = THREE.MirroredRepeatWrapping;
-                    texture.minFilter = THREE.LinearFilter;
+                    texture.generateMipmaps = true;
+                    texture.minFilter = THREE.LinearMipmapLinearFilter;
                     texture.magFilter = THREE.LinearFilter;
-                    texture.generateMipmaps = false;
 
-                    const imageWidth = texture.image ? (texture.image.naturalWidth || texture.image.width) : 2560;
-                    const imageHeight = texture.image ? (texture.image.naturalHeight || texture.image.height) : 1440;
+                    if (this.renderer && this.renderer.capabilities) {
+                        const maxAnisotropy = this.renderer.capabilities.getMaxAnisotropy();
+                        if (maxAnisotropy > 0) {
+                            texture.anisotropy = Math.min(maxAnisotropy, 16);
+                        }
+                    }
+
+                    const imageWidth = texture.image ? (texture.image.naturalWidth || texture.image.width) : 3840;
+                    const imageHeight = texture.image ? (texture.image.naturalHeight || texture.image.height) : 2144;
 
                     this.createSkyMaterial(texture, imageWidth, imageHeight);
                     this.bindEvents();
@@ -162,7 +169,19 @@
                     // Final distorted sample coordinates
                     vec2 finalUV = uv + totalFlow + windDrift;
 
-                    vec4 finalColor = texture2D(uTexture, finalUV);
+                    // High-clarity adaptive texture sampling with micro-contrast detail preservation
+                    vec2 texel = 1.0 / uImageResolution;
+                    vec4 centerCol = texture2D(uTexture, finalUV);
+
+                    // Cross-neighborhood sampling for subtle sharpness enhancement
+                    vec4 sN = texture2D(uTexture, finalUV + vec2(0.0, texel.y));
+                    vec4 sS = texture2D(uTexture, finalUV - vec2(0.0, texel.y));
+                    vec4 sE = texture2D(uTexture, finalUV + vec2(texel.x, 0.0));
+                    vec4 sW = texture2D(uTexture, finalUV - vec2(texel.x, 0.0));
+                    vec4 localMean = (sN + sS + sE + sW) * 0.25;
+
+                    // Crisp unsharp mask (enhances cloud contours and brush strokes)
+                    vec4 finalColor = clamp(centerCol + (centerCol - localMean) * 0.30, 0.0, 1.0);
 
                     // 3. Subtle Sunlit Crest Breathing Shimmer (Warm sunlight subsurface scattering)
                     float lum = dot(finalColor.rgb, vec3(0.299, 0.587, 0.114));
@@ -202,7 +221,7 @@
             this.width = window.innerWidth;
             this.height = window.innerHeight;
             this.renderer.setSize(this.width, this.height);
-            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2.5));
 
             if (this.uniforms && this.uniforms.uResolution) {
                 this.uniforms.uResolution.value.set(this.width, this.height);
