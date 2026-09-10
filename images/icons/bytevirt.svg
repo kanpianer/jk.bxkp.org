@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%" fill="none">
+  <!-- Outer Hexagon Outline -->
+  <path d="M 43.76 9.60 Q 50.00 6.00 56.24 9.60 L 81.87 24.40 Q 88.11 28.00 88.11 35.20 L 88.11 64.80 Q 88.11 72.00 81.87 75.60 L 56.24 90.40 Q 50.00 94.00 43.76 90.40 L 18.13 75.60 Q 11.89 72.00 11.89 64.80 L 11.89 35.20 Q 11.89 28.00 18.13 24.40 Z" stroke="#3850e5" stroke-width="4.2" stroke-linejoin="round" fill="none" />
+  
+  <!-- Inner Hexagon Solid Fill -->
+  <path d="M 45.67 23.30 Q 50.00 20.80 54.33 23.30 L 70.96 32.90 Q 75.29 35.40 75.29 40.40 L 75.29 59.60 Q 75.29 64.60 70.96 67.10 L 54.33 76.70 Q 50.00 79.20 45.67 76.70 L 29.04 67.10 Q 24.71 64.60 24.71 59.60 L 24.71 40.40 Q 24.71 35.40 29.04 32.90 Z" fill="#3850e5" stroke="#3850e5" stroke-width="1.8" stroke-linejoin="round" />
+  
+  <!-- Outlined Cloud Icon -->
+  <path d="M 42.0 56.5 L 58.0 56.5 C 61.2 56.5 63.8 54.0 63.8 50.8 C 63.8 47.8 61.5 45.2 58.5 44.8 C 58.0 41.2 55.0 38.2 51.2 38.2 C 47.8 38.2 45.0 40.2 43.8 43.2 C 42.8 43.0 41.8 42.8 40.8 42.8 C 37.5 42.8 35.5 45.5 35.5 49.0 C 35.5 53.2 38.5 56.5 42.0 56.5 Z" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+</svg>
