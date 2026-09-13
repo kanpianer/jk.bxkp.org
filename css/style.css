@@ -783,7 +783,17 @@ html, body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    /* clip-path cuts out a 14x1.5px notch at the bottom center to remove the border seamlessly */
+    clip-path: polygon(
+        0% 0%, 
+        100% 0%, 
+        100% 100%, 
+        calc(50% + 7px) 100%, 
+        calc(50% + 7px) calc(100% - 1.5px), 
+        calc(50% - 7px) calc(100% - 1.5px), 
+        calc(50% - 7px) 100%, 
+        0% 100%
+    );
   }
 
   /* Crisp white inner container for optimal smartphone scanning */
@@ -840,45 +850,19 @@ html, body {
     transition: none !important;
   }
 
-  /* Downward arrow indicator using pure CSS border triangle to fix Vivaldi backdrop-filter bugs */
+  /* Downward arrow indicator using clip-path to ensure identical backdrop-filter opacity */
   .qr-arrow {
     position: absolute;
     bottom: -6px;
     left: 50%;
     transform: translateX(-50%);
-    width: 12px;
-    height: 6px;
+    width: 14px;
+    height: 7.5px; /* Overlaps the 1.5px notch by 0.5px to prevent anti-aliasing gaps */
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
     z-index: 101;
-    background: none;
-    border: none;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
-  
-  .qr-arrow::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 0;
-    border-left: 6px solid transparent;
-    border-right: 6px solid transparent;
-    border-top: 6px solid rgba(255, 255, 255, 0.95);
-  }
-  
-  .qr-arrow::after {
-    content: '';
-    position: absolute;
-    top: -1.5px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 0;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-top: 5px solid rgba(255, 255, 255, 0.88);
   }
 
   /* Dark mode styling */
@@ -886,11 +870,8 @@ html, body {
     background: rgba(20, 26, 40, 0.92);
     border-color: rgba(255, 255, 255, 0.18);
   }
-  :root.theme-dark .qr-arrow::before {
-    border-top-color: rgba(255, 255, 255, 0.18);
-  }
-  :root.theme-dark .qr-arrow::after {
-    border-top-color: rgba(20, 26, 40, 0.92);
+  :root.theme-dark .qr-arrow {
+    background: rgba(20, 26, 40, 0.92);
   }
 
   @media (prefers-color-scheme: dark) {
@@ -898,11 +879,8 @@ html, body {
       background: rgba(20, 26, 40, 0.92);
       border-color: rgba(255, 255, 255, 0.18);
     }
-    :root.theme-auto .qr-arrow::before {
-      border-top-color: rgba(255, 255, 255, 0.18);
-    }
-    :root.theme-auto .qr-arrow::after {
-      border-top-color: rgba(20, 26, 40, 0.92);
+    :root.theme-auto .qr-arrow {
+      background: rgba(20, 26, 40, 0.92);
     }
     :root.theme-auto .qr-caption {
       color: #94a3b8;
