@@ -416,40 +416,32 @@
                 trigger.addEventListener('click', preventNav);
                 popup.addEventListener('click', preventNav);
 
-                // 首次悬浮时懒加载生成二维码，节省初始渲染性能
-                let qrGenerated = false;
-                function ensureQRCode() {
-                    if (qrGenerated) return;
-                    qrGenerated = true;
-                    const codeBox = popup.querySelector('.qr-code-box');
-                    if (codeBox && typeof QRCode !== 'undefined') {
-                        new QRCode(codeBox, {
-                            text: href,
-                            width: 112,
-                            height: 112,
-                            colorDark: "#0f172a",
-                            colorLight: "#ffffff",
-                            correctLevel: QRCode.CorrectLevel.M
-                        });
-                        codeBox.removeAttribute('title');
-                        const img = codeBox.querySelector('img');
-                        if (img) {
-                            img.removeAttribute('title');
-                            img.alt = '二维码';
-                        }
+                // 初始化时直接预渲染二维码，避免悬浮时动态插入导致任何布局抖动或图标位移
+                const codeBox = popup.querySelector('.qr-code-box');
+                if (codeBox && typeof QRCode !== 'undefined') {
+                    new QRCode(codeBox, {
+                        text: href,
+                        width: 112,
+                        height: 112,
+                        colorDark: "#0f172a",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.M
+                    });
+                    codeBox.removeAttribute('title');
+                    const img = codeBox.querySelector('img');
+                    if (img) {
+                        img.removeAttribute('title');
+                        img.alt = '二维码';
                     }
                 }
 
-                btn.addEventListener('mouseenter', ensureQRCode, { passive: true });
                 trigger.addEventListener('mouseenter', () => {
-                    ensureQRCode();
                     btn.classList.add('qr-active');
                 });
                 trigger.addEventListener('mouseleave', () => {
                     btn.classList.remove('qr-active');
                 });
                 trigger.addEventListener('focus', () => {
-                    ensureQRCode();
                     btn.classList.add('qr-active');
                 });
                 trigger.addEventListener('blur', () => {
