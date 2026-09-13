@@ -706,7 +706,10 @@ html, body {
     height: 1.05rem;
     display: block;
     fill: currentColor;
-    transform: none !important;
+    margin: 0;
+    padding: 0;
+    transform: translateZ(0) !important;
+    backface-visibility: hidden;
     transition: none !important;
   }
 
@@ -721,7 +724,7 @@ html, body {
   .button .qr-trigger:hover,
   .button .qr-trigger:focus-visible,
   .button.qr-active .qr-trigger {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(224, 242, 254, 0.95); /* 淡蓝色 / Light Blue */
     color: #0284c7;
     border-color: #ffffff;
     transform: translateY(-50%) !important;
@@ -830,24 +833,52 @@ html, body {
     fill: none;
     stroke: currentColor;
     stroke-width: 2;
-    transform: none !important;
+    margin: 0;
+    padding: 0;
+    transform: translateZ(0) !important;
+    backface-visibility: hidden;
     transition: none !important;
   }
 
-  /* Downward arrow indicator */
+  /* Downward arrow indicator using pure CSS border triangle to fix Vivaldi backdrop-filter bugs */
   .qr-arrow {
     position: absolute;
     bottom: -6px;
     left: 50%;
-    transform: translateX(-50%) rotate(45deg);
+    transform: translateX(-50%);
     width: 12px;
-    height: 12px;
-    background: rgba(255, 255, 255, 0.88);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-right: 1px solid rgba(255, 255, 255, 0.95);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.95);
-    z-index: -1;
+    height: 6px;
+    z-index: 101;
+    background: none;
+    border: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  
+  .qr-arrow::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid rgba(255, 255, 255, 0.95);
+  }
+  
+  .qr-arrow::after {
+    content: '';
+    position: absolute;
+    top: -1.5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid rgba(255, 255, 255, 0.88);
   }
 
   /* Dark mode styling */
@@ -855,13 +886,11 @@ html, body {
     background: rgba(20, 26, 40, 0.92);
     border-color: rgba(255, 255, 255, 0.18);
   }
-  :root.theme-dark .qr-arrow {
-    background: rgba(20, 26, 40, 0.92);
-    border-right-color: rgba(255, 255, 255, 0.18);
-    border-bottom-color: rgba(255, 255, 255, 0.18);
+  :root.theme-dark .qr-arrow::before {
+    border-top-color: rgba(255, 255, 255, 0.18);
   }
-  :root.theme-dark .qr-caption {
-    color: #94a3b8;
+  :root.theme-dark .qr-arrow::after {
+    border-top-color: rgba(20, 26, 40, 0.92);
   }
 
   @media (prefers-color-scheme: dark) {
@@ -869,10 +898,11 @@ html, body {
       background: rgba(20, 26, 40, 0.92);
       border-color: rgba(255, 255, 255, 0.18);
     }
-    :root.theme-auto .qr-arrow {
-      background: rgba(20, 26, 40, 0.92);
-      border-right-color: rgba(255, 255, 255, 0.18);
-      border-bottom-color: rgba(255, 255, 255, 0.18);
+    :root.theme-auto .qr-arrow::before {
+      border-top-color: rgba(255, 255, 255, 0.18);
+    }
+    :root.theme-auto .qr-arrow::after {
+      border-top-color: rgba(20, 26, 40, 0.92);
     }
     :root.theme-auto .qr-caption {
       color: #94a3b8;
