@@ -69,7 +69,7 @@
 	padding:0;
 	background-color:transparent;
 	color:#ffffff;
-	font-family: "LXGW WenKai", "Open Sans", system-ui, sans-serif;
+	font-family: "LXGW WenKai TC", "LXGW WenKai", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 	font-size:1.125rem;    				/* 18px */
     font-weight:400;
 	line-height:1.6;
@@ -626,12 +626,51 @@ ul li {
   text-decoration: none !important;
 }
 
-/* 引入 LXGW WenKai 字体 */
+/* 引入并兼容谷歌字体 LXGW WenKai / LXGW WenKai TC */
+@font-face {
+  font-family: 'LXGW WenKai';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: local('LXGW WenKai Light'), local('LXGW WenKai TC Light'), local('LXGW WenKai TC'), local('LXGW WenKai'), url(https://fonts.gstatic.com/s/lxgwwenkaitc/v10/w8gAH20td8wNsI3f40DmtXZb4_MmBfkp.ttf) format('truetype');
+}
+@font-face {
+  font-family: 'LXGW WenKai';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('LXGW WenKai Regular'), local('LXGW WenKai TC Regular'), local('LXGW WenKai TC'), local('LXGW WenKai'), url(https://fonts.gstatic.com/s/lxgwwenkaitc/v10/w8gDH20td8wNsI3f40DmtXZb48uK.ttf) format('truetype');
+}
+@font-face {
+  font-family: 'LXGW WenKai';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('LXGW WenKai Bold'), local('LXGW WenKai TC Bold'), local('LXGW WenKai TC'), local('LXGW WenKai'), url(https://fonts.gstatic.com/s/lxgwwenkaitc/v10/w8gAH20td8wNsI3f40DmtXZb4_M2Avkp.ttf) format('truetype');
+}
+
+html,
+body,
 h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+a,
+button,
+input,
+textarea,
+select,
+.container,
 .container p,
 .middle-footer,
-.button {
-  font-family: 'LXGW WenKai', "Open Sans", system-ui, sans-serif;
+.button,
+.qr-caption,
+.qr-tooltip,
+footer {
+  font-family: "LXGW WenKai TC", "LXGW WenKai", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
@@ -821,7 +860,7 @@ html, body {
     justify-content: center;
     gap: 0.25rem;
     white-space: nowrap;
-    font-family: 'LXGW WenKai', "Open Sans", system-ui, sans-serif;
+    font-family: "LXGW WenKai TC", "LXGW WenKai", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   }
 
   .qr-caption svg {
