@@ -785,7 +785,7 @@ html, body {
     z-index: 100;
     transition: opacity 0.2s ease,
                 visibility 0.2s ease;
-    filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.95)) drop-shadow(0 12px 28px rgba(0, 20, 50, 0.25));
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.1)) drop-shadow(0 12px 28px rgba(0, 20, 50, 0.18));
     cursor: default;
   }
 
@@ -811,11 +811,9 @@ html, body {
     transform: translateX(-50%) !important;
   }
 
-  /* Glassmorphic popup card */
+  /* Crisp white popup card */
   .qr-popup-card {
-    background: rgba(255, 255, 255, 0.88);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: #ffffff;
     border: none;
     border-radius: 0.75rem;
     padding: 0.75rem;
@@ -835,7 +833,7 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+    box-shadow: none;
     overflow: hidden;
   }
 
@@ -886,34 +884,33 @@ html, body {
     transform: translateX(-50%);
     width: 14px;
     height: 6px;
-    background: rgba(255, 255, 255, 0.88);
+    background: #ffffff;
     clip-path: polygon(0 0, 100% 0, 50% 100%);
     z-index: -1; /* Place the 0.5px overlap behind the card */
   }
 
-  /* Dark mode styling */
+  /* Dark mode styling: popup card and arrow stay pure white matching the QR background */
   :root.theme-dark .qr-popup {
-    filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.18)) drop-shadow(0 12px 28px rgba(0, 0, 0, 0.5));
+    filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.45)) drop-shadow(0 14px 30px rgba(0, 0, 0, 0.6));
   }
-  :root.theme-dark .qr-popup-card {
-    background: rgba(20, 26, 40, 0.92);
-  }
+  :root.theme-dark .qr-popup-card,
   :root.theme-dark .qr-arrow {
-    background: rgba(20, 26, 40, 0.92);
+    background: #ffffff;
+  }
+  :root.theme-dark .qr-caption {
+    color: #475569;
   }
 
   @media (prefers-color-scheme: dark) {
     :root.theme-auto .qr-popup {
-      filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.18)) drop-shadow(0 12px 28px rgba(0, 0, 0, 0.5));
+      filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.45)) drop-shadow(0 14px 30px rgba(0, 0, 0, 0.6));
     }
-    :root.theme-auto .qr-popup-card {
-      background: rgba(20, 26, 40, 0.92);
-    }
+    :root.theme-auto .qr-popup-card,
     :root.theme-auto .qr-arrow {
-      background: rgba(20, 26, 40, 0.92);
+      background: #ffffff;
     }
     :root.theme-auto .qr-caption {
-      color: #94a3b8;
+      color: #475569;
     }
   }
 
