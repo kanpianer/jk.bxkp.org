@@ -345,6 +345,86 @@ a:hover {
 /* Center the last button when it's alone in the row (odd number of buttons) */
 /* Rule removed for 3-column layout */
 
+/* Hidden Card State */
+.button-stack .button.card-hidden {
+	display: none;
+}
+
+.button-stack.is-expanded .button.card-hidden {
+	display: inline-flex;
+	animation: cardFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes cardFadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(-8px) scale(0.98);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+/* Minimalist Expand Button between Button Stack and Middle Footer */
+.expand-btn-wrapper {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+	margin: 1.25rem auto -0.8rem auto;
+	background: transparent !important;
+	pointer-events: auto;
+}
+
+.expand-card-btn,
+.expand-card-btn:hover,
+.expand-card-btn:focus,
+.expand-card-btn:active {
+	width: auto !important;
+	max-width: none !important;
+	min-height: 0 !important;
+	background: none !important;
+	background-color: transparent !important;
+	border: none !important;
+	outline: none !important;
+	box-shadow: none !important;
+	text-shadow: none !important;
+	padding: 0.5rem 1rem !important;
+	cursor: pointer;
+	color: rgba(255, 255, 255, 0.7);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	transition: color 0.25s ease, transform 0.25s ease, opacity 0.25s ease;
+	-webkit-tap-highlight-color: transparent;
+	pointer-events: auto;
+}
+
+.expand-card-btn:hover {
+	color: #ffffff !important;
+	transform: translateY(2px);
+}
+
+.expand-card-btn:active {
+	transform: translateY(3px) scale(0.95);
+}
+
+.expand-card-btn .expand-icon {
+	width: 28px;
+	height: 28px;
+	transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+	filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+}
+
+.expand-btn-wrapper.is-expanded .expand-card-btn .expand-icon {
+	transform: rotate(180deg);
+}
+
+.expand-btn-wrapper.is-expanded .expand-card-btn:hover {
+	transform: translateY(-2px);
+}
+
 /* Middle Footer - between two rows of buttons */
 .middle-footer {
 	text-align: center;
@@ -526,6 +606,9 @@ footer a:hover,
 	.middle-footer {
 		margin: var(--spacing-m) 0;
 		padding: var(--spacing-xs) 0;
+	}
+	.expand-btn-wrapper {
+		margin-bottom: -0.6rem;
 	}
 	/* Reduce airplane size on mobile */
 	.airplane-wrapper {

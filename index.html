@@ -217,14 +217,13 @@
                 <a class="button button-xzwl"
                     href="https://akile.ai/register?aff_code=0c0d0c15-1f7b-4079-a9ba-967393ab2421" target="_blank"
                     rel="noopener" role="button"><img class="icon" aria-hidden="true" src="images/icons/akile.ico"
-                        alt="ReCloud Logo">AkileCloud☁️¥150/Y起</a>
+                        alt="ReCloud Logo">AkileCloud☁️¥150/y起</a>
 
 
-                <!-- Voluri
+                <!-- Voluri -->
                 <a class="button button-xzwl" href="https://voluri.net/aff.php?aff=27" target="_blank" rel="noopener"
                     role="button"><img class="icon" aria-hidden="true" src="images/icons/voluri.png"
-                        alt="voluri Logo">#Voluri☁️</a>
-                -->
+                        alt="voluri Logo">Voluri☁️$30起</a>
 
                 <!-- ZoroCloud --
                 <a class="button button-xzwl" href="https://my.zorocloud.com/aff.php?aff=1371" target="_blank"
@@ -265,7 +264,7 @@
                 <!-- Residential-IDC -->
                 <a class="button button-xzwl" href="https://residential-service.com/" target="_blank" rel="noopener"
                     role="button"><img class="icon" aria-hidden="true" src="images/icons/ridc.svg"
-                        alt="Residential-IDC Logo">Residential-IDC☁️$20起</a>
+                        alt="Residential-IDC Logo">!Residential-IDC☁️$20起</a>
 
                 <!-- Blossom Host --
                 <a class="button button-xzwl" href="https://blossomhost.us" target="_blank" rel="noopener"
@@ -284,6 +283,17 @@
                         alt="taphip Logo">Taphip☁️</a> -->
 
 
+            </div>
+
+            <!-- 展开隐藏卡片按钮（仅纯净图标，无背景） -->
+            <div class="expand-btn-wrapper" id="expandBtnWrapper" style="display: none;">
+                <div class="expand-card-btn" id="expandCardBtn" role="button" tabindex="0" aria-label="展开隐藏卡片"
+                    aria-expanded="false" title="展开更多">
+                    <svg class="expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M5 9.5L12 14.5L19 9.5" />
+                    </svg>
+                </div>
             </div>
 
             <footer class="middle-footer">
@@ -306,7 +316,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <script src="js/qrcode.min.js"></script>
     <script>
-        // 自动解析卡片分类与高亮，并确保高亮（带 #）卡片自动排在对应分类（机场 ✈️ 和 VPS ☁️）的最前面
+        // 自动解析卡片分类与高亮，并确保高亮（带 #）卡片自动排在对应分类（机场 ✈️ 和 VPS ☁️）的最前面，隐藏卡片（带 !）排在对应分类末尾
         function initAndSortButtons() {
             const container = document.querySelector('.button-stack');
             if (!container) return;
@@ -320,39 +330,53 @@
                 return 2; // 其他
             }
 
-            function isHighlighted(btn) {
-                if (btn.querySelector('.highlight-title')) return true;
+            function getCardPrefixes(btn) {
+                let isHidden = false;
+                let isHighlight = false;
                 const childNodes = Array.from(btn.childNodes);
                 for (const node of childNodes) {
+                    if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains('icon')) continue;
                     const text = node.textContent.trim();
-                    if (text.startsWith('#') || text.startsWith('＃')) {
-                        return true;
+                    const match = text.match(/^([!！#＃]+)/);
+                    if (match) {
+                        const syms = match[1];
+                        if (syms.includes('!') || syms.includes('！')) isHidden = true;
+                        if (syms.includes('#') || syms.includes('＃')) isHighlight = true;
+                        break;
                     }
                 }
-                return false;
+                return { isHidden, isHighlight };
             }
 
-            // 按分类分组，高亮卡片排在各自组的最前面，同时保持同组内的原有先后顺序
+            // 按分类分组：高亮卡片排在最前，普通卡片次之，隐藏卡片归于对应分类末尾
             const groups = {
                 airportHigh: [],
                 airportNormal: [],
+                airportHidden: [],
                 vpsHigh: [],
                 vpsNormal: [],
+                vpsHidden: [],
                 otherHigh: [],
-                otherNormal: []
+                otherNormal: [],
+                otherHidden: []
             };
 
             buttons.forEach(btn => {
                 const cat = getCategory(btn);
-                const high = isHighlighted(btn);
-                if (cat === 0) {
-                    if (high) groups.airportHigh.push(btn);
-                    else groups.airportNormal.push(btn);
-                } else if (cat === 1) {
-                    if (high) groups.vpsHigh.push(btn);
-                    else groups.vpsNormal.push(btn);
+                const { isHidden, isHighlight } = getCardPrefixes(btn);
+
+                if (isHidden) {
+                    btn.classList.add('card-hidden');
+                    if (cat === 0) groups.airportHidden.push(btn);
+                    else if (cat === 1) groups.vpsHidden.push(btn);
+                    else groups.otherHidden.push(btn);
+                } else if (isHighlight) {
+                    if (cat === 0) groups.airportHigh.push(btn);
+                    else if (cat === 1) groups.vpsHigh.push(btn);
+                    else groups.otherHigh.push(btn);
                 } else {
-                    if (high) groups.otherHigh.push(btn);
+                    if (cat === 0) groups.airportNormal.push(btn);
+                    else if (cat === 1) groups.vpsNormal.push(btn);
                     else groups.otherNormal.push(btn);
                 }
             });
@@ -360,39 +384,86 @@
             const sortedButtons = [
                 ...groups.airportHigh,
                 ...groups.airportNormal,
+                ...groups.airportHidden,
                 ...groups.vpsHigh,
                 ...groups.vpsNormal,
+                ...groups.vpsHidden,
                 ...groups.otherHigh,
-                ...groups.otherNormal
+                ...groups.otherNormal,
+                ...groups.otherHidden
             ];
 
             // 重新在 DOM 容器中挂载排序后的卡片
             sortedButtons.forEach(btn => container.appendChild(btn));
 
-            // 解析卡片名称前的 # 符号并赋予副标题高亮样式
+            // 解析卡片名称前缀，去除 !、！符号，并为带 #、＃ 的赋予副标题高亮样式
             sortedButtons.forEach(btn => {
                 const childNodes = Array.from(btn.childNodes);
                 for (const node of childNodes) {
                     if (node.nodeType === Node.TEXT_NODE) {
                         const trimmed = node.textContent.trim();
-                        if (trimmed.startsWith('#') || trimmed.startsWith('＃')) {
-                            const cleanText = trimmed.replace(/^[#＃]\s*/, '');
-                            const span = document.createElement('span');
-                            span.className = 'highlight-title';
-                            span.textContent = cleanText;
-                            node.parentNode.replaceChild(span, node);
+                        const match = trimmed.match(/^([!！#＃]+)\s*/);
+                        if (match) {
+                            const syms = match[1];
+                            const cleanText = trimmed.slice(match[0].length);
+                            if (syms.includes('#') || syms.includes('＃')) {
+                                const span = document.createElement('span');
+                                span.className = 'highlight-title';
+                                span.textContent = cleanText;
+                                node.parentNode.replaceChild(span, node);
+                            } else {
+                                node.textContent = cleanText;
+                            }
                         }
-                    } else if (node.nodeType === Node.ELEMENT_NODE && !node.classList.contains('icon')) {
+                    } else if (node.nodeType === Node.ELEMENT_NODE && !node.classList.contains('icon') && !node.classList.contains('qr-trigger') && !node.classList.contains('qr-popup')) {
                         const trimmed = node.textContent.trim();
-                        if (trimmed.startsWith('#') || trimmed.startsWith('＃')) {
-                            node.classList.add('highlight-title');
-                            node.textContent = trimmed.replace(/^[#＃]\s*/, '');
+                        const match = trimmed.match(/^([!！#＃]+)\s*/);
+                        if (match) {
+                            const syms = match[1];
+                            const cleanText = trimmed.slice(match[0].length);
+                            if (syms.includes('#') || syms.includes('＃')) {
+                                node.classList.add('highlight-title');
+                            }
+                            node.textContent = cleanText;
                         }
                     }
                 }
             });
         }
         initAndSortButtons();
+
+        // 初始化展开/收起隐藏卡片按钮
+        function initExpandButton() {
+            const container = document.querySelector('.button-stack');
+            const wrapper = document.getElementById('expandBtnWrapper');
+            const btn = document.getElementById('expandCardBtn');
+            if (!container || !wrapper || !btn) return;
+
+            const hiddenCards = container.querySelectorAll('.button.card-hidden');
+            if (hiddenCards.length === 0) {
+                wrapper.style.display = 'none';
+                return;
+            }
+
+            wrapper.style.display = 'flex';
+
+            function toggleExpand() {
+                const isExpanded = container.classList.toggle('is-expanded');
+                wrapper.classList.toggle('is-expanded', isExpanded);
+                btn.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+                btn.setAttribute('title', isExpanded ? '收起卡片' : '展开更多');
+                btn.setAttribute('aria-label', isExpanded ? '收起卡片' : '展开更多');
+            }
+
+            btn.addEventListener('click', toggleExpand);
+            btn.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleExpand();
+                }
+            });
+        }
+        initExpandButton();
 
         // 初始化卡片内部右侧二维码图标与悬浮展示逻辑
         function initCardQRCodes() {
@@ -820,7 +891,9 @@
             if (!cardsFallen) {
                 cardsFallen = true;
                 document.body.classList.add('cards-falling');
-                const cardsArray = Array.from(document.querySelectorAll('.button'));
+                const cardsArray = Array.from(document.querySelectorAll('.button')).filter(card => {
+                    return window.getComputedStyle(card).display !== 'none';
+                });
 
                 // Shuffle array for random drop order
                 for (let i = cardsArray.length - 1; i > 0; i--) {
