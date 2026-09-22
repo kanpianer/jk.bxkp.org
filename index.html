@@ -52,7 +52,7 @@
     <meta property="og:image:type" content="image/jpeg">
     <meta property="og:image:width" content="1024">
     <meta property="og:image:height" content="540">
-    <meta property="og:image:alt" content="家宽导航 - 一些包含“家宽”节点的 VPS☁️ 和 机场✈️">
+    <meta property="og:image:alt" content="家宽导航 - 包含“家宽”节点的 VPS☁️ 和 机场✈️">
     <meta property="og:locale" content="zh_CN">
 
     <!-- Twitter / X -->
@@ -62,7 +62,7 @@
     <meta name="twitter:title" content="家宽导航 | 精选包含家宽[住宅]IP节点的VPS和机场">
     <meta name="twitter:description" content="精选收录优质家庭宽带、住宅IP与双ISP节点的 VPS 服务器与机场节点推荐。">
     <meta name="twitter:image" content="https://jiakuan.link/images/og-preview.jpg">
-    <meta name="twitter:image:alt" content="家宽导航 - 一些包含“家宽”节点的 VPS☁️ 和 机场✈️">
+    <meta name="twitter:image:alt" content="家宽导航 - 包含“家宽”节点的 VPS☁️ 和 机场✈️">
     <meta name="twitter:image:width" content="1024">
     <meta name="twitter:image:height" content="540">
 
@@ -113,7 +113,7 @@
             </h1>
 
             <!-- Add a short description about yourself or your brand -->
-            <p><span class="highlight-title">一些包含<b>“家宽”</b>节点的 VPS☁️ 和 机场✈️</span></p>
+            <p><span class="highlight-title">包含<b>“家宽”</b>节点的 VPS☁️ 和 机场✈️</span></p>
 
             <!-- All your buttons go here -->
             <div class="button-stack" role="navigation">
@@ -155,10 +155,11 @@
                     rel="noopener" role="button"><img class="icon" aria-hidden="true" src="images/icons/noww.webp"
                         alt="noww Logo">#Now加速✈️¥35</a>
 
-                <!-- 悦通 --
+                <!-- 悦通
                 <a class="button button-xzwl" href="https://my.yue.to/#/register?code=JW9pLa1S" target="_blank"
                     rel="noopener" role="button"><img class="icon" aria-hidden="true" src="images/icons/yueto.png"
                         alt="rancho Logo">悦通✈️¥30起</a>
+                -->
 
                 <!-- VVCloud -->
                 <a class="button button-xzwl" href="https://dg.vv11.cloud/#/register?code=Sop54Zq9" target="_blank"
@@ -230,10 +231,11 @@
                     rel="noopener" role="button"><img class="icon" aria-hidden="true" src="images/icons/zorocloud.png"
                         alt="ZoroCloud Logo">ZoroCloud☁️¥79起</a>
 
-                <!-- 丽萨主机 LisaHost --
+                <!-- 丽萨主机 LisaHost
                 <a class="button button-xzwl" href="https://lisahost.com/aff.php?aff=13422" target="_blank"
                     rel="noopener" role="button"><img class="icon" aria-hidden="true" src="images/icons/lisa.ico"
                         alt="lisahost Logo">#丽萨主机☁️</a>
+                -->
 
                 <!-- OHNO -->
                 <a class="button button-xzwl" href="https://ohno.icu/aff.php?aff=38" target="_blank" rel="noopener"
@@ -251,10 +253,11 @@
                         alt="idc.do Logo">IDC.DO☁️</a>
                 -->
 
-                <!-- qq.pw --
+                <!-- qq.pw
                 <a class="button button-xzwl" href="https://qq.pw/index.php" target="_blank" rel="noopener"
                     role="button"><img class="icon" aria-hidden="true" src="images/icons/qqpw.png"
                         alt="qqpw Logo">qq.pw☁️$2起</a>
+                -->
 
                 <!-- VoyraCloud -->
                 <a class="button button-xzwl" href="https://www.voyracloud.com/?ref_code=PYUJNEW3" target="_blank"
@@ -277,12 +280,13 @@
                         alt="SolaDrive Logo">!SolaDrive☁️$25起</a>
 
 
-                <!-- Blossom Host --
+                <!-- Blossom Host
                 <a class="button button-xzwl" href="https://blossomhost.us" target="_blank" rel="noopener"
                     role="button"><img class="icon" aria-hidden="true" src="images/icons/blossomhost.png"
                         alt="Blossom Host Logo">Blossom Host☁️</a>
+                -->
 
-                <!-- BOILCLOUD --
+                <!-- BOILCLOUD
                 <a class="button button-xzwl" href="https://cloud.boil.network/index.php" target="_blank" rel="noopener"
                     role="button"><img class="icon" aria-hidden="true" src="images/icons/boil.png"
                         alt="boil Logo">BOILCLOUD☁️</a>
@@ -563,89 +567,12 @@
 
         const airplane = document.querySelector('.airplane');
         let hasCrashed = false;
-        let cardsFallen = false;
         let isRewinding = false;
         let lastCrashTime = 0;
 
         let engine, world, runner;
         let ground, topWall, leftWall, rightWall;
         const domBodies = [];
-
-        let targetGravityX = 0;
-        let targetGravityY = 1;
-        let permissionRequested = false;
-
-        function updateGravity(gx, gy) {
-            targetGravityX = gx;
-            targetGravityY = gy;
-            if (engine) {
-                if (engine.gravity) {
-                    engine.gravity.x = gx;
-                    engine.gravity.y = gy;
-                }
-                if (engine.world && engine.world.gravity) {
-                    engine.world.gravity.x = gx;
-                    engine.world.gravity.y = gy;
-                }
-            }
-        }
-
-        function handleOrientation(event) {
-            if (event.beta === null || event.gamma === null) return;
-
-            let beta = event.beta;   // [-180, 180] (Pitch)
-            let gamma = event.gamma; // [-90, 90]   (Roll)
-
-            beta = Math.max(-180, Math.min(180, beta));
-            gamma = Math.max(-90, Math.min(90, gamma));
-
-            const betaRad = (beta * Math.PI) / 180;
-            const gammaRad = (gamma * Math.PI) / 180;
-
-            const gx = Math.sin(gammaRad);
-            const gy = Math.sin(betaRad);
-
-            const orientationAngle = (screen.orientation && screen.orientation.angle !== undefined)
-                ? screen.orientation.angle
-                : (window.orientation || 0);
-
-            const radO = (orientationAngle * Math.PI) / 180;
-            const cosO = Math.cos(radO);
-            const sinO = Math.sin(radO);
-
-            // Rotate gravity vector according to viewport orientation
-            let screenGx = gx * cosO - gy * sinO;
-            let screenGy = gx * sinO + gy * cosO;
-
-            screenGx = Math.max(-1.5, Math.min(1.5, screenGx));
-            screenGy = Math.max(-1.5, Math.min(1.5, screenGy));
-
-            updateGravity(screenGx, screenGy);
-        }
-
-        function requestOrientationPermission() {
-            if (permissionRequested) return;
-            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                DeviceOrientationEvent.requestPermission()
-                    .then(state => {
-                        if (state === 'granted') {
-                            permissionRequested = true;
-                            window.addEventListener('deviceorientation', handleOrientation, true);
-                        }
-                    })
-                    .catch(console.error);
-            } else if (typeof window.DeviceOrientationEvent !== 'undefined') {
-                permissionRequested = true;
-                window.addEventListener('deviceorientation', handleOrientation, true);
-            }
-        }
-
-        // Auto-listen if permission request API is not needed (e.g. Android Chrome)
-        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission !== 'function') {
-            window.addEventListener('deviceorientation', handleOrientation, true);
-        }
-        window.addEventListener('click', requestOrientationPermission, { once: true });
-        window.addEventListener('touchstart', requestOrientationPermission, { once: true });
 
         function initPhysics() {
             if (engine) {
@@ -661,14 +588,13 @@
 
             engine = Engine.create();
             world = engine.world;
-
-            // Apply current orientation gravity
-            updateGravity(targetGravityX, targetGravityY);
+            engine.gravity.x = 0;
+            engine.gravity.y = 1;
 
             const w = window.innerWidth;
             const h = window.innerHeight;
             const thickness = 100;
-            ground = Bodies.rectangle(w / 2, h + thickness / 2, w + 400, thickness, { isStatic: true, friction: 0.8 });
+            ground = Bodies.rectangle(w / 2, h - 15 + thickness / 2, w + 400, thickness, { isStatic: true, friction: 0.8 });
             topWall = Bodies.rectangle(w / 2, -thickness / 2, w + 400, thickness, { isStatic: true, friction: 0.8 });
             leftWall = Bodies.rectangle(-thickness / 2, h / 2, thickness, h * 2 + 400, { isStatic: true, friction: 0.8 });
             rightWall = Bodies.rectangle(w + thickness / 2, h / 2, thickness, h * 2 + 400, { isStatic: true, friction: 0.8 });
@@ -679,8 +605,6 @@
                 if (isRewinding) return;
                 for (let db of domBodies) {
                     const { body, el, width, height, history } = db;
-
-                    // For compound bodies, parts[1] is the geometric center of the main rectangle
                     const mainPart = body.parts.length > 1 ? body.parts[1] : body;
                     const x = mainPart.position.x - width / 2;
                     const y = mainPart.position.y - height / 2;
@@ -699,7 +623,7 @@
             const w = window.innerWidth;
             const h = window.innerHeight;
             const thickness = 100;
-            Matter.Body.setPosition(ground, { x: w / 2, y: h + thickness / 2 });
+            Matter.Body.setPosition(ground, { x: w / 2, y: h - 15 + thickness / 2 });
             Matter.Body.setPosition(topWall, { x: w / 2, y: -thickness / 2 });
             Matter.Body.setPosition(leftWall, { x: -thickness / 2, y: h / 2 });
             Matter.Body.setPosition(rightWall, { x: w + thickness / 2, y: h / 2 });
@@ -729,19 +653,12 @@
             el.style.transition = 'none';
             el.style.animation = 'none';
             el.style.transform = `translate(${rect.left}px, ${rect.top}px)`;
-
-            if (el.classList.contains('airplane')) {
-                el.style.zIndex = '2';
-                el.style.pointerEvents = 'auto';
-                el.style.cursor = 'pointer';
-            } else {
-                el.style.zIndex = '3';
-                el.style.pointerEvents = 'auto';
-                el.style.cursor = 'pointer';
-            }
+            el.style.zIndex = '9999';
+            el.style.pointerEvents = 'auto';
+            el.style.cursor = 'pointer';
 
             const body = Matter.Bodies.rectangle(xCenter, yCenter, rect.width, rect.height, {
-                restitution: 0.4,
+                restitution: 0.2,
                 friction: 0.8,
                 frictionAir: 0.02,
                 ...options
@@ -763,7 +680,20 @@
             isRewinding = true;
             if (runner) Matter.Runner.stop(runner);
 
-            const rewindFrames = 120; // 2 seconds at 60fps
+            // 过滤静止停顿帧，使小飞机点击时光倒流时立即向上回飞
+            for (let db of domBodies) {
+                while (db.history.length > 20) {
+                    const last = db.history[db.history.length - 1];
+                    const prev = db.history[db.history.length - 2];
+                    if (Math.abs(last.x - prev.x) < 0.5 && Math.abs(last.y - prev.y) < 0.5 && Math.abs(last.angle - prev.angle) < 0.01) {
+                        db.history.pop();
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            const rewindFrames = 90; // 约1.5秒平滑倒流回到原轨迹
             let currentFrame = 0;
 
             function rewindTick() {
@@ -842,17 +772,14 @@
             if (wrapper) wrapper.style.animationPlayState = 'running';
 
             domBodies.length = 0;
-            document.body.classList.remove('cards-falling');
             hasCrashed = false;
-            cardsFallen = false;
             isRewinding = false;
         }
 
-        function triggerCrash(clientX, clientY) {
+        function triggerCrash() {
             if (hasCrashed) return;
             hasCrashed = true;
             lastCrashTime = Date.now();
-            requestOrientationPermission();
 
             const wrapper = airplane.parentElement;
             if (wrapper && wrapper.classList.contains('airplane-wrapper')) {
@@ -865,108 +792,32 @@
             airplane.style.transition = 'none';
             const planeBody = addDomBodyWithRect(airplane, rect, {
                 density: 0.05,
-                restitution: 0.15,
+                restitution: 0.2,
                 friction: 0.8,
                 frictionAir: 0.02
             });
 
-            // Zero initial velocity & angle for immediate in-place vertical dropping
+            // 垂直自然掉落
             Matter.Body.setVelocity(planeBody, { x: 0, y: 0 });
             Matter.Body.setAngularVelocity(planeBody, 0.01);
             Matter.Body.setAngle(planeBody, 0);
         }
 
-        airplane.addEventListener('mouseenter', (event) => {
-            triggerCrash(event.clientX, event.clientY);
-        });
-
-        airplane.addEventListener('touchstart', (event) => {
-            requestOrientationPermission();
-            if (!hasCrashed) {
-                const touch = event.touches[0];
-                triggerCrash(touch ? touch.clientX : undefined, touch ? touch.clientY : undefined);
-            }
-        }, { passive: true });
-
-        function handleAirplaneClick(e) {
-            if (!hasCrashed) {
-                triggerCrash(e ? e.clientX : undefined, e ? e.clientY : undefined);
-                return;
-            }
-            if (Date.now() - lastCrashTime < 350) return; // Prevent touch synthesized click
+        function handleAirplaneInteraction(e) {
             if (e) {
                 e.preventDefault();
                 e.stopPropagation();
             }
-
-            if (!cardsFallen) {
-                cardsFallen = true;
-                document.body.classList.add('cards-falling');
-                const cardsArray = Array.from(document.querySelectorAll('.button')).filter(card => {
-                    return window.getComputedStyle(card).display !== 'none';
-                });
-
-                // Shuffle array for random drop order
-                for (let i = cardsArray.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [cardsArray[i], cardsArray[j]] = [cardsArray[j], cardsArray[i]];
-                }
-
-                cardsArray.forEach((card, i) => {
-                    setTimeout(() => {
-                        const rect = card.getBoundingClientRect();
-                        const body = addDomBodyWithRect(card, rect, { density: 0.005, restitution: 0.2 });
-
-                        // Random point on the card (relative to its center)
-                        const offsetX = (Math.random() - 0.5) * rect.width;
-                        const offsetY = (Math.random() - 0.5) * rect.height;
-                        const forcePosition = {
-                            x: body.position.x + offsetX,
-                            y: body.position.y + offsetY
-                        };
-
-                        // Downward angled force
-                        const forceMagnitude = body.mass * (0.001 + Math.random() * 0.002);
-                        const forceAngle = Math.PI / 4 + Math.random() * (Math.PI / 2);
-
-                        const forceVector = {
-                            x: forceMagnitude * Math.cos(forceAngle),
-                            y: forceMagnitude * Math.sin(forceAngle)
-                        };
-
-                        Matter.Body.applyForce(body, forcePosition, forceVector);
-                    }, i * 120);
-                });
+            if (!hasCrashed) {
+                triggerCrash();
             } else if (!isRewinding) {
+                if (Date.now() - lastCrashTime < 300) return;
                 startRewind();
             }
         }
 
-        function handleCardClick(e) {
-            // 允许卡片点击后跳转链接，不再阻止默认行为和触发回退
-            if (cardsFallen && isRewinding) {
-                if (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-            }
-        }
-
-        airplane.addEventListener('click', handleAirplaneClick);
-        airplane.addEventListener('touchend', (e) => {
-            if (hasCrashed) {
-                handleAirplaneClick(e);
-            }
-        });
-
-        document.querySelectorAll('.button').forEach(btn => {
-            btn.addEventListener('click', handleCardClick);
-            btn.addEventListener('touchend', (e) => {
-                if (cardsFallen) {
-                    handleCardClick(e);
-                }
-            });
-        });
+        airplane.addEventListener('click', handleAirplaneInteraction);
+        airplane.addEventListener('touchend', handleAirplaneInteraction);
     </script>
     <!-- Three.js & Living Anime Sky Shader -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
