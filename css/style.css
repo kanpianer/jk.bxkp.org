@@ -996,6 +996,12 @@ html, body {
       color: #475569;
     }
   }
+
+  /* Hide QR codes during physics collapse Easter egg */
+  body.cards-falling .qr-trigger,
+  body.cards-falling .qr-popup {
+    display: none !important;
+  }
 }
 
 

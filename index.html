@@ -328,7 +328,6 @@
 
 
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <script src="js/qrcode.min.js"></script>
     <script>
         // 自动解析卡片分类与高亮，并确保高亮（带 #）卡片自动排在对应分类（机场 ✈️ 和 VPS ☁️）的最前面，隐藏卡片（带 !）排在对应分类末尾
@@ -565,259 +564,341 @@
         }
         initCardQRCodes();
 
-        const airplane = document.querySelector('.airplane');
-        let hasCrashed = false;
-        let isRewinding = false;
-        let lastCrashTime = 0;
+        // 桌面端物理掉落与时光倒流彩蛋（移动端不加载 Matter.js 与对应代码）
+        const isMobileDevice = () => {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(navigator.userAgent)
+                || (navigator.maxTouchPoints > 1 && window.innerWidth <= 1024)
+                || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches && window.innerWidth <= 1024);
+        };
 
-        let engine, world, runner;
-        let ground, topWall, leftWall, rightWall;
-        const domBodies = [];
-
-        function initPhysics() {
-            if (engine) {
-                Matter.World.clear(engine.world);
-                Matter.Engine.clear(engine);
-                if (runner) Matter.Runner.stop(runner);
-            }
-
-            const Engine = Matter.Engine,
-                World = Matter.World,
-                Bodies = Matter.Bodies,
-                Runner = Matter.Runner;
-
-            engine = Engine.create();
-            world = engine.world;
-            engine.gravity.x = 0;
-            engine.gravity.y = 1;
-
-            const w = window.innerWidth;
-            const h = window.innerHeight;
-            const thickness = 100;
-            ground = Bodies.rectangle(w / 2, h - 15 + thickness / 2, w + 400, thickness, { isStatic: true, friction: 0.8 });
-            topWall = Bodies.rectangle(w / 2, -thickness / 2, w + 400, thickness, { isStatic: true, friction: 0.8 });
-            leftWall = Bodies.rectangle(-thickness / 2, h / 2, thickness, h * 2 + 400, { isStatic: true, friction: 0.8 });
-            rightWall = Bodies.rectangle(w + thickness / 2, h / 2, thickness, h * 2 + 400, { isStatic: true, friction: 0.8 });
-
-            World.add(world, [ground, topWall, leftWall, rightWall]);
-
-            Matter.Events.on(engine, 'afterUpdate', () => {
-                if (isRewinding) return;
-                for (let db of domBodies) {
-                    const { body, el, width, height, history } = db;
-                    const mainPart = body.parts.length > 1 ? body.parts[1] : body;
-                    const x = mainPart.position.x - width / 2;
-                    const y = mainPart.position.y - height / 2;
-
-                    el.style.transform = `translate(${x}px, ${y}px) rotate(${body.angle}rad)`;
-                    history.push({ x, y, angle: body.angle });
-                }
-            });
-
-            runner = Runner.create();
-            Runner.run(runner, engine);
+        if (!isMobileDevice()) {
+            const matterScript = document.createElement('script');
+            matterScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js';
+            matterScript.onload = initDesktopPhysics;
+            document.head.appendChild(matterScript);
         }
 
-        window.addEventListener('resize', () => {
-            if (!engine || !world || !ground || !topWall || !leftWall || !rightWall) return;
-            const w = window.innerWidth;
-            const h = window.innerHeight;
-            const thickness = 100;
-            Matter.Body.setPosition(ground, { x: w / 2, y: h - 15 + thickness / 2 });
-            Matter.Body.setPosition(topWall, { x: w / 2, y: -thickness / 2 });
-            Matter.Body.setPosition(leftWall, { x: -thickness / 2, y: h / 2 });
-            Matter.Body.setPosition(rightWall, { x: w + thickness / 2, y: h / 2 });
-        });
+        function initDesktopPhysics() {
+            const airplane = document.querySelector('.airplane');
+            if (!airplane) return;
 
-        function addDomBodyWithRect(el, rect, options = {}) {
-            const xCenter = rect.left + rect.width / 2;
-            const yCenter = rect.top + rect.height / 2;
+            let hasCrashed = false;
+            let cardsFallen = false;
+            let isRewinding = false;
+            let lastCrashTime = 0;
 
-            const isFixed = window.getComputedStyle(el).position === 'fixed';
-            let placeholder = null;
-            if (!isFixed) {
-                placeholder = document.createElement('div');
-                placeholder.style.width = rect.width + 'px';
-                placeholder.style.height = rect.height + 'px';
-                el.parentNode.insertBefore(placeholder, el);
-            }
+            let engine, world, runner;
+            let ground, topWall, leftWall, rightWall;
+            const domBodies = [];
 
-            document.body.appendChild(el);
-
-            el.style.position = 'fixed';
-            el.style.left = '0';
-            el.style.top = '0';
-            el.style.margin = '0';
-            el.style.width = rect.width + 'px';
-            el.style.height = rect.height + 'px';
-            el.style.transition = 'none';
-            el.style.animation = 'none';
-            el.style.transform = `translate(${rect.left}px, ${rect.top}px)`;
-            el.style.zIndex = '9999';
-            el.style.pointerEvents = 'auto';
-            el.style.cursor = 'pointer';
-
-            const body = Matter.Bodies.rectangle(xCenter, yCenter, rect.width, rect.height, {
-                restitution: 0.2,
-                friction: 0.8,
-                frictionAir: 0.02,
-                ...options
-            });
-
-            Matter.World.add(world, body);
-            domBodies.push({
-                body,
-                el,
-                placeholder,
-                width: rect.width,
-                height: rect.height,
-                history: [{ x: rect.left, y: rect.top, angle: 0 }]
-            });
-            return body;
-        }
-
-        function startRewind() {
-            isRewinding = true;
-            if (runner) Matter.Runner.stop(runner);
-
-            // 过滤静止停顿帧，使小飞机点击时光倒流时立即向上回飞
-            for (let db of domBodies) {
-                while (db.history.length > 20) {
-                    const last = db.history[db.history.length - 1];
-                    const prev = db.history[db.history.length - 2];
-                    if (Math.abs(last.x - prev.x) < 0.5 && Math.abs(last.y - prev.y) < 0.5 && Math.abs(last.angle - prev.angle) < 0.01) {
-                        db.history.pop();
-                    } else {
-                        break;
-                    }
-                }
-            }
-
-            const rewindFrames = 90; // 约1.5秒平滑倒流回到原轨迹
-            let currentFrame = 0;
-
-            function rewindTick() {
-                currentFrame++;
-                const progress = currentFrame / rewindFrames;
-                const easeProgress = progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-
-                for (let db of domBodies) {
-                    const hLen = db.history.length;
-                    if (hLen === 0) continue;
-
-                    if (hLen === 1) {
-                        const frame = db.history[0];
-                        db.el.style.transform = `translate(${frame.x}px, ${frame.y}px) rotate(${frame.angle}rad)`;
-                        continue;
-                    }
-
-                    let exactIndex = (1 - easeProgress) * (hLen - 1);
-                    exactIndex = Math.max(0, Math.min(hLen - 1, exactIndex));
-
-                    const indexFloor = Math.floor(exactIndex);
-                    const indexCeil = Math.ceil(exactIndex);
-                    const weight = exactIndex - indexFloor;
-
-                    const frameF = db.history[indexFloor];
-                    const frameC = db.history[indexCeil];
-
-                    const x = frameF.x * (1 - weight) + frameC.x * weight;
-                    const y = frameF.y * (1 - weight) + frameC.y * weight;
-
-                    let diff = frameC.angle - frameF.angle;
-                    while (diff < -Math.PI) diff += 2 * Math.PI;
-                    while (diff > Math.PI) diff -= 2 * Math.PI;
-                    const angle = frameF.angle + diff * weight;
-
-                    db.el.style.transform = `translate(${x}px, ${y}px) rotate(${angle}rad)`;
+            function initPhysics() {
+                if (engine) {
+                    Matter.World.clear(engine.world);
+                    Matter.Engine.clear(engine);
+                    if (runner) Matter.Runner.stop(runner);
                 }
 
-                if (currentFrame < rewindFrames) {
-                    requestAnimationFrame(rewindTick);
+                const Engine = Matter.Engine,
+                    World = Matter.World,
+                    Bodies = Matter.Bodies,
+                    Runner = Matter.Runner;
+
+                engine = Engine.create();
+                world = engine.world;
+                engine.gravity.x = 0;
+                engine.gravity.y = 1;
+
+                const w = window.innerWidth;
+                const h = window.innerHeight;
+                const thickness = 100;
+                ground = Bodies.rectangle(w / 2, h + thickness / 2, w + 400, thickness, { isStatic: true, friction: 0.8 });
+                topWall = Bodies.rectangle(w / 2, -thickness / 2, w + 400, thickness, { isStatic: true, friction: 0.8 });
+                leftWall = Bodies.rectangle(-thickness / 2, h / 2, thickness, h * 2 + 400, { isStatic: true, friction: 0.8 });
+                rightWall = Bodies.rectangle(w + thickness / 2, h / 2, thickness, h * 2 + 400, { isStatic: true, friction: 0.8 });
+
+                World.add(world, [ground, topWall, leftWall, rightWall]);
+
+                Matter.Events.on(engine, 'afterUpdate', () => {
+                    if (isRewinding) return;
+                    for (let db of domBodies) {
+                        const { body, el, width, height, history } = db;
+                        const mainPart = body.parts.length > 1 ? body.parts[1] : body;
+                        const x = mainPart.position.x - width / 2;
+                        const y = mainPart.position.y - height / 2;
+
+                        el.style.transform = `translate(${x}px, ${y}px) rotate(${body.angle}rad)`;
+                        history.push({ x, y, angle: body.angle });
+                    }
+                });
+
+                runner = Runner.create();
+                Runner.run(runner, engine);
+            }
+
+            window.addEventListener('resize', () => {
+                if (!engine || !world || !ground || !topWall || !leftWall || !rightWall) return;
+                const w = window.innerWidth;
+                const h = window.innerHeight;
+                const thickness = 100;
+                Matter.Body.setPosition(ground, { x: w / 2, y: h + thickness / 2 });
+                Matter.Body.setPosition(topWall, { x: w / 2, y: -thickness / 2 });
+                Matter.Body.setPosition(leftWall, { x: -thickness / 2, y: h / 2 });
+                Matter.Body.setPosition(rightWall, { x: w + thickness / 2, y: h / 2 });
+            });
+
+            function addDomBodyWithRect(el, rect, options = {}) {
+                const xCenter = rect.left + rect.width / 2;
+                const yCenter = rect.top + rect.height / 2;
+
+                const isFixed = window.getComputedStyle(el).position === 'fixed';
+                let placeholder = null;
+                if (!isFixed) {
+                    placeholder = document.createElement('div');
+                    placeholder.style.width = rect.width + 'px';
+                    placeholder.style.height = rect.height + 'px';
+                    el.parentNode.insertBefore(placeholder, el);
+                }
+
+                document.body.appendChild(el);
+
+                el.style.position = 'fixed';
+                el.style.left = '0';
+                el.style.top = '0';
+                el.style.margin = '0';
+                el.style.width = rect.width + 'px';
+                el.style.height = rect.height + 'px';
+                el.style.transition = 'none';
+                el.style.animation = 'none';
+                el.style.transform = `translate(${rect.left}px, ${rect.top}px)`;
+
+                if (el.classList.contains('airplane')) {
+                    el.style.zIndex = '9999';
+                    el.style.pointerEvents = 'auto';
+                    el.style.cursor = 'pointer';
                 } else {
-                    restoreOriginalState();
+                    el.style.zIndex = '10';
+                    el.style.pointerEvents = 'auto';
+                    el.style.cursor = 'pointer';
+                }
+
+                const body = Matter.Bodies.rectangle(xCenter, yCenter, rect.width, rect.height, {
+                    restitution: 0.4,
+                    friction: 0.8,
+                    frictionAir: 0.02,
+                    ...options
+                });
+
+                Matter.World.add(world, body);
+                domBodies.push({
+                    body,
+                    el,
+                    placeholder,
+                    width: rect.width,
+                    height: rect.height,
+                    history: [{ x: rect.left, y: rect.top, angle: 0 }]
+                });
+                return body;
+            }
+
+            function startRewind() {
+                isRewinding = true;
+                if (runner) Matter.Runner.stop(runner);
+
+                // 过滤尾部静止停顿帧，使倒流立即响应
+                for (let db of domBodies) {
+                    while (db.history.length > 20) {
+                        const last = db.history[db.history.length - 1];
+                        const prev = db.history[db.history.length - 2];
+                        if (Math.abs(last.x - prev.x) < 0.5 && Math.abs(last.y - prev.y) < 0.5 && Math.abs(last.angle - prev.angle) < 0.01) {
+                            db.history.pop();
+                        } else {
+                            break;
+                        }
+                    }
+                }
+
+                const rewindFrames = 120; // 2秒平滑倒流回到原轨迹
+                let currentFrame = 0;
+
+                function rewindTick() {
+                    currentFrame++;
+                    const progress = currentFrame / rewindFrames;
+                    const easeProgress = progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+                    for (let db of domBodies) {
+                        const hLen = db.history.length;
+                        if (hLen === 0) continue;
+
+                        if (hLen === 1) {
+                            const frame = db.history[0];
+                            db.el.style.transform = `translate(${frame.x}px, ${frame.y}px) rotate(${frame.angle}rad)`;
+                            continue;
+                        }
+
+                        let exactIndex = (1 - easeProgress) * (hLen - 1);
+                        exactIndex = Math.max(0, Math.min(hLen - 1, exactIndex));
+
+                        const indexFloor = Math.floor(exactIndex);
+                        const indexCeil = Math.ceil(exactIndex);
+                        const weight = exactIndex - indexFloor;
+
+                        const frameF = db.history[indexFloor];
+                        const frameC = db.history[indexCeil];
+
+                        const x = frameF.x * (1 - weight) + frameC.x * weight;
+                        const y = frameF.y * (1 - weight) + frameC.y * weight;
+
+                        let diff = frameC.angle - frameF.angle;
+                        while (diff < -Math.PI) diff += 2 * Math.PI;
+                        while (diff > Math.PI) diff -= 2 * Math.PI;
+                        const angle = frameF.angle + diff * weight;
+
+                        db.el.style.transform = `translate(${x}px, ${y}px) rotate(${angle}rad)`;
+                    }
+
+                    if (currentFrame < rewindFrames) {
+                        requestAnimationFrame(rewindTick);
+                    } else {
+                        restoreOriginalState();
+                    }
+                }
+                requestAnimationFrame(rewindTick);
+            }
+
+            function restoreOriginalState() {
+                for (let db of domBodies) {
+                    const { el, placeholder } = db;
+
+                    el.style.position = '';
+                    el.style.left = '';
+                    el.style.top = '';
+                    el.style.margin = '';
+                    el.style.width = '';
+                    el.style.height = '';
+                    el.style.transform = '';
+                    el.style.transition = '';
+                    el.style.animation = '';
+                    el.style.zIndex = '';
+                    el.style.cursor = '';
+                    el.style.pointerEvents = '';
+
+                    if (placeholder && placeholder.parentNode) {
+                        placeholder.parentNode.replaceChild(el, placeholder);
+                    }
+                }
+
+                if (engine) {
+                    Matter.World.clear(engine.world);
+                    Matter.Engine.clear(engine);
+                }
+
+                const wrapper = document.querySelector('.airplane-wrapper');
+                if (wrapper) wrapper.style.animationPlayState = 'running';
+
+                domBodies.length = 0;
+                document.body.classList.remove('cards-falling');
+                hasCrashed = false;
+                cardsFallen = false;
+                isRewinding = false;
+            }
+
+            function triggerCrash(clientX, clientY) {
+                if (hasCrashed) return;
+                hasCrashed = true;
+                lastCrashTime = Date.now();
+
+                const wrapper = airplane.parentElement;
+                if (wrapper && wrapper.classList.contains('airplane-wrapper')) {
+                    wrapper.style.animationPlayState = 'paused';
+                }
+
+                const rect = airplane.getBoundingClientRect();
+
+                initPhysics();
+                airplane.style.transition = 'none';
+                const planeBody = addDomBodyWithRect(airplane, rect, {
+                    density: 0.05,
+                    restitution: 0.15,
+                    friction: 0.8,
+                    frictionAir: 0.02
+                });
+
+                Matter.Body.setVelocity(planeBody, { x: 0, y: 0 });
+                Matter.Body.setAngularVelocity(planeBody, 0.01);
+                Matter.Body.setAngle(planeBody, 0);
+            }
+
+            function handleAirplaneClick(e) {
+                if (!hasCrashed) {
+                    triggerCrash(e ? e.clientX : undefined, e ? e.clientY : undefined);
+                    return;
+                }
+                if (Date.now() - lastCrashTime < 350) return;
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+
+                if (!cardsFallen) {
+                    cardsFallen = true;
+                    document.body.classList.add('cards-falling');
+                    const cardsArray = Array.from(document.querySelectorAll('.button')).filter(card => {
+                        return window.getComputedStyle(card).display !== 'none';
+                    });
+
+                    // 随机乱序掉落
+                    for (let i = cardsArray.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [cardsArray[i], cardsArray[j]] = [cardsArray[j], cardsArray[i]];
+                    }
+
+                    cardsArray.forEach((card, i) => {
+                        setTimeout(() => {
+                            const rect = card.getBoundingClientRect();
+                            const body = addDomBodyWithRect(card, rect, { density: 0.005, restitution: 0.2 });
+
+                            const offsetX = (Math.random() - 0.5) * rect.width;
+                            const offsetY = (Math.random() - 0.5) * rect.height;
+                            const forcePosition = {
+                                x: body.position.x + offsetX,
+                                y: body.position.y + offsetY
+                            };
+
+                            const forceMagnitude = body.mass * (0.001 + Math.random() * 0.002);
+                            const forceAngle = Math.PI / 4 + Math.random() * (Math.PI / 2);
+
+                            const forceVector = {
+                                x: forceMagnitude * Math.cos(forceAngle),
+                                y: forceMagnitude * Math.sin(forceAngle)
+                            };
+
+                            Matter.Body.applyForce(body, forcePosition, forceVector);
+                        }, i * 120);
+                    });
+                } else if (!isRewinding) {
+                    startRewind();
                 }
             }
-            requestAnimationFrame(rewindTick);
-        }
 
-        function restoreOriginalState() {
-            for (let db of domBodies) {
-                const { el, placeholder } = db;
-
-                el.style.position = '';
-                el.style.left = '';
-                el.style.top = '';
-                el.style.margin = '';
-                el.style.width = '';
-                el.style.height = '';
-                el.style.transform = '';
-                el.style.transition = '';
-                el.style.animation = '';
-                el.style.zIndex = '';
-                el.style.cursor = '';
-                el.style.pointerEvents = '';
-
-                if (placeholder && placeholder.parentNode) {
-                    placeholder.parentNode.replaceChild(el, placeholder);
+            function handleCardClick(e) {
+                // 卡片掉落后依然允许正常点击跳转；仅在倒流中阻止默认行为
+                if (cardsFallen && isRewinding) {
+                    if (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
                 }
             }
 
-            if (engine) {
-                Matter.World.clear(engine.world);
-                Matter.Engine.clear(engine);
-            }
-
-            const wrapper = document.querySelector('.airplane-wrapper');
-            if (wrapper) wrapper.style.animationPlayState = 'running';
-
-            domBodies.length = 0;
-            hasCrashed = false;
-            isRewinding = false;
-        }
-
-        function triggerCrash() {
-            if (hasCrashed) return;
-            hasCrashed = true;
-            lastCrashTime = Date.now();
-
-            const wrapper = airplane.parentElement;
-            if (wrapper && wrapper.classList.contains('airplane-wrapper')) {
-                wrapper.style.animationPlayState = 'paused';
-            }
-
-            const rect = airplane.getBoundingClientRect();
-
-            initPhysics();
-            airplane.style.transition = 'none';
-            const planeBody = addDomBodyWithRect(airplane, rect, {
-                density: 0.05,
-                restitution: 0.2,
-                friction: 0.8,
-                frictionAir: 0.02
+            airplane.addEventListener('mouseenter', (event) => {
+                triggerCrash(event.clientX, event.clientY);
             });
+            airplane.addEventListener('click', handleAirplaneClick);
 
-            // 垂直自然掉落
-            Matter.Body.setVelocity(planeBody, { x: 0, y: 0 });
-            Matter.Body.setAngularVelocity(planeBody, 0.01);
-            Matter.Body.setAngle(planeBody, 0);
+            document.querySelectorAll('.button').forEach(btn => {
+                btn.addEventListener('click', handleCardClick);
+            });
         }
-
-        function handleAirplaneInteraction(e) {
-            if (e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-            if (!hasCrashed) {
-                triggerCrash();
-            } else if (!isRewinding) {
-                if (Date.now() - lastCrashTime < 300) return;
-                startRewind();
-            }
-        }
-
-        airplane.addEventListener('click', handleAirplaneInteraction);
-        airplane.addEventListener('touchend', handleAirplaneInteraction);
     </script>
     <!-- Three.js & Living Anime Sky Shader -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
