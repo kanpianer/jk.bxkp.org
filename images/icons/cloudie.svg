@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 46 46" width="46" height="46">
+  <defs>
+    <linearGradient id="cloudie-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14b8a6" />
+      <stop offset="100%" stop-color="#0f766e" />
+    </linearGradient>
+  </defs>
+  <rect width="46" height="46" rx="11" fill="url(#cloudie-grad)" />
+  <path d="M15.5 28.5h15a6 6 0 0 0 1.2-11.9 8.5 8.5 0 0 0-16.4-2.1A6.5 6.5 0 0 0 15.5 28.5z" fill="#ffffff" />
+</svg>

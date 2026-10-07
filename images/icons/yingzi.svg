@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="yingzi-bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1b1c52"/>
+      <stop offset="45%" stop-color="#28266b"/>
+      <stop offset="100%" stop-color="#4e42b6"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="22" fill="url(#yingzi-bg)"/>
+  <text x="50" y="52" text-anchor="middle" dominant-baseline="central" fill="#ffffff" font-size="54" font-weight="900" font-family="'Noto Sans CJK SC', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif">影</text>
+</svg>
