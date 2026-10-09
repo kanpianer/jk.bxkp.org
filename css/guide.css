@@ -1,0 +1,292 @@
+/* ==================================================
+ * Guide Pages Typography & Layout (Topic Clusters)
+ * ================================================== */
+
+:root {
+    --guide-max-width: 820px;
+    --text-primary: #1e293b;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    --bg-glass: rgba(255, 255, 255, 0.65);
+    --border-glass: rgba(255, 255, 255, 0.7);
+    --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    --link-color: #2563eb;
+    --code-bg: rgba(0, 0, 0, 0.05);
+}
+
+:root.theme-dark {
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --bg-glass: rgba(18, 24, 38, 0.68);
+    --border-glass: rgba(255, 255, 255, 0.12);
+    --card-shadow: 0 10px 35px rgba(0, 0, 0, 0.35);
+    --link-color: #60a5fa;
+    --code-bg: rgba(255, 255, 255, 0.08);
+}
+
+:root.theme-auto {
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --bg-glass: rgba(18, 24, 38, 0.68);
+    --border-glass: rgba(255, 255, 255, 0.12);
+    --card-shadow: 0 10px 35px rgba(0, 0, 0, 0.35);
+    --link-color: #60a5fa;
+    --code-bg: rgba(255, 255, 255, 0.08);
+}
+
+@media (prefers-color-scheme: light) {
+    :root.theme-auto {
+        --text-primary: #1e293b;
+        --text-secondary: #475569;
+        --text-muted: #64748b;
+        --bg-glass: rgba(255, 255, 255, 0.65);
+        --border-glass: rgba(255, 255, 255, 0.7);
+        --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        --link-color: #2563eb;
+        --code-bg: rgba(0, 0, 0, 0.05);
+    }
+}
+
+body.guide-body {
+    margin: 0;
+    padding: 0;
+    font-family: "LXGW WenKai TC", "LXGW WenKai", system-ui, -apple-system, sans-serif;
+    color: var(--text-primary);
+    line-height: 1.8;
+    background: transparent;
+    min-height: 100vh;
+}
+
+.guide-wrapper {
+    position: relative;
+    max-width: var(--guide-max-width);
+    margin: 0 auto;
+    padding: 2.5rem 1.25rem 4rem 1.25rem;
+    z-index: 2;
+}
+
+/* Header & Navigation */
+.guide-nav-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-glass);
+}
+
+.back-home-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--link-color);
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+}
+
+.back-home-link:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+}
+
+/* Breadcrumb */
+.guide-breadcrumb {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+
+.guide-breadcrumb a {
+    color: var(--link-color);
+    text-decoration: none;
+}
+
+.guide-breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+/* Article Container */
+.guide-article {
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border-glass);
+    border-radius: 20px;
+    padding: 2.5rem 2rem;
+    box-shadow: var(--card-shadow);
+}
+
+@media (max-width: 600px) {
+    .guide-article {
+        padding: 1.75rem 1.25rem;
+    }
+}
+
+.guide-title {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.35;
+    margin: 0 0 1rem 0;
+    letter-spacing: -0.02em;
+}
+
+.guide-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    padding-bottom: 1.5rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid rgba(125, 125, 125, 0.15);
+}
+
+.guide-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+/* Typography Inside Article */
+.guide-article h2 {
+    font-size: 1.45rem;
+    font-weight: 700;
+    margin: 2.5rem 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(125, 125, 125, 0.2);
+    color: var(--text-primary);
+}
+
+.guide-article h3 {
+    font-size: 1.18rem;
+    font-weight: 700;
+    margin: 1.8rem 0 0.75rem 0;
+    color: var(--text-primary);
+}
+
+.guide-article p {
+    margin: 0 0 1.2rem 0;
+    font-size: 1.02rem;
+    color: var(--text-secondary);
+}
+
+.guide-article ul,
+.guide-article ol {
+    margin: 0 0 1.5rem 0;
+    padding-left: 1.5rem;
+    color: var(--text-secondary);
+}
+
+.guide-article li {
+    margin-bottom: 0.6rem;
+}
+
+.guide-article strong {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.guide-article a {
+    color: var(--link-color);
+    text-decoration: underline;
+}
+
+/* Callout Boxes */
+.callout {
+    padding: 1.1rem 1.25rem;
+    border-radius: 12px;
+    margin: 1.5rem 0;
+    font-size: 0.95rem;
+    line-height: 1.65;
+}
+
+.callout-info {
+    background: rgba(59, 130, 246, 0.12);
+    border-left: 4px solid #3b82f6;
+    color: var(--text-primary);
+}
+
+.callout-warning {
+    background: rgba(245, 158, 11, 0.12);
+    border-left: 4px solid #f59e0b;
+    color: var(--text-primary);
+}
+
+.callout-success {
+    background: rgba(16, 185, 129, 0.12);
+    border-left: 4px solid #10b981;
+    color: var(--text-primary);
+}
+
+/* Tables in Guides */
+.guide-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+    border-radius: 10px;
+    border: 1px solid var(--border-glass);
+}
+
+.guide-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.guide-table th,
+.guide-table td {
+    padding: 0.85rem 1.1rem;
+    border-bottom: 1px solid rgba(125, 125, 125, 0.15);
+}
+
+.guide-table th {
+    background: rgba(0, 0, 0, 0.05);
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+:root.theme-dark .guide-table th,
+:root.theme-auto .guide-table th {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+@media (prefers-color-scheme: light) {
+    :root.theme-auto .guide-table th {
+        background: rgba(0, 0, 0, 0.05);
+    }
+}
+
+.guide-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Guide Footer & CTA */
+.guide-footer-cta {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-glass);
+    text-align: center;
+}
+
+.cta-button {
+    display: inline-block;
+    padding: 0.85rem 1.75rem;
+    background: #3b82f6;
+    color: #ffffff !important;
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.35);
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.cta-button:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+}

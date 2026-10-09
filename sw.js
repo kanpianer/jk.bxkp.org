@@ -1,5 +1,5 @@
 /**
- * Service Worker - 家宽导航 (jk.bxkp.org / jiakuan.link)
+ * Service Worker - 家宽导航 (jiakuan.link / jk.bxkp.org)
  *
  * 核心持久化与更新策略：
  * 1. 静态资源（云朵着色器/Three.js/天空大图/物理引擎/样式/字体/图标）：【Cache-First / 缓存优先】
@@ -10,7 +10,7 @@
  *    - 仅在用户离线/无网络连接时，优雅降级提供本地缓存页面进行展示。
  */
 
-const CACHE_VERSION = 'v1.0.4';
+const CACHE_VERSION = 'v1.0.5';
 const STATIC_CACHE_NAME = `jkdh-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE_NAME = `jkdh-runtime-${CACHE_VERSION}`;
 

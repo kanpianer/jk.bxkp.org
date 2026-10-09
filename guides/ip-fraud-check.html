@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html class="theme-auto" lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <script>
+        (function() {
+            try {
+                var urlParams = new URLSearchParams(window.location.search);
+                var urlTheme = urlParams.get('theme');
+                if (urlTheme === 'light' || urlTheme === 'dark') {
+                    localStorage.setItem('theme', urlTheme);
+                }
+                var stored = localStorage.getItem('theme');
+                var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (stored === 'dark' || (!stored && prefersDark)) {
+                    document.documentElement.classList.add('theme-dark');
+                    document.documentElement.classList.remove('theme-light', 'theme-auto');
+                } else if (stored === 'light' || (!stored && !prefersDark)) {
+                    document.documentElement.classList.add('theme-light');
+                    document.documentElement.classList.remove('theme-dark', 'theme-auto');
+                }
+            } catch (e) {}
+        })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>如何检测住宅IP纯净度？Scamalytics与IP欺诈分查询实战教程 | 家宽导航</title>
+    <meta name="description" content="手把手教你如何检测住宅IP与家宽节点的真实纯净度，使用 IPinfo、Scamalytics、Ping0、BrowserScan 排查 Fraud Score 欺诈分、黑名单污染与 WebRTC 泄漏。">
+    <meta name="keywords" content="IP纯净度检测, Scamalytics欺诈分, Fraud Score查询, IPinfo ASN, WebRTC泄漏, 住宅IP检测, 识别伪住宅IP">
+    <link rel="canonical" href="https://jiakuan.link/guides/ip-fraud-check.html">
+    <link rel="icon" type="image/x-icon" href="../images/avatar.png">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@300;400;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="../css/reset.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/guide.css">
+
+    <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Article",
+          "headline": "如何检测住宅IP纯净度？Scamalytics与IP欺诈分查询实战教程",
+          "description": "手把手教你如何检测住宅IP与家宽节点的真实纯净度，使用 IPinfo、Scamalytics、Ping0、BrowserScan 排查 Fraud Score 欺诈分、黑名单污染与 WebRTC 泄漏。",
+          "mainEntityOfPage": "https://jiakuan.link/guides/ip-fraud-check.html",
+          "datePublished": "2026-10-09T12:00:00+08:00",
+          "dateModified": "2026-10-09T12:00:00+08:00",
+          "author": {
+            "@type": "Organization",
+            "name": "家宽导航",
+            "url": "https://jiakuan.link/"
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "家宽导航",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://jiakuan.link/images/avatar.png"
+            }
+          }
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "首页",
+              "item": "https://jiakuan.link/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "深度指南",
+              "item": "https://jiakuan.link/#seo-knowledge"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": "住宅IP纯净度与欺诈分检测教程",
+              "item": "https://jiakuan.link/guides/ip-fraud-check.html"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body class="guide-body">
+    <!-- 2.5D Sky Container -->
+    <div id="sky-canvas-container" class="sky-container">
+        <canvas id="sky-canvas"></canvas>
+    </div>
+
+    <div class="guide-wrapper">
+        <header class="guide-nav-header">
+            <a href="/" class="back-home-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                返回家宽导航首页
+            </a>
+            <button id="theme-toggle" class="theme-toggle-btn" type="button" aria-label="切换主题" title="切换主题" style="position:static; margin:0;">
+                <span class="theme-stage">
+                    <svg class="theme-icon sun-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4.5"></circle>
+                        <line x1="12" y1="2" x2="12" y2="4.5"></line>
+                        <line x1="12" y1="19.5" x2="12" y2="22"></line>
+                        <line x1="2" y1="12" x2="4.5" y2="12"></line>
+                        <line x1="19.5" y1="12" x2="22" y2="12"></line>
+                        <line x1="4.93" y1="4.93" x2="6.7" y2="6.7"></line>
+                        <line x1="17.3" y1="17.3" x2="19.07" y2="19.07"></line>
+                        <line x1="4.93" y1="19.07" x2="6.7" y2="17.3"></line>
+                        <line x1="17.3" y1="6.7" x2="19.07" y2="4.93"></line>
+                    </svg>
+                    <svg class="theme-icon moon-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </span>
+            </button>
+        </header>
+
+        <nav class="guide-breadcrumb" aria-label="面包屑导航">
+            <a href="/">首页</a> &gt; <span>深度指南</span> &gt; <span>住宅IP纯净度与欺诈分检测实战</span>
+        </nav>
+
+        <article class="guide-article">
+            <h1 class="guide-title">如何检测住宅IP纯净度？Scamalytics与IP欺诈分查询实战教程</h1>
+            <div class="guide-meta">
+                <span>📅 发布时间：2026年10月</span>
+                <span>🏷️ 分类：工具评测 / 风险排查</span>
+                <span>⏱️ 阅读时长：约 5 分钟</span>
+            </div>
+
+            <div class="callout callout-info">
+                <strong>核心原则：</strong><br>
+                “家宽”或宣称的“双ISP”并不自动等于“100%真住宅”。如果某个住宅 IP 段曾在前任租客手中被用于恶意爬虫、撞库攻击或发送垃圾邮件，该 IP 就会被全球网络安全联合体拉入黑名单，产生很高的 <strong>Fraud Score（欺诈分）</strong>。因此在投入正式商业运营前，必须进行规范的 IP 纯净度检测。
+            </div>
+
+            <h2>一、 核心检测维度：我们需要测什么？</h2>
+            <ol>
+                <li><strong>ASN 与类型归属：</strong>确认目标 IP 是正规民用宽带商（Residential），警惕机房双ISP伪装为住宅。</li>
+                <li><strong>Fraud Score 欺诈评分：</strong>衡量该 IP 历史行为风险，越接近 0 分越纯净。</li>
+                <li><strong>黑名单（Blacklist）命中率：</strong>检查是否被 Spamhaus、SORBS、Barracuda 等安全组织收录。</li>
+                <li><strong>DNS 与 WebRTC 泄漏：</strong>防止代理未能全局生效，导致真实物理地址或本地运营商 DNS 暴露。</li>
+            </ol>
+
+            <h2>二、 五大权威免费检测工具推荐</h2>
+            <div class="guide-table-wrap">
+                <table class="guide-table">
+                    <thead>
+                        <tr>
+                            <th>工具名称</th>
+                            <th>主要功能</th>
+                            <th>核心观察指标</th>
+                            <th>访问网址</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Scamalytics</strong></td>
+                            <td>全球顶尖欺诈风险数据库</td>
+                            <td>Fraud Score（0-100分）</td>
+                            <td><a href="https://scamalytics.com/ip" target="_blank" rel="noopener">scamalytics.com</a></td>
+                        </tr>
+                        <tr>
+                            <td><strong>IPinfo.io</strong></td>
+                            <td>权威 ASN 与网段类型查询</td>
+                            <td>Type (isp/hosting)</td>
+                            <td><a href="https://ipinfo.io/" target="_blank" rel="noopener">ipinfo.io</a></td>
+                        </tr>
+                        <tr>
+                            <td><strong>IPSuper / IPCheck</strong></td>
+                            <td>一站式综合纯净度评分看板</td>
+                            <td>住宅属性判定、风险等级</td>
+                            <td><a href="https://ipsuper.com/" target="_blank" rel="noopener">ipsuper.com</a></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Ping0</strong></td>
+                            <td>国内开发者常用纯净度工具</td>
+                            <td>伪装度、原生判定</td>
+                            <td><a href="https://ping0.cc/" target="_blank" rel="noopener">ping0.cc</a></td>
+                        </tr>
+                        <tr>
+                            <td><strong>BrowserScan</strong></td>
+                            <td>浏览器指纹与 WebRTC 泄漏检测</td>
+                            <td>WebRTC IP、DNS 泄露</td>
+                            <td><a href="https://www.browserscan.net/" target="_blank" rel="noopener">browserscan.net</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h2>三、 4 步标准化检测排查工作流</h2>
+
+            <h3>步骤 1：确认 ASN 与真住宅属性（排查伪住宅）</h3>
+            <p>打开 <code>ipinfo.io</code>，输入你的节点外网 IP。在 <strong>ASN 详情</strong> 中：</p>
+            <ul>
+                <li>若 <code>Type</code> 显示为 <strong>isp</strong>，且组织名称为知名电信运营商（如 AT&amp;T、Verizon、Comcast），说明该 IP 具备 ISP 资质。</li>
+                <li>若 <code>Type</code> 显示为 <strong>hosting</strong>，说明依然是机房云服务器，不能充当真家宽。</li>
+            </ul>
+
+            <h3>步骤 2：测试 Scamalytics 欺诈分（Fraud Score）</h3>
+            <p>打开 <code>scamalytics.com/ip/&lt;你的IP&gt;</code>，重点关注分值颜色与数值：</p>
+            <ul>
+                <li><strong>0 - 14 分（绿色，Low Risk）：</strong>极纯净住宅 IP，完全契合跨境电商多店铺、TikTok 直播等严苛业务。</li>
+                <li><strong>15 - 40 分（黄色，Medium Risk）：</strong>有轻微使用历史，日常流媒体或外贸浏览无碍，但新注册店铺需谨慎。</li>
+                <li><strong>40 分以上（红色，High Risk）：</strong>高危 IP，可能近期存在恶意行为，建议申请更换 IP。</li>
+            </ul>
+
+            <h3>步骤 3：排查 WebRTC 与 DNS 泄漏</h3>
+            <p>即使使用了优质住宅 IP，如果客户端配置不当，浏览器内置的 WebRTC 协议可能会直接绕过代理把你的本地内网地址暴露给远程服务器。访问 <code>browserscan.net</code>，检查：</p>
+            <ul>
+                <li>WebRTC 显示的 IP 是否与你的住宅节点 IP 完全一致。</li>
+                <li>DNS 服务器所在地是否与你的 IP 所在国家/州属一致（若人在国内但 DNS 解析显示为中国电信，即属于 DNS 泄漏）。</li>
+            </ul>
+
+            <h3>步骤 4：实际业务沙盒测试</h3>
+            <p>在无痕窗口或专用指纹浏览器中，尝试访问 <code>whoer.net</code> 查看综合伪装度是否达到 <strong>100%</strong>。随后打开 Netflix 或 TikTok 网页版注册页面，观察是否出现异常拦截或人机验证死循环。</p>
+
+            <div class="callout callout-success">
+                <strong>小贴士：</strong>定期对使用的家宽节点进行抽检（每月 1 次）。如果发现服务商某批段欺诈分异常上升，请及时联系售后工单申请调换干净段。
+            </div>
+
+            <div class="guide-footer-cta">
+                <a href="/" class="cta-button">返回家宽导航，挑选低欺诈分优质节点 →</a>
+            </div>
+        </article>
+    </div>
+
+    <!-- Theme Manager & Sky Shader -->
+    <script>
+        function initThemeManager() {
+            const toggleBtn = document.getElementById('theme-toggle');
+            const mediaQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+            function getEffectiveTheme() {
+                try {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const urlTheme = urlParams.get('theme');
+                    if (urlTheme === 'dark' || urlTheme === 'light') {
+                        return urlTheme;
+                    }
+                } catch (e) {}
+                const stored = localStorage.getItem('theme');
+                if (stored === 'dark' || stored === 'light') {
+                    return stored;
+                }
+                return (mediaQuery && mediaQuery.matches) ? 'dark' : 'light';
+            }
+
+            function applyTheme(theme, isUserAction = false) {
+                const isDark = (theme === 'dark');
+                document.documentElement.classList.toggle('theme-dark', isDark);
+                document.documentElement.classList.toggle('theme-light', !isDark);
+                document.documentElement.classList.remove('theme-auto');
+
+                if (toggleBtn) {
+                    const label = isDark ? '切换至浅色模式' : '切换至暗黑模式';
+                    toggleBtn.setAttribute('title', label);
+                    toggleBtn.setAttribute('aria-label', label);
+                }
+
+                if (window.__skySystem && typeof window.__skySystem.setDarkMode === 'function') {
+                    window.__skySystem.setDarkMode(isDark, !isUserAction && !document.body);
+                }
+            }
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const current = getEffectiveTheme();
+                    const next = (current === 'dark') ? 'light' : 'dark';
+                    const systemPref = (mediaQuery && mediaQuery.matches) ? 'dark' : 'light';
+
+                    if (next === systemPref) {
+                        localStorage.removeItem('theme');
+                    } else {
+                        localStorage.setItem('theme', next);
+                    }
+                    applyTheme(next, true);
+                });
+            }
+
+            if (mediaQuery) {
+                mediaQuery.addEventListener('change', (e) => {
+                    const stored = localStorage.getItem('theme');
+                    if (!stored) {
+                        applyTheme(e.matches ? 'dark' : 'light', false);
+                    }
+                });
+            }
+
+            applyTheme(getEffectiveTheme(), false);
+        }
+        initThemeManager();
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="../js/sky.js" defer></script>
+</body>
+</html>
