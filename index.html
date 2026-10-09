@@ -105,20 +105,22 @@
 
     <!-- 极简右上角小太阳/主题切换按钮（无背景、极简图标） -->
     <button id="theme-toggle" class="theme-toggle-btn" type="button" aria-label="切换主题" title="切换主题">
-        <svg class="theme-icon sun-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="12" r="4.5"></circle>
-            <line x1="12" y1="2" x2="12" y2="4.5"></line>
-            <line x1="12" y1="19.5" x2="12" y2="22"></line>
-            <line x1="2" y1="12" x2="4.5" y2="12"></line>
-            <line x1="19.5" y1="12" x2="22" y2="12"></line>
-            <line x1="4.93" y1="4.93" x2="6.7" y2="6.7"></line>
-            <line x1="17.3" y1="17.3" x2="19.07" y2="19.07"></line>
-            <line x1="4.93" y1="19.07" x2="6.7" y2="17.3"></line>
-            <line x1="17.3" y1="6.7" x2="19.07" y2="4.93"></line>
-        </svg>
-        <svg class="theme-icon moon-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-        </svg>
+        <span class="theme-stage">
+            <svg class="theme-icon sun-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="4.5"></circle>
+                <line x1="12" y1="2" x2="12" y2="4.5"></line>
+                <line x1="12" y1="19.5" x2="12" y2="22"></line>
+                <line x1="2" y1="12" x2="4.5" y2="12"></line>
+                <line x1="19.5" y1="12" x2="22" y2="12"></line>
+                <line x1="4.93" y1="4.93" x2="6.7" y2="6.7"></line>
+                <line x1="17.3" y1="17.3" x2="19.07" y2="19.07"></line>
+                <line x1="4.93" y1="19.07" x2="6.7" y2="17.3"></line>
+                <line x1="17.3" y1="6.7" x2="19.07" y2="4.93"></line>
+            </svg>
+            <svg class="theme-icon moon-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+        </span>
     </button>
 
     <div class="airplane-wrapper">
@@ -1357,6 +1359,28 @@
     <!-- Three.js & Living Anime Sky Shader -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="js/sky.js" defer></script>
+
+    <!-- 客户端数据持久化 Service Worker 注册（静态资源与云朵 0ms 本地秒开，卡片网络优先实时更新） -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('./sw.js').then(function (registration) {
+                    registration.onupdatefound = function () {
+                        const installingWorker = registration.installing;
+                        if (installingWorker) {
+                            installingWorker.onstatechange = function () {
+                                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    console.log('[SW] 静态资源及云朵着色器已在后台完成静默更新');
+                                }
+                            };
+                        }
+                    };
+                }).catch(function (error) {
+                    console.warn('[SW] ServiceWorker 注册失败:', error);
+                });
+            });
+        }
+    </script>
 </body>
 
 </html>

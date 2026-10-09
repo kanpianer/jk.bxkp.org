@@ -358,7 +358,7 @@ a:hover {
 	margin: 0 auto;
 }
 
-.button,button {
+.button,button:not(.theme-toggle-btn):not(.category-btn) {
 	position:relative;
 	display:inline-flex;
 	align-items:center;
@@ -388,7 +388,7 @@ a:hover {
 	pointer-events: auto;
 }
 
-.button:hover,button:hover {
+.button:hover,button:not(.theme-toggle-btn):not(.category-btn):hover {
 	background-color:rgba(255, 255, 255, 0.5) !important;
 	border-color: rgba(255, 255, 255, 0.6) !important;
 	color: #1a1a1a !important;
@@ -704,79 +704,113 @@ footer a:hover,
 	border: none !important;
 	outline: none !important;
 	box-shadow: none !important;
+	border-radius: 50%;
 	cursor: pointer;
 	color: #ffffff;
 	z-index: 1000;
 	pointer-events: auto;
 	-webkit-tap-highlight-color: transparent;
-	transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, filter 0.25s ease;
+	transition: none;
 }
 
-.theme-toggle-btn:hover {
-	transform: scale(1.15);
-	filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.85));
-}
-
+.theme-toggle-btn:hover,
+.theme-toggle-btn:focus,
 .theme-toggle-btn:active {
+	background: transparent !important;
+	background-color: transparent !important;
+	border: none !important;
+	outline: none !important;
+	box-shadow: none !important;
+}
+
+.theme-stage {
+	position: relative;
+	width: 2rem;
+	height: 2rem;
+	overflow: hidden; /* 地平线视窗裁剪：太阳落山时沉入下方地平线隐藏，日出时从下方冉冉升起 */
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none;
+	transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.25s ease;
+}
+
+/* 鼠标悬停到主题切换按钮上时，不显示按钮背景，仅对图标做高亮和轻微放大效果 */
+.theme-toggle-btn:hover .theme-stage {
+	transform: scale(1.15);
+	filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 16px rgba(255, 255, 255, 0.6));
+}
+
+.theme-toggle-btn:active .theme-stage {
 	transform: scale(0.92);
 }
 
-.theme-toggle-btn:focus-visible {
-	outline: 2px solid rgba(255, 255, 255, 0.7) !important;
-	outline-offset: 3px;
-	border-radius: 50%;
-}
-
-.theme-toggle-btn .theme-icon {
+.theme-stage .theme-icon {
 	position: absolute;
 	width: 1.625rem;
 	height: 1.625rem;
 	stroke: currentColor;
-	stroke-width: 1.8;
+	stroke-width: 1.85;
 	stroke-linecap: round;
 	stroke-linejoin: round;
 	fill: none;
-	transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 	pointer-events: none;
+	will-change: transform, opacity;
 }
 
-/* Light theme default */
-:root.theme-light .theme-toggle-btn .sun-icon {
+/* 
+  太阳和月亮真实天体升落轨迹：
+  - 白天 (Light): 太阳位于正中 (translateY(0))，月亮隐于地平线下方 (translateY(135%))
+  - 点击太阳 -> 切换为暗黑模式 (Dark): 太阳像真实日落一样垂直沉入地平线 (translateY(135%))，月亮升起就位 (translateY(0))
+  - 点击月亮 -> 切换为浅色模式 (Light): 月亮下落隐退，太阳像真实日出一样从地平线下方升起归位 (translateY(0))
+*/
+
+/* Light theme */
+:root.theme-light .sun-icon {
 	opacity: 1;
-	transform: rotate(0deg) scale(1);
+	transform: translateY(0);
+	transition: transform 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.15) 0.08s, opacity 0.35s ease 0.08s;
 }
-:root.theme-light .theme-toggle-btn .moon-icon {
+:root.theme-light .moon-icon {
 	opacity: 0;
-	transform: rotate(-90deg) scale(0.3);
+	transform: translateY(135%);
+	transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
 }
 
-/* Dark theme button icon */
-:root.theme-dark .theme-toggle-btn .sun-icon {
+/* Dark theme */
+:root.theme-dark .sun-icon {
 	opacity: 0;
-	transform: rotate(90deg) scale(0.3);
+	transform: translateY(135%);
+	transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
 }
-:root.theme-dark .theme-toggle-btn .moon-icon {
+:root.theme-dark .moon-icon {
 	opacity: 1;
-	transform: rotate(0deg) scale(1);
+	transform: translateY(0);
+	transition: transform 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.15) 0.08s, opacity 0.35s ease 0.08s;
 }
 
-/* Auto theme button icon based on system preference */
-:root.theme-auto .theme-toggle-btn .sun-icon {
+/* Auto theme */
+:root.theme-auto .sun-icon {
 	opacity: 1;
-	transform: rotate(0deg) scale(1);
+	transform: translateY(0);
+	transition: transform 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.15) 0.08s, opacity 0.35s ease 0.08s;
 }
-:root.theme-auto .theme-toggle-btn .moon-icon {
+:root.theme-auto .moon-icon {
 	opacity: 0;
-	transform: rotate(-90deg) scale(0.3);
+	transform: translateY(135%);
+	transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
 }
 @media (prefers-color-scheme: dark) {
-	:root.theme-auto .theme-toggle-btn .sun-icon {
+	:root.theme-auto .sun-icon {
 		opacity: 0;
-		transform: rotate(90deg) scale(0.3);
+		transform: translateY(135%);
+		transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
 	}
-	:root.theme-auto .theme-toggle-btn .moon-icon {
+	:root.theme-auto .moon-icon {
 		opacity: 1;
-		transform: rotate(0deg) scale(1);
+		transform: translateY(0);
+		transition: transform 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.15) 0.08s, opacity 0.35s ease 0.08s;
 	}
 }
 
@@ -787,7 +821,11 @@ footer a:hover,
 		width: 2.5rem;
 		height: 2.5rem;
 	}
-	.theme-toggle-btn .theme-icon {
+	.theme-stage {
+		width: 1.85rem;
+		height: 1.85rem;
+	}
+	.theme-stage .theme-icon {
 		width: 1.45rem;
 		height: 1.45rem;
 	}
@@ -827,6 +865,18 @@ footer a:hover,
 	border-color: rgba(147, 197, 253, 0.5) !important;
 	color: #ffffff !important;
 	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 16px rgba(147, 197, 253, 0.18) !important;
+}
+
+:root.theme-dark .button .card-title,
+:root.theme-dark .button:hover .card-title {
+	color: #ffffff !important;
+}
+:root.theme-dark .button .card-meta,
+:root.theme-dark .button:hover .card-meta {
+	color: #e2e8f0 !important;
+}
+:root.theme-dark .card-title.highlight-title {
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65) !important;
 }
 
 :root.theme-dark .button:hover .card-tag {
@@ -927,6 +977,17 @@ footer a:hover,
 		border-color: rgba(147, 197, 253, 0.5) !important;
 		color: #ffffff !important;
 		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 16px rgba(147, 197, 253, 0.18) !important;
+	}
+	:root.theme-auto .button .card-title,
+	:root.theme-auto .button:hover .card-title {
+		color: #ffffff !important;
+	}
+	:root.theme-auto .button .card-meta,
+	:root.theme-auto .button:hover .card-meta {
+		color: #e2e8f0 !important;
+	}
+	:root.theme-auto .card-title.highlight-title {
+		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65) !important;
 	}
 	:root.theme-auto .button:hover .card-tag {
 		background: rgba(255, 255, 255, 0.12);

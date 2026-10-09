@@ -19,10 +19,16 @@ RUN echo 'server { \
     gzip_vary on; \
     gzip_types text/plain text/css application/json application/javascript; \
     \
-    # Basic cache settings \
-    location ~* \\.(?:css|js|jpg|jpeg|gif|png|ico|svg)$ { \
-        expires 7d; \
-        add_header Cache-Control "public"; \
+    # Ensure sw.js and index.html are never forcefully cached by HTTP \
+    location ~* (?:index\\.html|sw\\.js)$ { \
+        expires -1; \
+        add_header Cache-Control "no-cache, no-store, must-revalidate"; \
+    } \
+    \
+    # Long-term cache settings for static assets \
+    location ~* \\.(?:css|js|jpg|jpeg|gif|png|ico|svg|webp|woff2?|ttf)$ { \
+        expires 30d; \
+        add_header Cache-Control "public, max-age=2592000"; \
     } \
 }' > /etc/nginx/conf.d/default.conf
 

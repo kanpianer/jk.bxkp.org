@@ -134,9 +134,10 @@
                 vec2 getCoverUV(vec2 uv, vec2 screenRes, vec2 imgRes) {
                     float sAspect = screenRes.x / screenRes.y;
                     float iAspect = imgRes.x / imgRes.y;
-                    // 8% overscan safety margin to ensure drift and curl noise never touch image borders
-                    float margin = 1.08;
-                    vec2 coverUV = (uv - 0.5) / margin + 0.5;
+                    // Zoom slightly and shift down-left so the top-right sun flare in texture is placed outside the screen
+                    float margin = 1.14;
+                    vec2 offset = vec2(-0.05, -0.05);
+                    vec2 coverUV = (uv - 0.5) / margin + 0.5 + offset;
                     if (sAspect > iAspect) {
                         float scale = sAspect / iAspect;
                         coverUV.y = (coverUV.y - 0.5) / scale + 0.5;
@@ -196,63 +197,56 @@
                     float lum = dot(finalColor.rgb, vec3(0.299, 0.587, 0.114));
                     float crest = smoothstep(0.85, 1.0, lum);
 
-                    // --- DAYLIGHT MODE LIGHTING ---
-                    // Subtle Sunlit Crest Breathing Shimmer (Warm sunlight subsurface scattering)
-                    float sunShimmer = sin(uTime * 1.0 + finalUV.x * 3.5 + finalUV.y * 2.5) * 0.03 * crest;
+                    // --- DAYLIGHT MODE: NATURAL DIFFUSE AMBIENT SKY (光源在页面之外) ---
+                    // Tone down any direct corner glare into rich uniform anime sky blue
+                    float trDist = length(vec2(1.0, 1.0) - uv);
+                    if (trDist < 0.45) {
+                        float flareDamp = smoothstep(0.45, 0.05, trDist) * smoothstep(0.85, 1.0, lum);
+                        vec3 ambientSkyBlue = vec3(0.24, 0.58, 0.92);
+                        finalColor.rgb = mix(finalColor.rgb, ambientSkyBlue, flareDamp * 0.75);
+                    }
+
+                    // Subtle daytime crest breathing shimmer
+                    float sunShimmer = sin(uTime * 1.0 + finalUV.x * 3.5 + finalUV.y * 2.5) * 0.025 * crest;
                     vec3 dayColor = finalColor.rgb + vec3(1.0, 0.97, 0.90) * sunShimmer;
 
-                    // --- DARK MODE: MOONLIGHT RAYS & NOCTURNE SKY ---
+                    // --- DARK MODE: REALISTIC STATIC MOONLIGHT (真实月光，无条纹，月光静止不动) ---
                     // Cloud density factor
                     float cloudDensity = smoothstep(0.38, 0.82, lum);
 
-                    // Deep anime midnight sky gradient
-                    vec3 nightSkyTop = vec3(0.035, 0.065, 0.15);
-                    vec3 nightSkyBottom = vec3(0.075, 0.13, 0.26);
+                    // Deep anime midnight sky gradient (zenith to horizon)
+                    vec3 nightSkyTop = vec3(0.035, 0.060, 0.14);
+                    vec3 nightSkyBottom = vec3(0.070, 0.125, 0.24);
                     vec3 nightSky = mix(nightSkyBottom, nightSkyTop, clamp(uv.y, 0.0, 1.0));
 
-                    // Nocturnal cloud body tones
-                    vec3 cloudShadow = vec3(0.08, 0.13, 0.23);
-                    vec3 cloudBody = mix(cloudShadow, vec3(0.18, 0.28, 0.44), smoothstep(0.42, 0.85, lum));
+                    // Nocturnal cloud body tones (smooth velvety dark-blue cloud base)
+                    vec3 cloudShadow = vec3(0.075, 0.120, 0.22);
+                    vec3 cloudBody = mix(cloudShadow, vec3(0.17, 0.26, 0.40), smoothstep(0.42, 0.85, lum));
                     vec3 nightBase = mix(nightSky, cloudBody, cloudDensity);
 
-                    // Moonlight Rays (emanating from top-right moon position)
-                    vec2 moonPos = vec2(0.88, 0.90);
-                    vec2 rayOffset = finalUV - moonPos;
-                    vec2 aspectOffset = rayOffset * vec2(uResolution.x / uResolution.y, 1.0);
-                    float moonDist = length(aspectOffset);
-                    float rayAngle = atan(rayOffset.y, rayOffset.x);
+                    // Realistic moonlight: off-screen light source outside the page (top-right, above)
+                    // Completely STATIC (月光静止不动，模拟真实的月光，无条纹散开)
+                    vec2 offscreenMoonPos = vec2(0.92, 1.15);
+                    vec2 moonVector = finalUV - offscreenMoonPos;
+                    float moonDist = length(moonVector * vec2(uResolution.x / uResolution.y * 0.8, 1.0));
 
-                    // Volumetric moonlight shafts / crepuscular rays
-                    float rayShafts = sin(rayAngle * 10.0 + uTime * 0.08) * 0.35
-                                    + sin(rayAngle * 21.0 - uTime * 0.05) * 0.25
-                                    + sin(rayAngle * 33.0 + uTime * 0.12) * 0.15;
-                    rayShafts = clamp(rayShafts + 0.35, 0.0, 1.0);
+                    // 1. Broad, smooth, serene ambient moonlight wash across the sky and clouds (no radial bands)
+                    float moonAmbient = clamp(1.0 - moonDist * 0.58, 0.0, 1.0);
+                    vec3 moonWash = vec3(0.62, 0.78, 0.94) * (moonAmbient * moonAmbient * 0.32);
 
-                    // Gentle undulating beam noise
-                    float rayCurl = snoise(vec2(rayAngle * 3.5, moonDist * 1.5 - uTime * 0.06)) * 0.2 + 0.8;
-                    float rayAttenuation = (1.0 / (1.0 + moonDist * 1.6)) * 0.85;
-                    float moonRays = rayShafts * rayCurl * rayAttenuation;
+                    // 2. Realistic lunar silver lining (月华银边 / crest rim lighting) on cloud tops
+                    float silverRim = smoothstep(0.72, 0.98, lum);
+                    vec3 moonRim = vec3(0.72, 0.86, 0.98) * (silverRim * 0.48);
 
-                    // Soft luminous moonlight color
-                    vec3 moonColor = vec3(0.70, 0.85, 1.0);
-
-                    // Atmospheric lunar glow
-                    float moonGlow = exp(-moonDist * 3.5) * 0.55 + exp(-moonDist * 1.2) * 0.25;
-
-                    // Moonlit cloud crest shimmer (silver lunar highlight)
-                    float moonShimmer = sin(uTime * 0.9 + finalUV.x * 3.5 + finalUV.y * 2.5) * 0.04 * crest;
-                    vec3 moonCrest = vec3(0.78, 0.90, 1.0) * (crest * 0.50 + moonShimmer);
-
-                    // Assemble night color
+                    // Assemble realistic night color
                     vec3 nightColor = nightBase;
-                    nightColor += moonColor * (moonRays * (0.35 + cloudDensity * 0.45));
-                    nightColor += moonColor * moonGlow;
-                    nightColor += moonCrest;
+                    nightColor += moonWash * (0.45 + cloudDensity * 0.55);
+                    nightColor += moonRim;
 
-                    // Subtle twinkling stars in open sky regions
-                    float starNoise = snoise(uv * 48.0);
-                    float star = step(0.965, starNoise) * (sin(uTime * 2.2 + starNoise * 80.0) * 0.4 + 0.6);
-                    nightColor += vec3(0.85, 0.92, 1.0) * star * (1.0 - cloudDensity) * 0.45;
+                    // 3. Delicate static stars in open deep sky (peaceful starry night, completely static)
+                    float starNoise = snoise(uv * 52.0);
+                    float star = step(0.972, starNoise) * 0.45;
+                    nightColor += vec3(0.85, 0.92, 1.0) * star * (1.0 - cloudDensity);
 
                     // Final blend between day and night based on uDarkMode
                     vec3 resultColor = mix(dayColor, nightColor, uDarkMode);
