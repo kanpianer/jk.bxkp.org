@@ -538,6 +538,21 @@ a:hover {
 	border-color: rgba(234, 88, 12, 0.5);
 }
 
+.tag-non-home,
+.tag-not-home,
+.tag-red {
+	background: rgba(239, 68, 68, 0.22);
+	color: #fecaca;
+	border: 1px solid rgba(239, 68, 68, 0.65);
+}
+.button:hover .tag-non-home,
+.button:hover .tag-not-home,
+.button:hover .tag-red {
+	background: rgba(239, 68, 68, 0.16);
+	color: #b91c1c;
+	border-color: rgba(220, 38, 38, 0.5);
+}
+
 .card-meta {
 	font-size: 0.8125rem;
 	font-weight: 500;
@@ -928,6 +943,13 @@ footer a:hover,
 	color: #fed7aa;
 	border-color: rgba(249, 115, 22, 0.6);
 }
+:root.theme-dark .button:hover .tag-non-home,
+:root.theme-dark .button:hover .tag-not-home,
+:root.theme-dark .button:hover .tag-red {
+	background: rgba(239, 68, 68, 0.25);
+	color: #fecaca;
+	border-color: rgba(239, 68, 68, 0.65);
+}
 
 :root.theme-dark .category-nav .category-btn,
 :root.theme-dark .category-btn {
@@ -1042,6 +1064,13 @@ footer a:hover,
 		background: rgba(251, 146, 60, 0.25);
 		color: #fed7aa;
 		border-color: rgba(249, 115, 22, 0.6);
+	}
+	:root.theme-auto .button:hover .tag-non-home,
+	:root.theme-auto .button:hover .tag-not-home,
+	:root.theme-auto .button:hover .tag-red {
+		background: rgba(239, 68, 68, 0.25);
+		color: #fecaca;
+		border-color: rgba(239, 68, 68, 0.65);
 	}
 	:root.theme-auto .category-nav .category-btn,
 	:root.theme-auto .category-btn {

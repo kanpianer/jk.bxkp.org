@@ -10,7 +10,7 @@
  *    - 仅在用户离线/无网络连接时，优雅降级提供本地缓存页面进行展示。
  */
 
-const CACHE_VERSION = 'v1.0.1';
+const CACHE_VERSION = 'v1.0.2';
 const STATIC_CACHE_NAME = `jkdh-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE_NAME = `jkdh-runtime-${CACHE_VERSION}`;
 
