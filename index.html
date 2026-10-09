@@ -13,6 +13,27 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <script>
+        (function() {
+            try {
+                var urlParams = new URLSearchParams(window.location.search);
+                var urlTheme = urlParams.get('theme');
+                if (urlTheme === 'light' || urlTheme === 'dark') {
+                    localStorage.setItem('theme', urlTheme);
+                }
+                var stored = localStorage.getItem('theme');
+                var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (stored === 'dark' || (!stored && prefersDark)) {
+                    document.documentElement.classList.add('theme-dark');
+                    document.documentElement.classList.remove('theme-light', 'theme-auto');
+                } else if (stored === 'light' || (!stored && !prefersDark)) {
+                    document.documentElement.classList.add('theme-light');
+                    document.documentElement.classList.remove('theme-dark', 'theme-auto');
+                }
+            } catch (e) {}
+        })();
+    </script>
     <meta name="robots" content="index, follow, max-image-preview:large">
 
     <!-- Page Title - Change this to your name/brand (50-60 characters recommended) -->
@@ -82,7 +103,23 @@
 
 <body>
 
-
+    <!-- 极简右上角小太阳/主题切换按钮（无背景、极简图标） -->
+    <button id="theme-toggle" class="theme-toggle-btn" type="button" aria-label="切换主题" title="切换主题">
+        <svg class="theme-icon sun-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.5"></circle>
+            <line x1="12" y1="2" x2="12" y2="4.5"></line>
+            <line x1="12" y1="19.5" x2="12" y2="22"></line>
+            <line x1="2" y1="12" x2="4.5" y2="12"></line>
+            <line x1="19.5" y1="12" x2="22" y2="12"></line>
+            <line x1="4.93" y1="4.93" x2="6.7" y2="6.7"></line>
+            <line x1="17.3" y1="17.3" x2="19.07" y2="19.07"></line>
+            <line x1="4.93" y1="19.07" x2="6.7" y2="17.3"></line>
+            <line x1="17.3" y1="6.7" x2="19.07" y2="4.93"></line>
+        </svg>
+        <svg class="theme-icon moon-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+    </button>
 
     <div class="airplane-wrapper">
         <img src="images/airplane.svg" class="airplane" alt="airplane" aria-hidden="true" draggable="false">
@@ -517,12 +554,11 @@
             </div>
 
             <footer class="middle-footer">
-                @<a href="https://bxkp.org" target="_blank" rel="noopener"
-                    class="highlight-title">不想看片</a>
-                @<a href="https://fan.jiakuan.link" target="_blank" rel="noopener"
-                    class="highlight-title">不想翻墙</a>
-                备用网址 <a href="https://jkdh.pages.dev" target="_blank" rel="noopener"
-                    class="highlight-title">jkdh.pages.dev</a>
+                <a href="https://bxkp.org" target="_blank" rel="noopener"
+                    class="highlight-title">不想看片</a>、<a href="https://fan.jiakuan.link" target="_blank" rel="noopener"
+                    class="highlight-title">不想翻墙</a>、<a href="https://bxks.sld.tw/" target="_blank" rel="noopener"
+                    class="highlight-title">不想看书</a>、<a href="https://jkdh.pages.dev/" target="_blank" rel="noopener"
+                    class="highlight-title">备用网址</a>
             </footer>
 
         </div>
@@ -537,6 +573,86 @@
 
     <script src="js/qrcode.min.js"></script>
     <script>
+        // 初始化明暗主题与设备自适应切换系统
+        function initThemeManager() {
+            const toggleBtn = document.getElementById('theme-toggle');
+            const mediaQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+            function getEffectiveTheme() {
+                try {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const urlTheme = urlParams.get('theme');
+                    if (urlTheme === 'dark' || urlTheme === 'light') {
+                        return urlTheme;
+                    }
+                } catch (e) {}
+                const stored = localStorage.getItem('theme');
+                if (stored === 'dark' || stored === 'light') {
+                    return stored;
+                }
+                return (mediaQuery && mediaQuery.matches) ? 'dark' : 'light';
+            }
+
+            function applyTheme(theme, isUserAction = false) {
+                const isDark = (theme === 'dark');
+                document.documentElement.classList.toggle('theme-dark', isDark);
+                document.documentElement.classList.toggle('theme-light', !isDark);
+                document.documentElement.classList.remove('theme-auto');
+
+                const meta = document.querySelector('meta[name="color-scheme"]');
+                if (meta) {
+                    meta.content = isDark ? 'dark' : 'light';
+                }
+
+                if (toggleBtn) {
+                    const label = isDark ? '切换至浅色模式' : '切换至暗黑模式';
+                    toggleBtn.setAttribute('title', label);
+                    toggleBtn.setAttribute('aria-label', label);
+                }
+
+                if (window.__skySystem && typeof window.__skySystem.setDarkMode === 'function') {
+                    window.__skySystem.setDarkMode(isDark, !isUserAction && !document.body);
+                }
+
+                window.dispatchEvent(new CustomEvent('themechange', { detail: { theme, isDark } }));
+            }
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const current = getEffectiveTheme();
+                    const next = (current === 'dark') ? 'light' : 'dark';
+                    const systemPref = (mediaQuery && mediaQuery.matches) ? 'dark' : 'light';
+
+                    if (next === systemPref) {
+                        // 如果用户切回了与系统一致的状态，清除存储以恢复设备自适应
+                        localStorage.removeItem('theme');
+                    } else {
+                        localStorage.setItem('theme', next);
+                    }
+                    applyTheme(next, true);
+                });
+            }
+
+            if (mediaQuery) {
+                mediaQuery.addEventListener('change', (e) => {
+                    const stored = localStorage.getItem('theme');
+                    if (!stored) {
+                        applyTheme(e.matches ? 'dark' : 'light', false);
+                    }
+                });
+            }
+
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'theme') {
+                    applyTheme(getEffectiveTheme(), true);
+                }
+            });
+
+            applyTheme(getEffectiveTheme(), false);
+        }
+        initThemeManager();
+
         // 全局卡片显示更新函数引用
         let updateCardVisibilityGlobal = null;
 

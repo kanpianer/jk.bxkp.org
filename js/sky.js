@@ -35,6 +35,14 @@
 
             this.clock = new THREE.Clock();
 
+            // Dark Mode Transition State
+            const isDarkInit = document.documentElement.classList.contains('theme-dark') ||
+                (document.documentElement.classList.contains('theme-auto') && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            this.targetDarkMode = isDarkInit ? 1.0 : 0.0;
+            this.currentDarkMode = this.targetDarkMode;
+
+            window.__skySystem = this;
+
             this.init();
         }
 
@@ -86,6 +94,7 @@
                 uniform vec2 uResolution;
                 uniform vec2 uImageResolution;
                 uniform float uTime;
+                uniform float uDarkMode;
 
                 varying vec2 vUv;
 
@@ -183,13 +192,71 @@
                     // Crisp unsharp mask (enhances cloud contours and brush strokes)
                     vec4 finalColor = clamp(centerCol + (centerCol - localMean) * 0.30, 0.0, 1.0);
 
-                    // 3. Subtle Sunlit Crest Breathing Shimmer (Warm sunlight subsurface scattering)
+                    // Luminance calculation
                     float lum = dot(finalColor.rgb, vec3(0.299, 0.587, 0.114));
                     float crest = smoothstep(0.85, 1.0, lum);
-                    float sunShimmer = sin(uTime * 1.0 + finalUV.x * 3.5 + finalUV.y * 2.5) * 0.03 * crest;
-                    finalColor.rgb += vec3(1.0, 0.97, 0.90) * sunShimmer;
 
-                    gl_FragColor = finalColor;
+                    // --- DAYLIGHT MODE LIGHTING ---
+                    // Subtle Sunlit Crest Breathing Shimmer (Warm sunlight subsurface scattering)
+                    float sunShimmer = sin(uTime * 1.0 + finalUV.x * 3.5 + finalUV.y * 2.5) * 0.03 * crest;
+                    vec3 dayColor = finalColor.rgb + vec3(1.0, 0.97, 0.90) * sunShimmer;
+
+                    // --- DARK MODE: MOONLIGHT RAYS & NOCTURNE SKY ---
+                    // Cloud density factor
+                    float cloudDensity = smoothstep(0.38, 0.82, lum);
+
+                    // Deep anime midnight sky gradient
+                    vec3 nightSkyTop = vec3(0.035, 0.065, 0.15);
+                    vec3 nightSkyBottom = vec3(0.075, 0.13, 0.26);
+                    vec3 nightSky = mix(nightSkyBottom, nightSkyTop, clamp(uv.y, 0.0, 1.0));
+
+                    // Nocturnal cloud body tones
+                    vec3 cloudShadow = vec3(0.08, 0.13, 0.23);
+                    vec3 cloudBody = mix(cloudShadow, vec3(0.18, 0.28, 0.44), smoothstep(0.42, 0.85, lum));
+                    vec3 nightBase = mix(nightSky, cloudBody, cloudDensity);
+
+                    // Moonlight Rays (emanating from top-right moon position)
+                    vec2 moonPos = vec2(0.88, 0.90);
+                    vec2 rayOffset = finalUV - moonPos;
+                    vec2 aspectOffset = rayOffset * vec2(uResolution.x / uResolution.y, 1.0);
+                    float moonDist = length(aspectOffset);
+                    float rayAngle = atan(rayOffset.y, rayOffset.x);
+
+                    // Volumetric moonlight shafts / crepuscular rays
+                    float rayShafts = sin(rayAngle * 10.0 + uTime * 0.08) * 0.35
+                                    + sin(rayAngle * 21.0 - uTime * 0.05) * 0.25
+                                    + sin(rayAngle * 33.0 + uTime * 0.12) * 0.15;
+                    rayShafts = clamp(rayShafts + 0.35, 0.0, 1.0);
+
+                    // Gentle undulating beam noise
+                    float rayCurl = snoise(vec2(rayAngle * 3.5, moonDist * 1.5 - uTime * 0.06)) * 0.2 + 0.8;
+                    float rayAttenuation = (1.0 / (1.0 + moonDist * 1.6)) * 0.85;
+                    float moonRays = rayShafts * rayCurl * rayAttenuation;
+
+                    // Soft luminous moonlight color
+                    vec3 moonColor = vec3(0.70, 0.85, 1.0);
+
+                    // Atmospheric lunar glow
+                    float moonGlow = exp(-moonDist * 3.5) * 0.55 + exp(-moonDist * 1.2) * 0.25;
+
+                    // Moonlit cloud crest shimmer (silver lunar highlight)
+                    float moonShimmer = sin(uTime * 0.9 + finalUV.x * 3.5 + finalUV.y * 2.5) * 0.04 * crest;
+                    vec3 moonCrest = vec3(0.78, 0.90, 1.0) * (crest * 0.50 + moonShimmer);
+
+                    // Assemble night color
+                    vec3 nightColor = nightBase;
+                    nightColor += moonColor * (moonRays * (0.35 + cloudDensity * 0.45));
+                    nightColor += moonColor * moonGlow;
+                    nightColor += moonCrest;
+
+                    // Subtle twinkling stars in open sky regions
+                    float starNoise = snoise(uv * 48.0);
+                    float star = step(0.965, starNoise) * (sin(uTime * 2.2 + starNoise * 80.0) * 0.4 + 0.6);
+                    nightColor += vec3(0.85, 0.92, 1.0) * star * (1.0 - cloudDensity) * 0.45;
+
+                    // Final blend between day and night based on uDarkMode
+                    vec3 resultColor = mix(dayColor, nightColor, uDarkMode);
+                    gl_FragColor = vec4(resultColor, 1.0);
                 }
             `;
 
@@ -197,7 +264,8 @@
                 uTexture: { value: texture },
                 uResolution: { value: new THREE.Vector2(this.width, this.height) },
                 uImageResolution: { value: new THREE.Vector2(imgW, imgH) },
-                uTime: { value: 0 }
+                uTime: { value: 0 },
+                uDarkMode: { value: this.currentDarkMode }
             };
 
             const geo = new THREE.PlaneGeometry(2, 2);
@@ -213,8 +281,32 @@
             this.scene.add(this.mesh);
         }
 
+        setDarkMode(isDark, instant = false) {
+            this.targetDarkMode = isDark ? 1.0 : 0.0;
+            if (instant) {
+                this.currentDarkMode = this.targetDarkMode;
+                if (this.uniforms && this.uniforms.uDarkMode) {
+                    this.uniforms.uDarkMode.value = this.currentDarkMode;
+                }
+            }
+        }
+
         bindEvents() {
             window.addEventListener('resize', this.onWindowResize.bind(this), { passive: true });
+
+            window.addEventListener('themechange', (e) => {
+                if (e.detail && typeof e.detail.isDark === 'boolean') {
+                    this.setDarkMode(e.detail.isDark);
+                }
+            });
+
+            if (typeof MutationObserver !== 'undefined') {
+                const observer = new MutationObserver(() => {
+                    const isDark = document.documentElement.classList.contains('theme-dark');
+                    this.setDarkMode(isDark);
+                });
+                observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+            }
         }
 
         onWindowResize() {
@@ -233,8 +325,19 @@
 
             const elapsedTime = this.clock.getElapsedTime();
 
+            // Smooth day/night interpolation
+            const diff = this.targetDarkMode - this.currentDarkMode;
+            if (Math.abs(diff) > 0.0005) {
+                this.currentDarkMode += diff * 0.06;
+            } else {
+                this.currentDarkMode = this.targetDarkMode;
+            }
+
             if (this.uniforms) {
                 this.uniforms.uTime.value = elapsedTime;
+                if (this.uniforms.uDarkMode) {
+                    this.uniforms.uDarkMode.value = this.currentDarkMode;
+                }
             }
 
             this.renderer.render(this.scene, this.camera);
