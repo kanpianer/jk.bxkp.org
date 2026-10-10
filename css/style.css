@@ -328,6 +328,7 @@ a:hover {
 	-webkit-backdrop-filter: blur(8px);
 	transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 	outline: none;
+	text-decoration: none !important;
 	white-space: nowrap;
 	-webkit-tap-highlight-color: transparent;
 	pointer-events: auto;

@@ -13,7 +13,11 @@ function shortlinkPlugin() {
             const map = JSON.parse(fs.readFileSync(mapPath, 'utf8'));
             const slug = req.url ? req.url.replace(/^\/+|\/+$/g, '').split('?')[0].toLowerCase() : '';
             if (slug && map[slug] && map[slug].target) {
-              res.writeHead(302, { Location: map[slug].target });
+              let target = map[slug].target;
+              if (target.startsWith('https://jiakuan.link/#') || target === 'https://jiakuan.link/' || target === 'https://jiakuan.link') {
+                target = target.replace('https://jiakuan.link', '') || '/';
+              }
+              res.writeHead(302, { Location: target });
               res.end();
               return;
             }
@@ -30,7 +34,11 @@ function shortlinkPlugin() {
             const map = JSON.parse(fs.readFileSync(mapPath, 'utf8'));
             const slug = req.url ? req.url.replace(/^\/+|\/+$/g, '').split('?')[0].toLowerCase() : '';
             if (slug && map[slug] && map[slug].target) {
-              res.writeHead(302, { Location: map[slug].target });
+              let target = map[slug].target;
+              if (target.startsWith('https://jiakuan.link/#') || target === 'https://jiakuan.link/' || target === 'https://jiakuan.link') {
+                target = target.replace('https://jiakuan.link', '') || '/';
+              }
+              res.writeHead(302, { Location: target });
               res.end();
               return;
             }

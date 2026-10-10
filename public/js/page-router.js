@@ -56,9 +56,11 @@
         return /\/guides\/[^/]+\.html$/i.test(path);
     }
 
-    // 判断是否为主页路径
+    // 判断是否为主页路径（包含官方分类路径 /old, /young, /vps）
     function isHomePath(path) {
-        return path === '/' || path === '/index.html' || path.endsWith('/index.html') || path === '';
+        const clean = (path || '').replace(/^\/+|\/+$/g, '').toLowerCase().split('/')[0];
+        return path === '/' || path === '/index.html' || path.endsWith('/index.html') || path === '' ||
+               clean === 'old' || clean === 'young' || clean === 'vps';
     }
 
     // 获取当前窗口真实滚动深度
@@ -432,6 +434,9 @@
 
         const anchor = e.target.closest('a');
         if (!anchor) return;
+
+        // 分类导航链接由分类过滤器独立控制，避免转场引擎干预
+        if (anchor.classList.contains('category-btn')) return;
 
         // 如果是返回按钮，走专门的返回逻辑
         if (anchor.classList.contains('floating-back-btn') || anchor.classList.contains('guide-footer-btn')) {

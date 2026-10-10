@@ -410,15 +410,39 @@
         const expandWrapper = document.getElementById('expandBtnWrapper');
         if (!container || !navButtons.length) return;
 
-        let activeCategory = 'airport';
-        const hash = window.location.hash.toLowerCase();
-        if (hash === '#noble' || hash === '#lz' || hash === '#old' || hash === '#gz') {
-            activeCategory = 'noble';
-        } else if (hash === '#vps') {
-            activeCategory = 'vps';
-        } else {
-            activeCategory = 'airport';
+        const categoryPathMap = {
+            'noble': '/old',
+            'airport': '/young',
+            'vps': '/vps'
+        };
+
+        function getCategoryFromLocation() {
+            const pathSlug = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase().split('/')[0];
+            const hash = (window.location.hash || '').toLowerCase();
+
+            if (pathSlug === 'old' || hash === '#noble' || hash === '#lz' || hash === '#old' || hash === '#gz') {
+                return 'noble';
+            } else if (pathSlug === 'vps' || hash === '#vps') {
+                return 'vps';
+            } else if (pathSlug === 'young' || hash === '#airport' || hash === '#young') {
+                return 'airport';
+            }
+            return 'airport';
         }
+
+        let activeCategory = getCategoryFromLocation();
+
+        // 若初始 URL 为 Hash 访问，规范化清洗为对应短路径 /old, /young, /vps
+        try {
+            const initialHash = (window.location.hash || '').toLowerCase();
+            if (initialHash === '#old' || initialHash === '#noble' || initialHash === '#lz' || initialHash === '#gz') {
+                history.replaceState({ category: 'noble', type: 'category' }, '', '/old');
+            } else if (initialHash === '#young' || initialHash === '#airport') {
+                history.replaceState({ category: 'airport', type: 'category' }, '', '/young');
+            } else if (initialHash === '#vps') {
+                history.replaceState({ category: 'vps', type: 'category' }, '', '/vps');
+            }
+        } catch (e) {}
 
         // 严格同步 body 属性，驱动 CSS 级严格隔离
         document.body.dataset.activeCategory = activeCategory;
@@ -481,11 +505,21 @@
 
         updateCardVisibilityGlobal = updateCardVisibility;
 
-        function setCategory(cat) {
+        function setCategory(cat, updateHistory = true) {
             if (!cat || !['airport', 'noble', 'vps'].includes(cat)) return;
             if (activeCategory === cat) return;
             const prevCategory = activeCategory;
             activeCategory = cat;
+
+            // 切换分类时同步更新 URL 路径 (HTML5 History API)
+            if (updateHistory) {
+                const targetPath = categoryPathMap[activeCategory];
+                if (targetPath && window.location.pathname !== targetPath) {
+                    try {
+                        history.pushState({ category: activeCategory, type: 'category' }, '', targetPath);
+                    } catch (e) {}
+                }
+            }
 
             // 切换分类时重置展开状态，保持一致的分类初始收起体验
             if (container.classList.contains('is-expanded')) {
@@ -533,21 +567,23 @@
                 e.preventDefault();
                 if (document.body.classList.contains('cards-falling')) return;
                 if (btn.dataset.category === activeCategory) return;
-                setCategory(btn.dataset.category);
+                setCategory(btn.dataset.category, true);
             });
         });
 
-        // 监听 URL hash 变化，支持前进后退与深度链接
-        window.addEventListener('hashchange', () => {
-            const h = (window.location.hash || '').toLowerCase();
-            let newCat = 'airport';
-            if (h === '#noble' || h === '#lz' || h === '#old' || h === '#gz') {
-                newCat = 'noble';
-            } else if (h === '#vps') {
-                newCat = 'vps';
+        // 监听浏览器前进后退，支持不同分类间无刷新无缝切换
+        window.addEventListener('popstate', () => {
+            const targetCat = getCategoryFromLocation();
+            if (targetCat !== activeCategory) {
+                setCategory(targetCat, false);
             }
-            if (newCat !== activeCategory) {
-                setCategory(newCat);
+        });
+
+        // 监听 URL hash 变化，支持传统锚点深度链接
+        window.addEventListener('hashchange', () => {
+            const targetCat = getCategoryFromLocation();
+            if (targetCat !== activeCategory) {
+                setCategory(targetCat, false);
             }
         });
 

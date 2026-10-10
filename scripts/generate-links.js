@@ -30,11 +30,31 @@ const ROOT_404_FILE = path.resolve(ROOT_DIR, '404.html');
 
 // 排除可能与网站现有路由冲突的保留词
 const RESERVED_SLUGS = new Set([
+  'old', 'young', 'vps',
   'guide', 'admin', 'asset', 'image', 'fonts', 'media', 'about',
   'index', 'login', 'share', 'terms', 'links', 'nodes', 'stats',
   'reset', 'style', 'tests', 'debug', 'error', 'setup', 'pages',
   'posts', 'files', 'cloud', 'robot', 'swjs0', 'cname'
 ]);
+
+// 官方 3 大分类的自定义短链路由映射
+const CATEGORY_LINKS = {
+  old: {
+    title: '老站',
+    target: `${BASE_URL}/#old`,
+    category: 'noble'
+  },
+  young: {
+    title: '机场',
+    target: `${BASE_URL}/#young`,
+    category: 'airport'
+  },
+  vps: {
+    title: 'VPS',
+    target: `${BASE_URL}/#vps`,
+    category: 'vps'
+  }
+};
 
 /**
  * 生成 5 位随机小写字母
@@ -250,6 +270,22 @@ export async function main() {
     }
   }
 
+  // 1.1 注入 3 大官方分类自定义短链（老站、机场、VPS）
+  for (const [slug, item] of Object.entries(CATEGORY_LINKS)) {
+    if (!linksMap[slug]) {
+      linksMap[slug] = {
+        title: item.title,
+        target: item.target,
+        category: item.category,
+        createdAt: new Date().toISOString().split('T')[0]
+      };
+    } else {
+      linksMap[slug].title = item.title;
+      linksMap[slug].target = item.target;
+      linksMap[slug].category = item.category;
+    }
+  }
+
   // 2. 建立已有的 slug 与 target 反查表
   const existingSlugs = new Set(Object.keys(linksMap));
   const targetToSlug = new Map();
@@ -410,7 +446,11 @@ export async function main() {
   const redirectLines = ['# Cloudflare Pages 302 Redirects'];
 
   for (const [slug, item] of Object.entries(sortedMap)) {
-    if (!item.target || item.target.startsWith(BASE_URL)) {
+    if (!item.target) {
+      continue;
+    }
+    // 避免自身指向自身的自重定向死循环
+    if (item.target === BASE_URL || item.target === `${BASE_URL}/` || item.target === `${BASE_URL}/${slug}` || item.target === `${BASE_URL}/${slug}/`) {
       continue;
     }
 

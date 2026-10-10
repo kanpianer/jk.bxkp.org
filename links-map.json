@@ -143,6 +143,12 @@
     "category": "airport",
     "createdAt": "2026-10-10"
   },
+  "old": {
+    "title": "老站",
+    "target": "https://jiakuan.link/#old",
+    "category": "noble",
+    "createdAt": "2026-10-10"
+  },
   "pdcvl": {
     "title": "Now加速",
     "target": "https://www.noww.cc/#/register?code=TFNz7IZX",
@@ -209,6 +215,12 @@
     "category": "airport",
     "createdAt": "2026-10-10"
   },
+  "vps": {
+    "title": "VPS",
+    "target": "https://jiakuan.link/#vps",
+    "category": "vps",
+    "createdAt": "2026-10-10"
+  },
   "vwrxb": {
     "title": "CatNet",
     "target": "https://catnet.uk/#/register?code=gfjdni85",
@@ -237,6 +249,12 @@
     "title": "#Lamhosting LLC",
     "target": "https://lamhosting.com/aff.php?aff=368",
     "category": "vps",
+    "createdAt": "2026-10-10"
+  },
+  "young": {
+    "title": "机场",
+    "target": "https://jiakuan.link/#young",
+    "category": "airport",
     "createdAt": "2026-10-10"
   }
 }
