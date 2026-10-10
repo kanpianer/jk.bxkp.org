@@ -198,10 +198,11 @@
         }
 
         function getCardPrefixes(btn) {
-            let isHidden = false;
+            let isHidden = btn.classList.contains('card-hidden');
             let isHighlight = false;
             const titleNode = btn.querySelector('.card-title');
             if (titleNode) {
+                if (titleNode.classList.contains('highlight-title')) isHighlight = true;
                 const text = titleNode.textContent.trim();
                 const match = text.match(/^([!！#＃]+)/);
                 if (match) {
@@ -300,9 +301,12 @@
             activeCategory = 'noble';
         } else if (hash === '#vps') {
             activeCategory = 'vps';
-        } else if (hash === '#all') {
-            activeCategory = 'all';
+        } else {
+            activeCategory = 'airport';
         }
+
+        // 严格同步 body 属性，驱动 CSS 级严格隔离
+        document.body.dataset.activeCategory = activeCategory;
 
         function updateCardVisibility(withAnimation = false) {
             const isExpanded = container.classList.contains('is-expanded');
@@ -313,7 +317,8 @@
 
             allButtons.forEach(btn => {
                 const btnCat = btn.dataset.category;
-                const matchesCategory = (activeCategory === 'all' || btnCat === activeCategory);
+                // 同一分类下，只可以显示所属分类的卡片，严禁跨分类展示
+                const matchesCategory = (btnCat === activeCategory);
                 const isCardHidden = btn.classList.contains('card-hidden');
 
                 if (matchesCategory) {
@@ -362,8 +367,23 @@
         updateCardVisibilityGlobal = updateCardVisibility;
 
         function setCategory(cat) {
+            if (!cat || !['airport', 'noble', 'vps'].includes(cat)) return;
             if (activeCategory === cat) return;
             activeCategory = cat;
+
+            // 切换分类时重置展开状态，保持一致的分类初始收起体验
+            if (container.classList.contains('is-expanded')) {
+                container.classList.remove('is-expanded');
+                if (expandWrapper) expandWrapper.classList.remove('is-expanded');
+                const expandBtn = document.getElementById('expandCardBtn');
+                if (expandBtn) {
+                    expandBtn.setAttribute('aria-expanded', 'false');
+                    expandBtn.setAttribute('title', '展开更多');
+                    expandBtn.setAttribute('aria-label', '展开更多');
+                }
+            }
+
+            document.body.dataset.activeCategory = activeCategory;
 
             navButtons.forEach(btn => {
                 const btnCat = btn.dataset.category;
@@ -386,6 +406,20 @@
                 if (btn.dataset.category === activeCategory) return;
                 setCategory(btn.dataset.category);
             });
+        });
+
+        // 监听 URL hash 变化，支持前进后退与深度链接
+        window.addEventListener('hashchange', () => {
+            const h = (window.location.hash || '').toLowerCase();
+            let newCat = 'airport';
+            if (h === '#noble' || h === '#lz' || h === '#old' || h === '#gz') {
+                newCat = 'noble';
+            } else if (h === '#vps') {
+                newCat = 'vps';
+            }
+            if (newCat !== activeCategory) {
+                setCategory(newCat);
+            }
         });
 
         updateCardVisibility(false);

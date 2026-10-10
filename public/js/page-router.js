@@ -361,6 +361,9 @@
         }
 
         document.body.classList.remove('is-viewing-guide');
+        if (!document.body.dataset.activeCategory) {
+            document.body.dataset.activeCategory = 'airport';
+        }
 
         // 直接显示主页视图
         if (homeView) {

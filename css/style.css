@@ -609,17 +609,31 @@ a:hover {
 /* Center the last button when it's alone in the row (odd number of buttons) */
 /* Rule removed for 3-column layout */
 
-/* Hidden Card State */
-.button-stack .button.card-hidden {
-	display: none;
+/* ==========================================================================
+   严格分类隔离与首屏展示规则
+   同一分类下，只允许显示所属分类的卡片，彻底避免首屏加载时跨分类闪烁与内容泄露
+   ========================================================================== */
+
+/* 1. 严格分类隔离：非当前激活分类的卡片强制隐藏，任何情况下均不可显示 */
+body[data-active-category="airport"] .button-stack .button:not([data-category="airport"]),
+body[data-active-category="noble"] .button-stack .button:not([data-category="noble"]),
+body[data-active-category="vps"] .button-stack .button:not([data-category="vps"]),
+body:not([data-active-category]) .button-stack .button:not([data-category="airport"]) {
+	display: none !important;
 }
 
+/* 2. 隐藏卡片状态：未处于展开状态时强制隐藏 */
+.button-stack:not(.is-expanded) .button.card-hidden {
+	display: none !important;
+}
+
+/* 3. 展开状态下，隐藏卡片在所属分类内淡入显示（受严格分类隔离规则绝对约束，绝不跨分类显示） */
 .button-stack.is-expanded .button.card-hidden {
 	display: inline-flex;
 	animation: cardFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Category Filter State & Animations */
+/* 4. 分类过滤辅助类兜底 */
 .button-stack .button.category-filtered-out,
 .button-stack.is-expanded .button.card-hidden.category-filtered-out {
 	display: none !important;

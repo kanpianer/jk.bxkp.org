@@ -186,7 +186,22 @@
 
 </head>
 
-<body>
+<body data-active-category="airport">
+    <!-- 同步解析 URL Hash，首屏极速锁定目标分类（零闪烁） -->
+    <script>
+        (function() {
+            try {
+                var h = (window.location.hash || "").toLowerCase();
+                if (h === "#noble" || h === "#lz" || h === "#old" || h === "#gz") {
+                    document.body.setAttribute("data-active-category", "noble");
+                } else if (h === "#vps") {
+                    document.body.setAttribute("data-active-category", "vps");
+                } else {
+                    document.body.setAttribute("data-active-category", "airport");
+                }
+            } catch(e) {}
+        })();
+    </script>
 
     <!-- 极简左上角指南按钮（全局常驻层，无背景、透明、极简图标+文字） -->
     <button id="guide-toggle" class="guide-toggle-btn" type="button" aria-label="指南" title="指南">
@@ -320,8 +335,8 @@
 
                 <!-- ========== 老站 ========== -->
                 <!-- rancho -->
-                <a class="button button-xzwl" href="https://jiakuan.link/dsiug" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="noble">
+                <a class="button button-xzwl category-filtered-out" href="https://jiakuan.link/dsiug" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="noble" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/rancho.png" alt="rancho Logo" width="30" height="30" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -334,8 +349,8 @@
                 </a>
 
                 <!-- MESL -->
-                <a class="button button-xzwl" href="https://jiakuan.link/laymo" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="noble">
+                <a class="button button-xzwl category-filtered-out" href="https://jiakuan.link/laymo" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="noble" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/mesl.png" alt="mesl Logo" width="30" height="30" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -347,8 +362,8 @@
                 </a>
 
                 <!-- TAG -->
-                <a class="button button-xzwl" href="https://jiakuan.link/yhdkx" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="noble">
+                <a class="button button-xzwl category-filtered-out" href="https://jiakuan.link/yhdkx" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="noble" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/tag.png" alt="tag Logo" width="30" height="30" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -360,8 +375,8 @@
                 </a>
 
                 <!-- Godetia -->
-                <a class="button button-xzwl" href="https://jiakuan.link/teolw" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="noble">
+                <a class="button button-xzwl category-filtered-out" href="https://jiakuan.link/teolw" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="noble" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/godetia.svg" alt="Godetia Logo" width="30" height="30" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -373,8 +388,8 @@
                 </a>
 
                 <!-- CLOUDIE -->
-                <a class="button button-xzwl" href="https://jiakuan.link/wxgzr" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="noble">
+                <a class="button button-xzwl category-filtered-out" href="https://jiakuan.link/wxgzr" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="noble" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/cloudie.png" alt="CLOUDIE Logo" width="30" height="30" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -386,8 +401,8 @@
                 </a>
 
                 <!-- oixCloud -->
-                <a class="button button-xzwl" href="https://jiakuan.link/gmiuc" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="noble">
+                <a class="button button-xzwl category-filtered-out" href="https://jiakuan.link/gmiuc" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="noble" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/oixcloud.png" alt="oixCloud Logo" width="30" height="30" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -400,8 +415,8 @@
                 </a>
 
                 <!-- FTQ -->
-                <a class="button button-xzwl" href="https://jiakuan.link/dmasg" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="noble">
+                <a class="button button-xzwl category-filtered-out" href="https://jiakuan.link/dmasg" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="noble" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/ftq.png" alt="FTQ Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -414,8 +429,8 @@
                 </a>
 
                 <!-- BiuBiu -->
-                <a class="button button-xzwl" href="https://jiakuan.link/riivj" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="noble">
+                <a class="button button-xzwl category-filtered-out" href="https://jiakuan.link/riivj" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="noble" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/biubiu.png" alt="BiuBiu Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -428,8 +443,8 @@
                 </a>
 
                 <!-- SS-ID -->
-                <a class="button button-xzwl" href="https://jiakuan.link/ejprr" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="noble">
+                <a class="button button-xzwl category-filtered-out" href="https://jiakuan.link/ejprr" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="noble" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/ssid.png" alt="SS-ID Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -442,8 +457,8 @@
                 </a>
 
                 <!-- SNTP -->
-                <a class="button button-xzwl" href="https://jiakuan.link/gsfcc" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="noble">
+                <a class="button button-xzwl category-filtered-out" href="https://jiakuan.link/gsfcc" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="noble" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/shouhou.png" alt="SNTP Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -457,8 +472,8 @@
                 </a>
 
                 <!-- E-IX -->
-                <a class="button button-xzwl" href="https://jiakuan.link/mzuia" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="noble">
+                <a class="button button-xzwl category-filtered-out" href="https://jiakuan.link/mzuia" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="noble" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/eix.png" alt="E-IX Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -471,8 +486,8 @@
                 </a>
 
                 <!-- CatNet -->
-                <a class="button button-xzwl" href="https://jiakuan.link/vwrxb" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="noble">
+                <a class="button button-xzwl category-filtered-out" href="https://jiakuan.link/vwrxb" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="noble" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/catnet.png" alt="CatNet Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -485,8 +500,8 @@
                 </a>
 
                 <!-- 青云梯 (Hidden) -->
-                <a class="button button-xzwl" href="https://jiakuan.link/evbyj" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="noble">
+                <a class="button button-xzwl card-hidden category-filtered-out" href="https://jiakuan.link/evbyj" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="noble" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/qingyunti.png" alt="青云梯 Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -499,8 +514,8 @@
                 </a>
 
                 <!-- Bitz Net (Hidden) -->
-                <a class="button button-xzwl" href="https://jiakuan.link/rklbd" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="noble">
+                <a class="button button-xzwl card-hidden category-filtered-out" href="https://jiakuan.link/rklbd" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="noble" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/bitznet.png" alt="Bitz Net Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -513,8 +528,8 @@
                 </a>
 
                 <!-- GLaDOS (Hidden) -->
-                <a class="button button-xzwl" href="https://jiakuan.link/gvkxq" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="noble">
+                <a class="button button-xzwl card-hidden category-filtered-out" href="https://jiakuan.link/gvkxq" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="noble" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/glados.png" alt="GLaDOS Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -527,8 +542,8 @@
                 </a>
 
                 <!-- LinkCube (Hidden) -->
-                <a class="button button-xzwl" href="https://jiakuan.link/niqcb" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="noble">
+                <a class="button button-xzwl card-hidden category-filtered-out" href="https://jiakuan.link/niqcb" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="noble" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/linkcube.png" alt="LinkCube Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -700,8 +715,8 @@
 
 
                 <!-- nvenix (Hidden) -->
-                <a class="button button-xzwl" href="https://jiakuan.link/iqohv" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="airport">
+                <a class="button button-xzwl card-hidden" href="https://jiakuan.link/iqohv" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="airport" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/nvenix.svg" alt="nvenix Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -713,8 +728,8 @@
                 </a>
 
                 <!-- EqualDCDN (Hidden) -->
-                <a class="button button-xzwl" href="https://jiakuan.link/iblrw" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="airport">
+                <a class="button button-xzwl card-hidden" href="https://jiakuan.link/iblrw" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="airport" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/equalvpn.webp" alt="EqualDCDN Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -727,8 +742,8 @@
 
                 <!-- ========== VPS ========== -->
                 <!-- 学长网络 -->
-                <a class="button button-xzwl" href="https://jiakuan.link/ensqw" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="vps">
+                <a class="button button-xzwl category-filtered-out" href="https://jiakuan.link/ensqw" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="vps" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/xzwl.png" alt="xzwl Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -740,8 +755,8 @@
                 </a>
 
                 <!-- Lamhosting LLC -->
-                <a class="button button-xzwl" href="https://jiakuan.link/ynxde" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="vps">
+                <a class="button button-xzwl category-filtered-out" href="https://jiakuan.link/ynxde" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="vps" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/lamhosting.svg" alt="Lamhosting Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -753,8 +768,8 @@
                 </a>
 
                 <!-- OHNO -->
-                <a class="button button-xzwl" href="https://jiakuan.link/spqju" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="vps">
+                <a class="button button-xzwl category-filtered-out" href="https://jiakuan.link/spqju" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="vps" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/ohno.png" alt="OHNO Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -766,8 +781,8 @@
                 </a>
 
                 <!-- ZoroCloud -->
-                <a class="button button-xzwl" href="https://jiakuan.link/qbgae" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="vps">
+                <a class="button button-xzwl category-filtered-out" href="https://jiakuan.link/qbgae" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="vps" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/zorocloud.png" alt="ZoroCloud Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -778,8 +793,8 @@
                 </a>
 
                 <!-- VoyraCloud -->
-                <a class="button button-xzwl" href="https://jiakuan.link/btkmi" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="vps">
+                <a class="button button-xzwl category-filtered-out" href="https://jiakuan.link/btkmi" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="vps" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/voyracloud.png" alt="VoyraCloud Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -790,8 +805,8 @@
                 </a>
 
                 <!-- 干杯CLOUD -->
-                <a class="button button-xzwl" href="https://jiakuan.link/lkyue" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="vps">
+                <a class="button button-xzwl category-filtered-out" href="https://jiakuan.link/lkyue" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="vps" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/ganbei.svg" alt="ganbei Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -802,9 +817,9 @@
                 </a>
 
                 <!-- AkileCloud -->
-                <a class="button button-xzwl"
+                <a class="button button-xzwl category-filtered-out"
                     href="https://jiakuan.link/lssuk" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="vps">
+                    rel="sponsored noopener" role="button" data-category="vps" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/akile.ico" alt="Akile Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -815,8 +830,8 @@
                 </a>
 
                 <!-- Voluri -->
-                <a class="button button-xzwl" href="https://jiakuan.link/pddtl" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="vps">
+                <a class="button button-xzwl category-filtered-out" href="https://jiakuan.link/pddtl" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="vps" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/voluri.png" alt="voluri Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -828,8 +843,8 @@
 
 
                 <!-- SixtyNet -->
-                <a class="button button-xzwl" href="https://jiakuan.link/leqts" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="vps">
+                <a class="button button-xzwl category-filtered-out" href="https://jiakuan.link/leqts" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="vps" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/sixtynet.png" alt="SixtyNet Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -840,8 +855,8 @@
                 </a>
 
                 <!-- SolaDrive (Hidden) -->
-                <a class="button button-xzwl" href="https://jiakuan.link/bvmvk" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="vps">
+                <a class="button button-xzwl card-hidden category-filtered-out" href="https://jiakuan.link/bvmvk" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="vps" style="display: none;">
                     <img class="icon" aria-hidden="true" src="images/icons/sola.webp" alt="SolaDrive Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
@@ -854,7 +869,7 @@
             </div>
 
             <!-- 展开隐藏卡片按钮（仅纯净图标，无背景） -->
-            <div class="expand-btn-wrapper" id="expandBtnWrapper" style="display: none;">
+            <div class="expand-btn-wrapper" id="expandBtnWrapper" style="display: flex;">
                 <div class="expand-card-btn" id="expandCardBtn" role="button" tabindex="0" aria-label="展开隐藏卡片"
                     aria-expanded="false" title="展开更多">
                     <svg class="expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
