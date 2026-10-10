@@ -393,10 +393,10 @@
 
         overlay.appendChild(card);
 
-        // 动效全长 0.80s（停留0.4s），结束后安全清理 DOM
+        // 动效全长 1.00s（进场0.3s，停留0.4s，离场0.3s），结束后安全清理 DOM
         activeSpeedToastTimer = setTimeout(() => {
             dismissCategorySpeedToast();
-        }, 850);
+        }, 1050);
     }
 
     window.triggerCategorySpeedToast = triggerCategorySpeedToast;

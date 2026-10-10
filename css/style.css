@@ -578,6 +578,18 @@ a:hover {
 	border: 1px solid rgba(239, 68, 68, 0.65);
 }
 
+.tag-xinjiang {
+	background: rgba(45, 212, 191, 0.25);
+	color: #99f6e4;
+	border: 1px solid rgba(45, 212, 191, 0.6);
+}
+
+.tag-satellite {
+	background: rgba(192, 132, 252, 0.25);
+	color: #f3e8ff;
+	border: 1px solid rgba(192, 132, 252, 0.6);
+}
+
 .card-meta {
 	font-size: 0.8125rem;
 	font-weight: 500;
@@ -588,6 +600,10 @@ a:hover {
 	width: 100%;
 	letter-spacing: -0.01em;
 	transition: color 0.25s ease;
+}
+
+.card-meta .card-tag {
+	vertical-align: middle;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -646,6 +662,18 @@ a:hover {
 		background: rgba(239, 68, 68, 0.16);
 		color: #b91c1c;
 		border-color: rgba(220, 38, 38, 0.5);
+	}
+
+	.button:hover .tag-xinjiang {
+		background: rgba(20, 184, 166, 0.22);
+		color: #115e59;
+		border-color: rgba(13, 148, 136, 0.5);
+	}
+
+	.button:hover .tag-satellite {
+		background: rgba(168, 85, 247, 0.22);
+		color: #581c87;
+		border-color: rgba(147, 51, 234, 0.5);
 	}
 
 	.button:hover .card-meta {
@@ -1149,6 +1177,16 @@ footer a:hover,
 		color: #fecaca;
 		border-color: rgba(239, 68, 68, 0.65);
 	}
+	:root.theme-dark .button:hover .tag-xinjiang {
+		background: rgba(45, 212, 191, 0.25);
+		color: #99f6e4;
+		border-color: rgba(45, 212, 191, 0.6);
+	}
+	:root.theme-dark .button:hover .tag-satellite {
+		background: rgba(192, 132, 252, 0.25);
+		color: #f3e8ff;
+		border-color: rgba(192, 132, 252, 0.6);
+	}
 
 	:root.theme-dark .category-nav .category-btn:hover,
 	:root.theme-dark .category-btn:hover {
@@ -1257,6 +1295,16 @@ footer a:hover,
 		background: rgba(239, 68, 68, 0.25);
 		color: #fecaca;
 		border-color: rgba(239, 68, 68, 0.65);
+	}
+	:root.theme-auto .button:hover .tag-xinjiang {
+		background: rgba(45, 212, 191, 0.25);
+		color: #99f6e4;
+		border-color: rgba(45, 212, 191, 0.6);
+	}
+	:root.theme-auto .button:hover .tag-satellite {
+		background: rgba(192, 132, 252, 0.25);
+		color: #f3e8ff;
+		border-color: rgba(192, 132, 252, 0.6);
 	}
 	:root.theme-auto .category-nav .category-btn,
 	:root.theme-auto .category-btn {
@@ -2466,7 +2514,7 @@ body[data-active-category="vps"] #seo-knowledge {
 	align-items: center;
 	justify-content: center;
 	will-change: transform, opacity;
-	animation: speedToastFlight 0.8s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+	animation: speedToastFlight 1.0s cubic-bezier(0.18, 0.88, 0.3, 1) forwards;
 }
 
 .speed-toast-text,
@@ -2505,16 +2553,16 @@ body[data-active-category="vps"] #seo-knowledge {
 }
 
 .speed-toast-ghost.ghost-1 {
-	animation: speedGhostTrail1 0.8s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+	animation: speedGhostTrail1 1.0s cubic-bezier(0.18, 0.88, 0.3, 1) forwards;
 }
 .speed-toast-ghost.ghost-2 {
-	animation: speedGhostTrail2 0.8s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+	animation: speedGhostTrail2 1.0s cubic-bezier(0.18, 0.88, 0.3, 1) forwards;
 }
 .speed-toast-ghost.ghost-3 {
-	animation: speedGhostTrail3 0.8s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+	animation: speedGhostTrail3 1.0s cubic-bezier(0.18, 0.88, 0.3, 1) forwards;
 }
 .speed-toast-ghost.ghost-4 {
-	animation: speedGhostTrail4 0.8s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+	animation: speedGhostTrail4 1.0s cubic-bezier(0.18, 0.88, 0.3, 1) forwards;
 }
 
 /* 极速运动白色光线粒子（Streaks） */
@@ -2536,7 +2584,7 @@ body[data-active-category="vps"] #seo-knowledge {
 	border-radius: 2px;
 	opacity: 0;
 	background: linear-gradient(to top, transparent, rgba(255, 255, 255, 0.8));
-	animation: speedStreakRush 0.8s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+	animation: speedStreakRush 1.0s cubic-bezier(0.18, 0.88, 0.3, 1) forwards;
 }
 
 .speed-streak.line-1 { left: 15%; animation-delay: 0.02s; }
@@ -2544,20 +2592,24 @@ body[data-active-category="vps"] #seo-knowledge {
 .speed-streak.line-3 { left: 62%; animation-delay: 0.03s; }
 .speed-streak.line-4 { left: 85%; animation-delay: 0.01s; }
 
-/* 核心位移关键帧：底部极速冲刺 -> 第二行卡片中心水平对齐停留 0.4 秒（无任何缩小动作） -> 极速向上发射消失 */
+/* 核心位移关键帧：
+   0% ~ 30% (0.30s): 底部进入 -> 明显平滑减速移入第二行卡片中心（比之前加0.1秒，移动过程更清晰）
+   30% ~ 70% (0.40s): 第二行卡片中心水平对齐静止停留 0.4 秒（无任何缩小动作）
+   70% ~ 100% (0.30s): 极速向上发射消失（比之前加0.1秒，冲顶过程更明显完整）
+*/
 @keyframes speedToastFlight {
 	0% {
 		transform: translate3d(-50%, calc(var(--start-y, 110vh) - 50%), 0);
 		opacity: 0;
-		animation-timing-function: cubic-bezier(0.12, 0.95, 0.2, 1);
+		animation-timing-function: cubic-bezier(0.18, 0.88, 0.3, 1);
 	}
-	3% {
+	4% {
 		opacity: 1;
 	}
-	25%, 75% {
+	30%, 70% {
 		transform: translate3d(-50%, calc(var(--target-y, 40vh) - 50%), 0);
 		opacity: 1;
-		animation-timing-function: cubic-bezier(0.42, 0, 0.88, 0.25);
+		animation-timing-function: cubic-bezier(0.42, 0, 0.85, 0.25);
 	}
 	95% {
 		opacity: 1;
@@ -2571,20 +2623,20 @@ body[data-active-category="vps"] #seo-knowledge {
 /* 幽灵残影 1（近距离纯白高保真残影） */
 @keyframes speedGhostTrail1 {
 	0% {
-		transform: translate3d(-50%, -50%, 0) translateY(20px);
+		transform: translate3d(-50%, -50%, 0) translateY(24px);
 		opacity: 0.75;
 		filter: blur(0.8px);
 	}
-	25%, 75% {
+	30%, 70% {
 		transform: translate3d(-50%, -50%, 0) translateY(0);
 		opacity: 0;
 		filter: blur(0);
 	}
-	80% {
+	76% {
 		opacity: 0.7;
 	}
 	100% {
-		transform: translate3d(-50%, -50%, 0) translateY(30px);
+		transform: translate3d(-50%, -50%, 0) translateY(35px);
 		opacity: 0;
 		filter: blur(1.2px);
 	}
@@ -2593,20 +2645,20 @@ body[data-active-category="vps"] #seo-knowledge {
 /* 幽灵残影 2 */
 @keyframes speedGhostTrail2 {
 	0% {
-		transform: translate3d(-50%, -50%, 0) translateY(42px);
+		transform: translate3d(-50%, -50%, 0) translateY(48px);
 		opacity: 0.55;
 		filter: blur(1.8px);
 	}
-	25%, 75% {
+	30%, 70% {
 		transform: translate3d(-50%, -50%, 0) translateY(0);
 		opacity: 0;
 		filter: blur(0);
 	}
-	80% {
+	76% {
 		opacity: 0.55;
 	}
 	100% {
-		transform: translate3d(-50%, -50%, 0) translateY(60px);
+		transform: translate3d(-50%, -50%, 0) translateY(68px);
 		opacity: 0;
 		filter: blur(2.5px);
 	}
@@ -2615,20 +2667,20 @@ body[data-active-category="vps"] #seo-knowledge {
 /* 幽灵残影 3 */
 @keyframes speedGhostTrail3 {
 	0% {
-		transform: translate3d(-50%, -50%, 0) translateY(72px);
+		transform: translate3d(-50%, -50%, 0) translateY(76px);
 		opacity: 0.35;
 		filter: blur(3.2px);
 	}
-	25%, 75% {
+	30%, 70% {
 		transform: translate3d(-50%, -50%, 0) translateY(0);
 		opacity: 0;
 		filter: blur(0);
 	}
-	80% {
+	76% {
 		opacity: 0.35;
 	}
 	100% {
-		transform: translate3d(-50%, -50%, 0) translateY(95px);
+		transform: translate3d(-50%, -50%, 0) translateY(105px);
 		opacity: 0;
 		filter: blur(4.2px);
 	}
@@ -2637,20 +2689,20 @@ body[data-active-category="vps"] #seo-knowledge {
 /* 幽灵残影 4（远距离拖尾羽化） */
 @keyframes speedGhostTrail4 {
 	0% {
-		transform: translate3d(-50%, -50%, 0) translateY(105px);
+		transform: translate3d(-50%, -50%, 0) translateY(110px);
 		opacity: 0.2;
 		filter: blur(4.8px);
 	}
-	25%, 75% {
+	30%, 70% {
 		transform: translate3d(-50%, -50%, 0) translateY(0);
 		opacity: 0;
 		filter: blur(0);
 	}
-	80% {
+	76% {
 		opacity: 0.2;
 	}
 	100% {
-		transform: translate3d(-50%, -50%, 0) translateY(135px);
+		transform: translate3d(-50%, -50%, 0) translateY(145px);
 		opacity: 0;
 		filter: blur(6px);
 	}
@@ -2662,11 +2714,11 @@ body[data-active-category="vps"] #seo-knowledge {
 		transform: translateY(60px) scaleY(1.8);
 		opacity: 0.85;
 	}
-	25%, 75% {
+	30%, 70% {
 		transform: translateY(0) scaleY(0.2);
 		opacity: 0;
 	}
-	80% {
+	76% {
 		opacity: 0.8;
 	}
 	100% {
@@ -2678,7 +2730,7 @@ body[data-active-category="vps"] #seo-knowledge {
 /* 无障碍减弱动态支持 */
 @media (prefers-reduced-motion: reduce) {
 	.speed-toast-card {
-		animation: speedToastReduced 0.8s ease-in-out forwards !important;
+		animation: speedToastReduced 1.0s ease-in-out forwards !important;
 		transform: translate3d(-50%, calc(var(--target-y, 40vh) - 50%), 0) !important;
 	}
 	.speed-toast-ghost,
@@ -2687,8 +2739,8 @@ body[data-active-category="vps"] #seo-knowledge {
 	}
 	@keyframes speedToastReduced {
 		0% { opacity: 0; }
-		25% { opacity: 1; }
-		75% { opacity: 1; }
+		30% { opacity: 1; }
+		70% { opacity: 1; }
 		100% { opacity: 0; }
 	}
 }
