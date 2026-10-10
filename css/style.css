@@ -1266,6 +1266,9 @@ footer a:hover,
 	.expand-btn-wrapper {
 		margin-bottom: -0.6rem;
 	}
+	.seo-knowledge-section {
+		margin-top: 1.55rem;
+	}
 	/* Reduce airplane size on mobile and start flight only after load */
 	.airplane-wrapper {
 		width: 64px;
@@ -1730,7 +1733,7 @@ body.guide-modal-open {
 	position: relative;
 	border-radius: 1rem;
 	padding: 1.5rem;
-	background-color: rgba(45, 156, 240, 0.5);
+	background-color: rgba(45, 156, 240, 0.8);
 	color: #ffffff;
 	border: 1px solid #ffffff;
 	box-shadow: 0 12px 36px rgba(14, 116, 144, 0.25), 0 2px 8px rgba(0, 0, 0, 0.05);
@@ -1863,7 +1866,7 @@ body.guide-modal-open {
 
 /* Dark mode modal styles */
 :root.theme-dark .guide-modal-content {
-	background-color: rgba(15, 23, 42, 0.65);
+	background-color: rgba(15, 23, 42, 0.8);
 	color: #f1f5f9;
 	border: 1px solid rgba(255, 255, 255, 0.15);
 	box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.25);
@@ -1922,7 +1925,7 @@ body.guide-modal-open {
 /* Auto theme dark mode */
 @media (prefers-color-scheme: dark) {
 	:root.theme-auto .guide-modal-content {
-		background-color: rgba(15, 23, 42, 0.65);
+		background-color: rgba(15, 23, 42, 0.8);
 		color: #f1f5f9;
 		border: 1px solid rgba(255, 255, 255, 0.15);
 		box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.25);
@@ -2030,7 +2033,7 @@ h3.card-title {
 .seo-knowledge-section {
 	position: relative;
 	width: 100%;
-	margin-top: var(--spacing-xl);
+	margin-top: 1.65rem;
 	margin-bottom: var(--spacing-l);
 	text-align: left;
 	pointer-events: auto;
@@ -2376,4 +2379,260 @@ body[data-active-category="vps"] #seo-knowledge {
 	border-radius: 8px;
 	font-size: 0.85rem;
 	line-height: 1.5;
+}
+
+/* ==========================================================================
+   分类切换极速拖影动效（老站“省心” / VPS“不难”）
+   ========================================================================== */
+.category-speed-toast-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	pointer-events: none;
+	z-index: 99999;
+	overflow: hidden;
+	display: flex;
+	justify-content: center;
+	align-items: flex-start;
+}
+
+.speed-toast-card {
+	position: absolute;
+	left: 50%;
+	top: 0;
+	transform: translate3d(-50%, calc(var(--start-y, 110vh) - 50%), 0);
+	pointer-events: none;
+	user-select: none;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	will-change: transform, opacity;
+	animation: speedToastFlight 0.8s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+}
+
+.speed-toast-text,
+.speed-toast-ghost {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+	font-size: clamp(4.8rem, 13.5vw, 8.1rem);
+	font-weight: 900;
+	letter-spacing: 0.18em;
+	line-height: 1;
+	text-align: center;
+	white-space: nowrap;
+}
+
+/* 统一纯白字体加高亮，完全删除光晕特效 */
+.speed-toast-text {
+	position: relative;
+	z-index: 5;
+	color: #ffffff;
+	text-shadow: 0 2px 6px rgba(0, 0, 0, 0.55), 0 0 2px rgba(255, 255, 255, 0.95);
+	filter: brightness(1.15);
+	will-change: transform;
+}
+
+/* 4层纵向幽灵残影克隆（纯白拖尾，模拟极速动态拖尾模糊，无缩放） */
+.speed-toast-ghost {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform-origin: center center;
+	pointer-events: none;
+	user-select: none;
+	z-index: 1;
+	color: #ffffff;
+	text-shadow: 0 0 4px rgba(255, 255, 255, 0.6);
+	will-change: transform, opacity, filter;
+}
+
+.speed-toast-ghost.ghost-1 {
+	animation: speedGhostTrail1 0.8s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+}
+.speed-toast-ghost.ghost-2 {
+	animation: speedGhostTrail2 0.8s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+}
+.speed-toast-ghost.ghost-3 {
+	animation: speedGhostTrail3 0.8s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+}
+.speed-toast-ghost.ghost-4 {
+	animation: speedGhostTrail4 0.8s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+}
+
+/* 极速运动白色光线粒子（Streaks） */
+.speed-toast-streaks {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 140%;
+	height: 140px;
+	pointer-events: none;
+	z-index: 0;
+}
+
+.speed-streak {
+	position: absolute;
+	width: 2px;
+	height: 70px;
+	border-radius: 2px;
+	opacity: 0;
+	background: linear-gradient(to top, transparent, rgba(255, 255, 255, 0.8));
+	animation: speedStreakRush 0.8s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+}
+
+.speed-streak.line-1 { left: 15%; animation-delay: 0.02s; }
+.speed-streak.line-2 { left: 38%; animation-delay: 0.00s; }
+.speed-streak.line-3 { left: 62%; animation-delay: 0.03s; }
+.speed-streak.line-4 { left: 85%; animation-delay: 0.01s; }
+
+/* 核心位移关键帧：底部极速冲刺 -> 第二行卡片中心水平对齐停留 0.4 秒（无任何缩小动作） -> 极速向上发射消失 */
+@keyframes speedToastFlight {
+	0% {
+		transform: translate3d(-50%, calc(var(--start-y, 110vh) - 50%), 0);
+		opacity: 0;
+		animation-timing-function: cubic-bezier(0.12, 0.95, 0.2, 1);
+	}
+	3% {
+		opacity: 1;
+	}
+	25%, 75% {
+		transform: translate3d(-50%, calc(var(--target-y, 40vh) - 50%), 0);
+		opacity: 1;
+		animation-timing-function: cubic-bezier(0.42, 0, 0.88, 0.25);
+	}
+	95% {
+		opacity: 1;
+	}
+	100% {
+		transform: translate3d(-50%, calc(var(--exit-y, -180px) - 50%), 0);
+		opacity: 0;
+	}
+}
+
+/* 幽灵残影 1（近距离纯白高保真残影） */
+@keyframes speedGhostTrail1 {
+	0% {
+		transform: translate3d(-50%, -50%, 0) translateY(20px);
+		opacity: 0.75;
+		filter: blur(0.8px);
+	}
+	25%, 75% {
+		transform: translate3d(-50%, -50%, 0) translateY(0);
+		opacity: 0;
+		filter: blur(0);
+	}
+	80% {
+		opacity: 0.7;
+	}
+	100% {
+		transform: translate3d(-50%, -50%, 0) translateY(30px);
+		opacity: 0;
+		filter: blur(1.2px);
+	}
+}
+
+/* 幽灵残影 2 */
+@keyframes speedGhostTrail2 {
+	0% {
+		transform: translate3d(-50%, -50%, 0) translateY(42px);
+		opacity: 0.55;
+		filter: blur(1.8px);
+	}
+	25%, 75% {
+		transform: translate3d(-50%, -50%, 0) translateY(0);
+		opacity: 0;
+		filter: blur(0);
+	}
+	80% {
+		opacity: 0.55;
+	}
+	100% {
+		transform: translate3d(-50%, -50%, 0) translateY(60px);
+		opacity: 0;
+		filter: blur(2.5px);
+	}
+}
+
+/* 幽灵残影 3 */
+@keyframes speedGhostTrail3 {
+	0% {
+		transform: translate3d(-50%, -50%, 0) translateY(72px);
+		opacity: 0.35;
+		filter: blur(3.2px);
+	}
+	25%, 75% {
+		transform: translate3d(-50%, -50%, 0) translateY(0);
+		opacity: 0;
+		filter: blur(0);
+	}
+	80% {
+		opacity: 0.35;
+	}
+	100% {
+		transform: translate3d(-50%, -50%, 0) translateY(95px);
+		opacity: 0;
+		filter: blur(4.2px);
+	}
+}
+
+/* 幽灵残影 4（远距离拖尾羽化） */
+@keyframes speedGhostTrail4 {
+	0% {
+		transform: translate3d(-50%, -50%, 0) translateY(105px);
+		opacity: 0.2;
+		filter: blur(4.8px);
+	}
+	25%, 75% {
+		transform: translate3d(-50%, -50%, 0) translateY(0);
+		opacity: 0;
+		filter: blur(0);
+	}
+	80% {
+		opacity: 0.2;
+	}
+	100% {
+		transform: translate3d(-50%, -50%, 0) translateY(135px);
+		opacity: 0;
+		filter: blur(6px);
+	}
+}
+
+/* 极速运动光线粒子帧 */
+@keyframes speedStreakRush {
+	0% {
+		transform: translateY(60px) scaleY(1.8);
+		opacity: 0.85;
+	}
+	25%, 75% {
+		transform: translateY(0) scaleY(0.2);
+		opacity: 0;
+	}
+	80% {
+		opacity: 0.8;
+	}
+	100% {
+		transform: translateY(90px) scaleY(2);
+		opacity: 0;
+	}
+}
+
+/* 无障碍减弱动态支持 */
+@media (prefers-reduced-motion: reduce) {
+	.speed-toast-card {
+		animation: speedToastReduced 0.8s ease-in-out forwards !important;
+		transform: translate3d(-50%, calc(var(--target-y, 40vh) - 50%), 0) !important;
+	}
+	.speed-toast-ghost,
+	.speed-toast-streaks {
+		display: none !important;
+	}
+	@keyframes speedToastReduced {
+		0% { opacity: 0; }
+		25% { opacity: 1; }
+		75% { opacity: 1; }
+		100% { opacity: 0; }
+	}
 }

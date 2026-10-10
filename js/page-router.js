@@ -394,6 +394,18 @@
             if (targetScroll > 300) bttHome.classList.add('is-visible');
             else bttHome.classList.remove('is-visible');
         }
+
+        // 如果从深度指南文章返回主页，且当前激活分类为 VPS、老站 或 机场，触发极速拖影动效
+        const activeCat = document.body.dataset.activeCategory;
+        if (typeof window.triggerCategorySpeedToast === 'function') {
+            if (activeCat === 'noble') {
+                setTimeout(() => window.triggerCategorySpeedToast('省心', 'noble'), 120);
+            } else if (activeCat === 'vps') {
+                setTimeout(() => window.triggerCategorySpeedToast('不难', 'vps'), 120);
+            } else if (activeCat === 'airport') {
+                setTimeout(() => window.triggerCategorySpeedToast('家宽', 'airport'), 120);
+            }
+        }
     }
 
     // 统一路由导航入口

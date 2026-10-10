@@ -288,6 +288,121 @@
         });
     }
 
+    // 极速拖影动效控制器（老站：“省心”，VPS：“不难”，机场：“家宽”）
+    // 每次加载网页，每一个动效字体最多出现两次，刷新页面重置
+    const speedToastMaxLimit = 2;
+    const speedToastCounts = {
+        noble: 0,
+        vps: 0,
+        airport: 0
+    };
+    let activeSpeedToastTimer = null;
+    function dismissCategorySpeedToast() {
+        if (activeSpeedToastTimer) {
+            clearTimeout(activeSpeedToastTimer);
+            activeSpeedToastTimer = null;
+        }
+        const overlay = document.querySelector('.category-speed-toast-overlay');
+        if (overlay) {
+            overlay.innerHTML = '';
+        }
+    }
+
+    function triggerCategorySpeedToast(text, type) {
+        if (document.body.classList.contains('cards-falling')) return;
+
+        const countKey = type || text;
+        if ((speedToastCounts[countKey] || 0) >= speedToastMaxLimit) {
+            return;
+        }
+        speedToastCounts[countKey] = (speedToastCounts[countKey] || 0) + 1;
+
+        dismissCategorySpeedToast();
+
+        let overlay = document.querySelector('.category-speed-toast-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.className = 'category-speed-toast-overlay';
+            overlay.setAttribute('aria-hidden', 'true');
+            document.body.appendChild(overlay);
+        }
+
+        // 计算卡片第二行中心区域的物理坐标
+        const stack = document.querySelector('.button-stack');
+        let targetY = window.innerHeight * 0.4;
+        if (stack) {
+            const visibleCards = Array.from(stack.querySelectorAll('.button')).filter(card => {
+                return window.getComputedStyle(card).display !== 'none';
+            });
+
+            if (visibleCards.length > 0) {
+                // 按卡片顶部 Y 坐标进行行聚合（容差 8px，处理不同列细微布局重排公差）
+                const rows = [];
+                visibleCards.forEach(card => {
+                    const rect = card.getBoundingClientRect();
+                    let foundRow = rows.find(r => Math.abs(r.top - rect.top) < 8);
+                    if (!foundRow) {
+                        foundRow = { top: rect.top, cards: [] };
+                        rows.push(foundRow);
+                    }
+                    foundRow.cards.push(card);
+                });
+
+                rows.sort((a, b) => a.top - b.top);
+
+                // 目标位置始终锁定在第二行（若仅有一行则使用该行）
+                const targetRow = rows.length > 1 ? rows[1] : rows[0];
+                const sampleCard = targetRow.cards[0];
+                const cardRect = sampleCard.getBoundingClientRect();
+                targetY = cardRect.top + cardRect.height / 2;
+            } else {
+                const rect = stack.getBoundingClientRect();
+                if (rect.height > 0) {
+                    targetY = rect.top + rect.height / 2;
+                }
+            }
+
+            // 视口安全范围限制（避免异常情况下跑出视口外）
+            const minY = window.innerHeight * 0.15;
+            const maxY = window.innerHeight * 0.85;
+            targetY = Math.max(minY, Math.min(maxY, targetY));
+        }
+
+        const startY = window.innerHeight + 160;
+        const exitY = -200;
+
+        const card = document.createElement('div');
+        card.className = `speed-toast-card speed-toast-${type || 'noble'}`;
+        card.style.setProperty('--start-y', `${startY}px`);
+        card.style.setProperty('--target-y', `${targetY}px`);
+        card.style.setProperty('--exit-y', `${exitY}px`);
+
+        card.innerHTML = `
+            <div class="speed-toast-streaks" aria-hidden="true">
+                <span class="speed-streak line-1"></span>
+                <span class="speed-streak line-2"></span>
+                <span class="speed-streak line-3"></span>
+                <span class="speed-streak line-4"></span>
+            </div>
+            <div class="speed-toast-ghost ghost-4" aria-hidden="true">${text}</div>
+            <div class="speed-toast-ghost ghost-3" aria-hidden="true">${text}</div>
+            <div class="speed-toast-ghost ghost-2" aria-hidden="true">${text}</div>
+            <div class="speed-toast-ghost ghost-1" aria-hidden="true">${text}</div>
+            <div class="speed-toast-text">${text}</div>
+        `;
+
+        overlay.appendChild(card);
+
+        // 动效全长 0.80s（停留0.4s），结束后安全清理 DOM
+        activeSpeedToastTimer = setTimeout(() => {
+            dismissCategorySpeedToast();
+        }, 850);
+    }
+
+    window.triggerCategorySpeedToast = triggerCategorySpeedToast;
+    window.dismissCategorySpeedToast = dismissCategorySpeedToast;
+    window.speedToastCounts = speedToastCounts;
+
     // 4. 初始化分类切换过滤器
     function initCategoryFilter() {
         const navButtons = Array.from(document.querySelectorAll('.category-btn'));
@@ -369,6 +484,7 @@
         function setCategory(cat) {
             if (!cat || !['airport', 'noble', 'vps'].includes(cat)) return;
             if (activeCategory === cat) return;
+            const prevCategory = activeCategory;
             activeCategory = cat;
 
             // 切换分类时重置展开状态，保持一致的分类初始收起体验
@@ -393,6 +509,19 @@
             });
 
             updateCardVisibility(true);
+
+            // 触发分类切换极速拖影动效（老站：“省心”，VPS：“不难”，机场：“家宽”）
+            if (prevCategory !== activeCategory) {
+                if (activeCategory === 'noble') {
+                    triggerCategorySpeedToast('省心', 'noble');
+                } else if (activeCategory === 'vps') {
+                    triggerCategorySpeedToast('不难', 'vps');
+                } else if (activeCategory === 'airport') {
+                    triggerCategorySpeedToast('家宽', 'airport');
+                } else {
+                    dismissCategorySpeedToast();
+                }
+            }
         }
 
         navButtons.forEach(btn => {
