@@ -12,11 +12,13 @@
             this.container = document.getElementById('sky-canvas-container') || document.body;
             this.canvas = document.getElementById('sky-canvas');
 
-            this.width = window.innerWidth;
-            this.height = window.innerHeight;
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(navigator.userAgent)
+            this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(navigator.userAgent)
                 || (navigator.maxTouchPoints > 1 && window.innerWidth <= 1024);
-            this.dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.25 : 1.75);
+            this.width = window.innerWidth || document.documentElement.clientWidth || 1920;
+            this.height = this.isMobile
+                ? this.getMaxMobileHeight(this.width, window.innerHeight || document.documentElement.clientHeight || 1080)
+                : (window.innerHeight || document.documentElement.clientHeight || 1080);
+            this.dpr = Math.min(window.devicePixelRatio || 1, this.isMobile ? 1.25 : 1.75);
 
             // Three.js Scene Setup
             this.scene = new THREE.Scene();
@@ -27,7 +29,7 @@
                 antialias: true,
                 powerPreference: 'high-performance'
             });
-            this.renderer.setSize(this.width, this.height);
+            this.renderer.setSize(this.width, this.height, false);
             this.renderer.setPixelRatio(this.dpr);
 
             this.clock = new THREE.Clock();
@@ -297,6 +299,9 @@
 
         bindEvents() {
             window.addEventListener('resize', this.onWindowResize, { passive: true });
+            window.addEventListener('orientationchange', () => {
+                setTimeout(this.onWindowResize, 100);
+            }, { passive: true });
 
             // 标签页后台休眠调度：切至后台或最小化时挂起渲染循环，释放 GPU 功耗；切回时自动恢复
             document.addEventListener('visibilitychange', () => {
@@ -337,18 +342,57 @@
             }
         }
 
+        getMaxMobileHeight(w, h) {
+            if (typeof window === 'undefined') return h;
+            const screenW = (window.screen && window.screen.width) || w;
+            const screenH = (window.screen && window.screen.height) || h;
+            const maxDim = Math.max(screenW, screenH);
+            const minDim = Math.min(screenW, screenH);
+            // 竖屏（w <= h）时最大高度为屏幕长边；横屏则为短边
+            const targetDim = (w > h) ? minDim : maxDim;
+            return Math.max(h, targetDim);
+        }
+
         onWindowResize() {
+            const newWidth = window.innerWidth || document.documentElement.clientWidth || 1920;
+            const newHeight = window.innerHeight || document.documentElement.clientHeight || 1080;
+
+            const widthDiff = Math.abs(newWidth - this.width);
+            const heightDiff = Math.abs(newHeight - this.height);
+
+            // 移动端上下滑动时，浏览器地址栏/工具栏的收起与展开会高频触发 window.resize。
+            // 此时屏幕宽度并未改变，仅高度产生微小变化。
+            // 若在此刻重新调用 renderer.setSize()，会导致 WebGL 绘制缓冲被清空并重置 GPU 纹理，
+            // 从而在移动端上下滑动时引发剧烈的白屏/黑屏闪烁。
+            // 因此：在移动端或仅因工具栏高度变化（宽度未变且高度变化小于阈值）时，严格跳过画布重建！
+            if (this.isMobile && widthDiff < 2 && heightDiff < 200) {
+                return;
+            }
+
+            // 对非移动端，若宽高均无实质变化也直接跳过
+            if (widthDiff < 2 && heightDiff < 2) {
+                return;
+            }
+
             if (this.resizeRaf) cancelAnimationFrame(this.resizeRaf);
             this.resizeRaf = requestAnimationFrame(() => {
-                this.width = window.innerWidth || document.documentElement.clientWidth || 1920;
-                this.height = window.innerHeight || document.documentElement.clientHeight || 1080;
+                this.width = newWidth;
+                this.height = this.isMobile
+                    ? this.getMaxMobileHeight(newWidth, newHeight)
+                    : newHeight;
+
                 if (this.renderer) {
-                    this.renderer.setSize(this.width, this.height);
+                    this.renderer.setSize(this.width, this.height, false);
                     this.renderer.setPixelRatio(this.dpr);
                 }
 
                 if (this.uniforms && this.uniforms.uResolution) {
                     this.uniforms.uResolution.value.set(this.width, this.height);
+                }
+
+                // 立即渲染一帧，杜绝清空与渲染循环之间的空白帧间隙
+                if (this.renderer && this.scene && this.camera) {
+                    this.renderer.render(this.scene, this.camera);
                 }
             });
         }

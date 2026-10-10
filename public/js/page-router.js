@@ -68,21 +68,40 @@
         return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
     }
 
-    // 实时追踪主页的真实滚动位置 (RAF 节流，消除高频滚动时同步写入 sessionStorage 的卡顿)
+    // 实时追踪主页的真实滚动位置 (纯内存跟踪，将耗时的 sessionStorage 写入延迟至 scrollend 执行，消除滚动卡顿与丢帧)
     let scrollTrackingRaf = null;
+    let scrollEndTimer = null;
+
+    function persistHomeScroll() {
+        if (!isGuidePath(normalizePath(window.location.href)) && (!guideView || guideView.style.display === 'none')) {
+            try {
+                sessionStorage.setItem('jk_home_scroll', String(savedHomeScroll));
+            } catch (e) {}
+        }
+    }
+
     window.addEventListener('scroll', () => {
         if (scrollTrackingRaf) return;
         scrollTrackingRaf = requestAnimationFrame(() => {
             scrollTrackingRaf = null;
             if (!isGuidePath(normalizePath(window.location.href)) && (!guideView || guideView.style.display === 'none')) {
-                const sc = getCurrentScroll();
-                savedHomeScroll = sc;
-                try {
-                    sessionStorage.setItem('jk_home_scroll', String(savedHomeScroll));
-                } catch (e) {}
+                savedHomeScroll = getCurrentScroll();
             }
         });
+
+        // 防抖兜底：针对未支持原生 scrollend 的环境
+        clearTimeout(scrollEndTimer);
+        scrollEndTimer = setTimeout(persistHomeScroll, 200);
     }, { passive: true });
+
+    if ('onscrollend' in window) {
+        window.addEventListener('scrollend', () => {
+            clearTimeout(scrollEndTimer);
+            persistHomeScroll();
+        }, { passive: true });
+    }
+
+    window.addEventListener('beforeunload', persistHomeScroll, { passive: true });
 
     // 预加载页面
     async function prefetch(url) {
