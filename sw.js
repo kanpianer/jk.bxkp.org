@@ -10,7 +10,7 @@
  *    - 仅在用户离线/无网络连接时，优雅降级提供本地缓存页面进行展示。
  */
 
-const CACHE_VERSION = 'v1.0.5';
+const CACHE_VERSION = 'v1.1.1';
 const STATIC_CACHE_NAME = `jkdh-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE_NAME = `jkdh-runtime-${CACHE_VERSION}`;
 
@@ -20,7 +20,9 @@ const CORE_STATIC_ASSETS = [
     './css/style.css',
     './css/guide.css',
     './js/qrcode.min.js',
+    './js/three.min.js',
     './js/sky.js',
+    './js/page-router.js',
     './images/anime_sky_bg.jpg',
     './images/airplane.svg',
     './images/ace-bg.png',
@@ -74,6 +76,20 @@ self.addEventListener('fetch', (event) => {
 
     // 只拦截 GET 请求
     if (request.method !== 'GET') {
+        return;
+    }
+
+    // 本地开发与私网调试环境（localhost / 127.0.0.1 / 内网IP）不拦截任何请求，直接走网络
+    const hostname = self.location.hostname;
+    const isLocalDev = (
+        hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
+        hostname === '[::1]' ||
+        hostname.startsWith('192.168.') ||
+        hostname.startsWith('10.') ||
+        hostname.startsWith('172.')
+    );
+    if (isLocalDev) {
         return;
     }
 

@@ -69,7 +69,8 @@ function escapeHtml(str) {
  * 生成单个短链静态 HTML 跳板
  */
 function renderRedirectHtml(title, targetUrl, slug) {
-  const safeTitle = escapeHtml(title);
+  const cleanTitle = String(title || '').replace(/^[!！#＃]+\s*/, '');
+  const safeTitle = escapeHtml(cleanTitle);
   const safeUrl = escapeHtml(targetUrl);
 
   return `<!DOCTYPE html>
