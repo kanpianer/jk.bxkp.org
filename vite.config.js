@@ -42,9 +42,33 @@ function shortlinkPlugin() {
   };
 }
 
+function syncJsPlugin() {
+  return {
+    name: 'sync-js-to-public',
+    buildStart() {
+      try {
+        const srcDir = resolve(__dirname, 'js');
+        const destDir = resolve(__dirname, 'public/js');
+        if (fs.existsSync(srcDir)) {
+          if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
+          for (const file of fs.readdirSync(srcDir)) {
+            fs.copyFileSync(resolve(srcDir, file), resolve(destDir, file));
+          }
+        }
+        const swSrc = resolve(__dirname, 'sw.js');
+        const swDest = resolve(__dirname, 'public/sw.js');
+        if (fs.existsSync(swSrc)) {
+          fs.copyFileSync(swSrc, swDest);
+        }
+      } catch (e) {}
+    }
+  };
+}
+
 export default defineConfig({
-  plugins: [shortlinkPlugin()],
+  plugins: [shortlinkPlugin(), syncJsPlugin()],
   build: {
+    assetsInlineLimit: 0,
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),

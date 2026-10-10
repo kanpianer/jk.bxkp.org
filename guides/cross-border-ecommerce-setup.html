@@ -29,10 +29,15 @@
     <link rel="canonical" href="https://jiakuan.link/guides/cross-border-ecommerce-setup.html">
     <link rel="icon" type="image/x-icon" href="../images/avatar.png">
 
+    <!-- Preload Critical Sky Texture -->
+    <link rel="preload" as="image" href="../images/anime_sky_bg.jpg">
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@300;400;700&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@300;400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@300;400;700&display=swap" rel="stylesheet"></noscript>
 
     <!-- Styles -->
     <link rel="stylesheet" href="../css/reset.css">
@@ -213,91 +218,10 @@
         <canvas id="sky-canvas"></canvas>
     </div>
 
-    <!-- Theme Manager -->
-    <script>
-        function initThemeManager() {
-            const toggleBtn = document.getElementById('theme-toggle');
-            const mediaQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
-
-            function getEffectiveTheme() {
-                try {
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const urlTheme = urlParams.get('theme');
-                    if (urlTheme === 'dark' || urlTheme === 'light') {
-                        return urlTheme;
-                    }
-                } catch (e) {}
-                const stored = localStorage.getItem('theme');
-                if (stored === 'dark' || stored === 'light') {
-                    return stored;
-                }
-                return (mediaQuery && mediaQuery.matches) ? 'dark' : 'light';
-            }
-
-            function applyTheme(theme, isUserAction = false) {
-                const isDark = (theme === 'dark');
-                document.documentElement.classList.toggle('theme-dark', isDark);
-                document.documentElement.classList.toggle('theme-light', !isDark);
-                document.documentElement.classList.remove('theme-auto');
-
-                if (toggleBtn) {
-                    const label = isDark ? '切换至浅色模式' : '切换至暗黑模式';
-                    toggleBtn.setAttribute('title', label);
-                    toggleBtn.setAttribute('aria-label', label);
-                }
-
-                if (window.__skySystem && typeof window.__skySystem.setDarkMode === 'function') {
-                    window.__skySystem.setDarkMode(isDark, !isUserAction && !document.body);
-                }
-            }
-
-            if (toggleBtn) {
-                toggleBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const current = getEffectiveTheme();
-                    const next = (current === 'dark') ? 'light' : 'dark';
-                    const systemPref = (mediaQuery && mediaQuery.matches) ? 'dark' : 'light';
-
-                    if (next === systemPref) {
-                        localStorage.removeItem('theme');
-                    } else {
-                        localStorage.setItem('theme', next);
-                    }
-                    applyTheme(next, true);
-                });
-            }
-
-            if (mediaQuery) {
-                mediaQuery.addEventListener('change', (e) => {
-                    const stored = localStorage.getItem('theme');
-                    if (!stored) {
-                        applyTheme(e.matches ? 'dark' : 'light', false);
-                    }
-                });
-            }
-
-            window.addEventListener('storage', (e) => {
-                if (e.key === 'theme') {
-                    applyTheme(getEffectiveTheme(), true);
-                }
-            });
-
-            window.addEventListener('pageshow', () => {
-                applyTheme(getEffectiveTheme(), false);
-            });
-
-            applyTheme(getEffectiveTheme(), false);
-        }
-        initThemeManager();
-    </script>
-    <!-- Three.js & Living Anime Sky Shader & Page Router -->
-    <script src="../js/three.min.js"></script>
-    <script>
-        if (typeof THREE === 'undefined') {
-            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
-        }
-    </script>
+    <!-- 核心脚本体系 (全部使用 defer 确保非阻塞按序加载与解析) -->
+    <script src="../js/three.min.js" defer></script>
     <script src="../js/sky.js" defer></script>
     <script src="../js/page-router.js" defer></script>
+    <script src="../js/main.js" defer></script>
 </body>
 </html>

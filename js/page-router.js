@@ -66,15 +66,20 @@
         return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
     }
 
-    // 实时追踪主页的真实滚动位置
+    // 实时追踪主页的真实滚动位置 (RAF 节流，消除高频滚动时同步写入 sessionStorage 的卡顿)
+    let scrollTrackingRaf = null;
     window.addEventListener('scroll', () => {
-        if (!isGuidePath(normalizePath(window.location.href)) && (!guideView || guideView.style.display === 'none')) {
-            const sc = getCurrentScroll();
-            savedHomeScroll = sc;
-            try {
-                sessionStorage.setItem('jk_home_scroll', String(savedHomeScroll));
-            } catch (e) {}
-        }
+        if (scrollTrackingRaf) return;
+        scrollTrackingRaf = requestAnimationFrame(() => {
+            scrollTrackingRaf = null;
+            if (!isGuidePath(normalizePath(window.location.href)) && (!guideView || guideView.style.display === 'none')) {
+                const sc = getCurrentScroll();
+                savedHomeScroll = sc;
+                try {
+                    sessionStorage.setItem('jk_home_scroll', String(savedHomeScroll));
+                } catch (e) {}
+            }
+        });
     }, { passive: true });
 
     // 预加载页面
@@ -201,13 +206,18 @@
             document.body.appendChild(btn);
         }
 
+        let bttRaf = null;
         function updateVisibility() {
-            const sc = getCurrentScroll();
-            if (sc > 300) {
-                btn.classList.add('is-visible');
-            } else {
-                btn.classList.remove('is-visible');
-            }
+            if (bttRaf) return;
+            bttRaf = requestAnimationFrame(() => {
+                bttRaf = null;
+                const sc = getCurrentScroll();
+                if (sc > 300) {
+                    btn.classList.add('is-visible');
+                } else {
+                    btn.classList.remove('is-visible');
+                }
+            });
         }
 
         btn.onclick = function (e) {

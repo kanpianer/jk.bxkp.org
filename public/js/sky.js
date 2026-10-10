@@ -14,7 +14,9 @@
 
             this.width = window.innerWidth;
             this.height = window.innerHeight;
-            this.dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(navigator.userAgent)
+                || (navigator.maxTouchPoints > 1 && window.innerWidth <= 1024);
+            this.dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.25 : 1.75);
 
             // Three.js Scene Setup
             this.scene = new THREE.Scene();
@@ -29,6 +31,13 @@
             this.renderer.setPixelRatio(this.dpr);
 
             this.clock = new THREE.Clock();
+            this.animationFrameId = null;
+            this.isPaused = false;
+            this.resizeRaf = null;
+
+            // 预绑定核心循环与监听方法，杜绝每帧生成闭包导致垃圾回收停顿
+            this.animate = this.animate.bind(this);
+            this.onWindowResize = this.onWindowResize.bind(this);
 
             // Dark Mode Transition State
             const isDarkInit = document.documentElement.classList.contains('theme-dark') ||
@@ -287,7 +296,24 @@
         }
 
         bindEvents() {
-            window.addEventListener('resize', this.onWindowResize.bind(this), { passive: true });
+            window.addEventListener('resize', this.onWindowResize, { passive: true });
+
+            // 标签页后台休眠调度：切至后台或最小化时挂起渲染循环，释放 GPU 功耗；切回时自动恢复
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    this.isPaused = true;
+                    if (this.animationFrameId) {
+                        cancelAnimationFrame(this.animationFrameId);
+                        this.animationFrameId = null;
+                    }
+                } else {
+                    if (this.isPaused) {
+                        this.isPaused = false;
+                        if (this.clock) this.clock.getDelta(); // 防止切回时 delta 累积产生跳变
+                        this.animate();
+                    }
+                }
+            });
 
             window.addEventListener('themechange', (e) => {
                 if (e.detail && typeof e.detail.isDark === 'boolean') {
@@ -312,20 +338,24 @@
         }
 
         onWindowResize() {
-            this.width = window.innerWidth || document.documentElement.clientWidth || 1920;
-            this.height = window.innerHeight || document.documentElement.clientHeight || 1080;
-            if (this.renderer) {
-                this.renderer.setSize(this.width, this.height);
-                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2.5));
-            }
+            if (this.resizeRaf) cancelAnimationFrame(this.resizeRaf);
+            this.resizeRaf = requestAnimationFrame(() => {
+                this.width = window.innerWidth || document.documentElement.clientWidth || 1920;
+                this.height = window.innerHeight || document.documentElement.clientHeight || 1080;
+                if (this.renderer) {
+                    this.renderer.setSize(this.width, this.height);
+                    this.renderer.setPixelRatio(this.dpr);
+                }
 
-            if (this.uniforms && this.uniforms.uResolution) {
-                this.uniforms.uResolution.value.set(this.width, this.height);
-            }
+                if (this.uniforms && this.uniforms.uResolution) {
+                    this.uniforms.uResolution.value.set(this.width, this.height);
+                }
+            });
         }
 
         animate() {
-            requestAnimationFrame(this.animate.bind(this));
+            if (this.isPaused) return;
+            this.animationFrameId = requestAnimationFrame(this.animate);
 
             const elapsedTime = this.clock.getElapsedTime();
 
@@ -356,6 +386,14 @@
                 if (typeof THREE !== 'undefined') {
                     clearInterval(timer);
                     new LivingAnimeSkySystem();
+                } else if (attempts === 15) {
+                    // 非阻塞异步注入 CDN 备用脚本（杜绝 document.write 警告与解析器阻塞）
+                    if (!document.getElementById('three-cdn-fallback')) {
+                        const fallbackScript = document.createElement('script');
+                        fallbackScript.id = 'three-cdn-fallback';
+                        fallbackScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+                        document.head.appendChild(fallbackScript);
+                    }
                 } else if (attempts >= 60) {
                     clearInterval(timer);
                     console.error('Three.js is required for the living sky shader.');
