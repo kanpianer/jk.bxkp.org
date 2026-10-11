@@ -12,7 +12,7 @@
     "updatedAt": "2026-10-11"
   },
   "biu": {
-    "title": "BiuBiu",
+    "title": "!BiuBiu",
     "target": "https://biubiu.one/#/register?code=9zhyjLWY",
     "category": "noble",
     "updatedAt": "2026-10-11"
@@ -24,7 +24,7 @@
     "updatedAt": "2026-10-11"
   },
   "cloudie": {
-    "title": "CLOUDIE",
+    "title": "!CLOUDIE",
     "target": "https://p2.cloud-ie.cc/#/register?code=V5KEjuC7",
     "category": "noble",
     "updatedAt": "2026-10-11"
@@ -48,7 +48,7 @@
     "updatedAt": "2026-10-11"
   },
   "ftq": {
-    "title": "FTQ",
+    "title": "!FTQ",
     "target": "https://wwa.ftquser.com/#/register?code=dcPOkY00",
     "category": "noble",
     "updatedAt": "2026-10-11"
@@ -138,7 +138,7 @@
     "updatedAt": "2026-10-11"
   },
   "oix": {
-    "title": "oixCloud",
+    "title": "!oixCloud",
     "target": "https://oixcloud.com/auth/register?affid=230329",
     "category": "noble",
     "updatedAt": "2026-10-11"
@@ -242,11 +242,6 @@
     "target": "https://fan.yunfan.app/#/register?code=c9LpBOig",
     "category": "airport",
     "updatedAt": "2026-10-11"
-  },
-  "young": {
-    "title": "机场",
-    "target": "https://jiakuan.link/#young",
-    "category": "airport"
   },
   "yz": {
     "title": "!影子",

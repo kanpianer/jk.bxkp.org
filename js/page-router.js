@@ -56,11 +56,11 @@
         return /\/guides\/[^/]+\.html$/i.test(path);
     }
 
-    // 判断是否为主页路径（包含官方分类路径 /old, /young, /vps）
+    // 判断是否为主页路径（包含官方分类路径 /old, /vps）
     function isHomePath(path) {
         const clean = (path || '').replace(/^\/+|\/+$/g, '').toLowerCase().split('/')[0];
         return path === '/' || path === '/index.html' || path.endsWith('/index.html') || path === '' ||
-               clean === 'old' || clean === 'young' || clean === 'vps';
+               clean === 'old' || clean === 'vps';
     }
 
     // 获取当前窗口真实滚动深度

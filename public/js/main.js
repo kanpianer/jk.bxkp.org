@@ -412,7 +412,7 @@
 
         const categoryPathMap = {
             'noble': '/old',
-            'airport': '/young',
+            'airport': '/',
             'vps': '/vps'
         };
 
@@ -424,7 +424,7 @@
                 return 'noble';
             } else if (pathSlug === 'vps' || hash === '#vps') {
                 return 'vps';
-            } else if (pathSlug === 'young' || hash === '#airport' || hash === '#young') {
+            } else if (hash === '#airport' || hash === '#young') {
                 return 'airport';
             }
             return 'airport';
@@ -432,13 +432,13 @@
 
         let activeCategory = getCategoryFromLocation();
 
-        // 若初始 URL 为 Hash 访问，规范化清洗为对应短路径 /old, /young, /vps
+        // 若初始 URL 为 Hash 访问，规范化清洗为对应路径 /old, /, /vps
         try {
             const initialHash = (window.location.hash || '').toLowerCase();
             if (initialHash === '#old' || initialHash === '#noble' || initialHash === '#lz' || initialHash === '#gz') {
                 history.replaceState({ category: 'noble', type: 'category' }, '', '/old');
             } else if (initialHash === '#young' || initialHash === '#airport') {
-                history.replaceState({ category: 'airport', type: 'category' }, '', '/young');
+                history.replaceState({ category: 'airport', type: 'category' }, '', '/');
             } else if (initialHash === '#vps') {
                 history.replaceState({ category: 'vps', type: 'category' }, '', '/vps');
             }

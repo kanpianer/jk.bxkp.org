@@ -59,6 +59,7 @@ body {
 	font-weight:400;
 	line-height:1.6;
 	overflow-x: hidden;
+	overflow-x: clip;
 	-webkit-overflow-scrolling: touch;
 }
 
@@ -241,7 +242,7 @@ h1 a:not(.button):hover,
 }
 
 .container p {
-	margin:0;
+	margin: 0 0 clamp(1.25rem, 3vw, 1.75rem) 0;
 	font-size:var(--scale-1);
 	line-height:1.6;
 	color: #ffffff;
@@ -304,16 +305,17 @@ a:hover {
 
 /* Category Navigation Filter */
 .category-nav-wrapper {
+	position: sticky;
+	top: calc(1.25rem + (2.75rem - 2.5rem) / 2); /* 1.375rem (22px) -> 水平中线精确对齐指南与主题按钮 2.625rem (42px) */
 	display: flex;
 	justify-content: center;
 	align-items: center;
 	width: 100%;
-	margin-top: clamp(1.25rem, 3vw, 1.75rem);
+	margin-top: 0;
 	margin-bottom: clamp(1.5rem, 3.5vw, 2rem);
 	margin-inline: auto;
-	pointer-events: auto;
-	position: relative;
-	z-index: 5;
+	pointer-events: none;
+	z-index: 999;
 }
 
 .category-nav {
@@ -406,15 +408,18 @@ a:hover {
 }
 
 @media (max-width: 34.375rem) {
+	.category-nav-wrapper {
+		top: calc(0.875rem + (2.5rem - 2.25rem) / 2); /* 1.0rem (16px) -> 水平中线精确对齐移动端指南与主题按钮 2.125rem (34px) */
+	}
 	.category-nav {
-		gap: 0.65rem;
+		gap: 0.5rem;
 	}
 	.category-nav .category-btn,
 	.category-btn {
-		min-width: 4.2rem;
+		min-width: 3.8rem;
 		height: 2.25rem !important;
 		min-height: 2.25rem !important;
-		padding: 0 1.15rem !important;
+		padding: 0 0.85rem !important;
 		font-size: 0.9375rem !important;
 	}
 }

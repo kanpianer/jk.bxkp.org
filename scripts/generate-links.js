@@ -37,17 +37,12 @@ const RESERVED_SLUGS = new Set([
   'posts', 'files', 'cloud', 'robot', 'swjs0', 'cname'
 ]);
 
-// 官方 3 大分类的自定义短链路由映射
+// 官方分类的自定义短链路由映射
 const CATEGORY_LINKS = {
   old: {
     title: '老站',
     target: `${BASE_URL}/#old`,
     category: 'noble'
-  },
-  young: {
-    title: '机场',
-    target: `${BASE_URL}/#young`,
-    category: 'airport'
   },
   vps: {
     title: 'VPS',
@@ -452,7 +447,7 @@ export async function main() {
     }
   }
 
-  // 1.1 注入 3 大官方分类自定义短链（老站、机场、VPS）
+  // 1.1 注入官方分类自定义短链（老站、VPS）
   for (const [slug, item] of Object.entries(CATEGORY_LINKS)) {
     linksMap[slug] = {
       title: item.title,
