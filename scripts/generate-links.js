@@ -81,6 +81,7 @@ const FIXED_SLUG_MAP = {
   'ftq': 'ftq',
   'biubiu': 'biu',
   'ss-id': 'ssid',
+  'just my socks': 'jms',
   'sntp': 'sntp',
   'e-ix': 'eix',
   'catnet': 'cat',
