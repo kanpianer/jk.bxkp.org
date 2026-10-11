@@ -79,7 +79,6 @@ const FIXED_SLUG_MAP = {
   'just my socks': 'jms',
   'sntp': 'sntp',
   'e-ix': 'eix',
-  'catnet': 'cat',
   '青云梯': 'qyt',
   'bitz net': 'bitz',
   'glados': 'glados',
