@@ -642,13 +642,63 @@
             popup.innerHTML = `
                 <div class="qr-popup-card">
                     <div class="qr-code-box"></div>
-                    <div class="qr-caption">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
-                        <span>手机扫码直达</span>
+                    <div class="qr-caption" role="button" tabindex="0" title="点击复制链接">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        <span>点击复制链接</span>
                     </div>
                 </div>
                 <div class="qr-arrow"></div>
             `;
+
+            // 点击复制链接交互逻辑
+            const caption = popup.querySelector('.qr-caption');
+            if (caption) {
+                const captionText = caption.querySelector('span');
+                const copySvgHTML = '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>';
+                const checkSvgHTML = '<polyline points="20 6 9 17 4 12"></polyline>';
+                let copyTimer = null;
+
+                const copyLink = async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const urlToCopy = btn.href || href;
+                    try {
+                        if (navigator.clipboard && window.isSecureContext) {
+                            await navigator.clipboard.writeText(urlToCopy);
+                        } else {
+                            const textarea = document.createElement('textarea');
+                            textarea.value = urlToCopy;
+                            textarea.style.position = 'fixed';
+                            textarea.style.left = '-9999px';
+                            document.body.appendChild(textarea);
+                            textarea.select();
+                            document.execCommand('copy');
+                            document.body.removeChild(textarea);
+                        }
+                        const svgEl = caption.querySelector('svg');
+                        if (captionText) {
+                            captionText.textContent = '已复制链接';
+                            caption.classList.add('copied');
+                            if (svgEl) svgEl.innerHTML = checkSvgHTML;
+                            clearTimeout(copyTimer);
+                            copyTimer = setTimeout(() => {
+                                captionText.textContent = '点击复制链接';
+                                caption.classList.remove('copied');
+                                if (svgEl) svgEl.innerHTML = copySvgHTML;
+                            }, 1500);
+                        }
+                    } catch (err) {
+                        console.error('复制失败', err);
+                    }
+                };
+
+                caption.addEventListener('click', copyLink);
+                caption.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        copyLink(e);
+                    }
+                });
+            }
 
             // 按需惰性渲染二维码：只在用户首次交互（鼠标移入、聚焦或点击）时生成，避免启动时执行 40 次密集 QRCode 运算
             let qrRendered = false;
