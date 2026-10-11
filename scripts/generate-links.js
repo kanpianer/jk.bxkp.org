@@ -431,7 +431,7 @@ function render404Html(slugMap) {
  * 主执行函数
  */
 export async function main() {
-  const syncHtml = process.argv.includes('--sync-html');
+  const syncHtml = !process.argv.includes('--no-sync-html');
 
   // 1. 读取现有的 links-map.json
   let linksMap = {};
@@ -624,19 +624,21 @@ export async function main() {
   fs.writeFileSync(INDEX_HTML_FILE, finalHtml, 'utf8');
 
   // 7. 清理 public/ 和 dist/ 中旧的 5 位无用跳板目录
-  if (fs.existsSync(PUBLIC_DIR)) {
-    const existingPublicEntries = fs.readdirSync(PUBLIC_DIR);
-    for (const entry of existingPublicEntries) {
-      const fullPath = path.resolve(PUBLIC_DIR, entry);
-      // 如果是 5 位小写纯字母，且不在新的 sortedMap 中，清理旧目录/文件
-      if (/^[a-z]{5}$/.test(entry) && !sortedMap[entry]) {
-        if (fs.statSync(fullPath).isDirectory()) {
-          fs.rmSync(fullPath, { recursive: true, force: true });
-        }
-      } else if (/^[a-z]{5}\.html$/.test(entry)) {
-        const base = entry.replace(/\.html$/, '');
-        if (!sortedMap[base]) {
-          fs.unlinkSync(fullPath);
+  for (const targetDir of [PUBLIC_DIR, DIST_DIR]) {
+    if (fs.existsSync(targetDir)) {
+      const existingEntries = fs.readdirSync(targetDir);
+      for (const entry of existingEntries) {
+        const fullPath = path.resolve(targetDir, entry);
+        // 如果是 5 位小写纯字母，且不在新的 sortedMap 中，清理旧目录/文件
+        if (/^[a-z]{5}$/.test(entry) && !sortedMap[entry]) {
+          if (fs.statSync(fullPath).isDirectory()) {
+            fs.rmSync(fullPath, { recursive: true, force: true });
+          }
+        } else if (/^[a-z]{5}\.html$/.test(entry)) {
+          const base = entry.replace(/\.html$/, '');
+          if (!sortedMap[base]) {
+            fs.unlinkSync(fullPath);
+          }
         }
       }
     }

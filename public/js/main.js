@@ -1064,7 +1064,7 @@
                 const cardEl = this || (e && e.currentTarget);
                 const href = cardEl ? cardEl.getAttribute('href') : '';
                 if (href) {
-                    const m = href.match(/^https?:\/\/jiakuan\.link\/([a-z]{5})/i) || href.match(/^\/([a-z]{5})/i);
+                    const m = href.match(/^https?:\/\/jiakuan\.link\/([a-z0-9_-]+)/i) || href.match(/^\/([a-z0-9_-]+)/i);
                     if (m && window.__SHORTLINK_MAP__ && window.__SHORTLINK_MAP__[m[1].toLowerCase()]) {
                         if (e) e.preventDefault();
                         window.open(window.__SHORTLINK_MAP__[m[1].toLowerCase()], '_blank', 'noopener,noreferrer');
