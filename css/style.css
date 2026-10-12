@@ -1466,14 +1466,14 @@ html, body {
    Website Card QR Code Feature (Desktop & Mobile)
    ========================================================================== */
 
-/* Elevate card z-index on hover and active popup */
+/* Elevate card z-index on hover and active popup (higher than category nav z-index 999) */
 .button:hover {
   z-index: 10;
 }
 .button.qr-active,
 .button:has(.qr-trigger:hover),
 .button:has(.qr-popup:hover) {
-  z-index: 50;
+  z-index: 1010;
 }
 
 /* QR Trigger Icon inside card on the right (Default visible on all devices) */
