@@ -17,6 +17,7 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
+import { parseCardsFromHtml } from './cms-service.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,6 +29,7 @@ const INDEX_HTML_FILE = path.resolve(ROOT_DIR, 'index.html');
 const PUBLIC_DIR = path.resolve(ROOT_DIR, 'public');
 const DIST_DIR = path.resolve(ROOT_DIR, 'dist');
 const ROOT_404_FILE = path.resolve(ROOT_DIR, '404.html');
+const README_FILE = path.resolve(ROOT_DIR, 'README.md');
 
 // 排除可能与网站系统路由或核心静态资源冲突的保留词
 const RESERVED_SLUGS = new Set([
@@ -423,6 +425,67 @@ function render404Html(slugMap) {
 }
 
 /**
+ * 生成 README.md 中的精选站点表格 (严格排除隐藏卡片)
+ */
+export function renderReadmeSiteDirectory(cards) {
+  const visible = cards.filter((c) => !c.isHidden);
+
+  const categories = [
+    { key: 'noble', name: '老站推荐 (Noble)', desc: '经受长期运营检验的高稳定性老牌专线与精品线路服务商。' },
+    { key: 'airport', name: '机场推荐 (Airport)', desc: '精选包含住宅IP、全家宽或高质量精品中继线路的机场服务商。' },
+    { key: 'vps', name: 'VPS 推荐 (Virtual Private Server)', desc: '适合自主搭建、静态住宅业务、跨境电商独立运营的高性价比 VPS / NAT 主机。' }
+  ];
+
+  let output = '';
+  for (const cat of categories) {
+    const list = visible.filter((c) => c.category === cat.key);
+    if (list.length === 0) continue;
+    output += `### ${cat.name}\n\n> ${cat.desc}\n\n`;
+    output += '| 站点名称 | 推荐级别 | 特性标签 | 价格 / 规格起步 | 快速访问短链 | 官方直达链接 |\n';
+    output += '| :--- | :---: | :--- | :--- | :--- | :--- |\n';
+    for (const c of list) {
+      const rec = c.isHighlight ? '⭐ 重点推荐' : '精选';
+      const allTags = [
+        ...c.headerTags.map((t) => '`' + t.text + '`'),
+        ...(c.metaTag ? ['`' + c.metaTag.text + '`'] : [])
+      ];
+      const tagStr = allTags.length > 0 ? allTags.join(' ') : '-';
+      const price = c.metaText || '-';
+      const shortlink = `[jiakuan.link/${c.slug}](https://jiakuan.link/${c.slug})`;
+      const direct = c.target ? `[直达官网](${c.target})` : '-';
+      output += `| **${c.cleanTitle}** | ${rec} | ${tagStr} | ${price} | ${shortlink} | ${direct} |\n`;
+    }
+    output += '\n';
+  }
+  return output.trim();
+}
+
+/**
+ * 同步更新 README.md 中的站点目录
+ */
+export function syncReadme(cards) {
+  if (!fs.existsSync(README_FILE)) return;
+  const content = fs.readFileSync(README_FILE, 'utf8');
+  const startMarker = '<!-- SITE_DIRECTORY_START -->';
+  const endMarker = '<!-- SITE_DIRECTORY_END -->';
+
+  const startIdx = content.indexOf(startMarker);
+  const endIdx = content.indexOf(endMarker);
+
+  if (startIdx !== -1 && endIdx !== -1) {
+    const tableContent = renderReadmeSiteDirectory(cards);
+    const updated =
+      content.substring(0, startIdx + startMarker.length) +
+      '\n' +
+      tableContent +
+      '\n' +
+      content.substring(endIdx);
+    fs.writeFileSync(README_FILE, updated, 'utf8');
+    console.log('[Success] README.md 网站信息已同步更新（已过滤隐藏卡片）！');
+  }
+}
+
+/**
  * 主执行函数
  */
 export async function main() {
@@ -689,6 +752,14 @@ export async function main() {
   fs.writeFileSync(path.resolve(PUBLIC_DIR, '404.html'), fallback404Content, 'utf8');
   if (fs.existsSync(DIST_DIR)) {
     fs.writeFileSync(path.resolve(DIST_DIR, '404.html'), fallback404Content, 'utf8');
+  }
+
+  // 11. 同步更新 README.md (严格过滤隐藏卡片)
+  try {
+    const detailedCards = parseCardsFromHtml(finalHtml, sortedMap);
+    syncReadme(detailedCards);
+  } catch (err) {
+    console.warn('[Warning] 同步更新 README.md 失败:', err.message);
   }
 
   console.log(`[Success] 全部固定自定义短链跳板页、_redirects、404.html 和 index.html 路由构建完成！`);
