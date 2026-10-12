@@ -236,10 +236,33 @@ async function handleRequest(req, res) {
     return;
   }
 
-  // 3. 后端 CMS 访问: /Donttouchmyshit (支持大小写自适应，防扫描)
-  if (lowerPath === '/donttouchmyshit' || lowerPath === '/donttouchmyshit/' || lowerPath === '/donttouchmyshit/index.html') {
+  // 3. 后端 CMS 访问: /Donttouchmyshit 与 /public/Donttouchmyshit/ (支持大小写自适应，防扫描)
+  if (
+    lowerPath === '/donttouchmyshit' ||
+    lowerPath === '/donttouchmyshit/' ||
+    lowerPath === '/donttouchmyshit/index.html'
+  ) {
     if (pathname !== '/Donttouchmyshit/') {
       res.writeHead(301, { Location: '/Donttouchmyshit/' });
+      res.end();
+      return;
+    }
+    if (fs.existsSync(ADMIN_HTML_FILE)) {
+      return serveStaticFile(res, ADMIN_HTML_FILE);
+    } else {
+      res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('CMS 前端文件未就绪，请确保 public/Donttouchmyshit/index.html 存在');
+      return;
+    }
+  }
+
+  if (
+    lowerPath === '/public/donttouchmyshit' ||
+    lowerPath === '/public/donttouchmyshit/' ||
+    lowerPath === '/public/donttouchmyshit/index.html'
+  ) {
+    if (pathname !== '/public/Donttouchmyshit/') {
+      res.writeHead(301, { Location: '/public/Donttouchmyshit/' });
       res.end();
       return;
     }

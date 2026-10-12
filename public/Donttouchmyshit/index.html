@@ -1706,16 +1706,19 @@
                         <li>在 GitHub Settings -> Developer settings -> Personal access tokens (fine-grained) 中生成一个仅针对 <code>kanpianer/jk.bxkp.org</code> 仓库具备 Contents 写入权限的专用 Token。</li>
                         <li>在下方输入您的 Token（<strong>仅保存在您的本地浏览器 localStorage 中，绝不上传到任何服务器</strong>）。</li>
                         <li>保存时，前端将直接调用 GitHub API 向仓库提交 Commit，只有作者账号有权成功写入，任何其他人均无权篡改！</li>
-                        <li><strong>进阶安全建议</strong>：在 Cloudflare Zero Trust 中为 <code>/Donttouchmyshit/*</code> 配置 Access 策略，要求输入您的作者邮箱接收 PIN 码后方可打开。</li>
+                        <li><strong>进阶安全建议</strong>：在 Cloudflare Zero Trust 中为 <code>/public/Donttouchmyshit/*</code> 配置 Access 策略，要求输入您的作者邮箱接收 PIN 码后方可打开。</li>
                     </ol>
 
                     <div class="form-group" style="margin-top: 14px;">
-                        <label class="form-label">GitHub Personal Access Token (可选，仅在线模式需要)：</label>
-                        <input type="password" id="github-pat-input" class="form-control" placeholder="github_pat_...">
+                        <label class="form-label">GitHub Personal Access Token (仅公网在线模式需要，本地无需配置)：</label>
+                        <input type="password" id="github-pat-input" class="form-control" placeholder="github_pat_... 或 ghp_...">
                     </div>
-                    <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
-                        <button id="btn-save-github-token" class="btn btn-primary btn-sm">保存 Token 到本地</button>
+                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+                        <button id="btn-test-github-token" class="btn btn-sm">⚡ 测试 Token 权限</button>
+                        <button id="btn-save-github-token" class="btn btn-primary btn-sm">💾 保存 Token</button>
+                        <button id="btn-clear-github-token" class="btn btn-danger btn-sm">🗑️ 清除 Token</button>
                     </div>
+                    <div id="github-token-status" style="margin-top: 10px; font-size: 0.82rem; color: #94a3b8;"></div>
                 </div>
             </div>
         </section>
@@ -1919,26 +1922,332 @@
                 });
             });
 
-            // 1. 加载数据
-            async function loadData() {
-                try {
-                    const resp = await fetch('/api/data');
-                    const res = await resp.json();
-                    if (res.success && res.data) {
-                        cmsData = res.data;
-                        renderCardsList();
-                        renderModalItems();
-                        renderFaqItems();
-                        renderGuideArticlesDropdown();
-                        renderIconsLibrary();
-                        loadBackups();
+            const DEFAULT_ICONS_LIST = [
+                "images/icons/aaitr.svg", "images/icons/akile.ico", "images/icons/bitznet.png", "images/icons/biubiu.png",
+                "images/icons/blossomhost.png", "images/icons/boil.png", "images/icons/bytevirt.svg", "images/icons/bytevirt.webp",
+                "images/icons/catnet.png", "images/icons/cloudie.png", "images/icons/cloudie.svg", "images/icons/daxiang.png",
+                "images/icons/daxiang.svg", "images/icons/daxiang.webp", "images/icons/eix.png", "images/icons/equalvpn.webp",
+                "images/icons/ftq.png", "images/icons/ganbei.svg", "images/icons/glados.png", "images/icons/godetia.svg",
+                "images/icons/homeproxy.png", "images/icons/idc.do.png", "images/icons/jms.png", "images/icons/jms.svg",
+                "images/icons/kuaiche.png", "images/icons/lamhosting.svg", "images/icons/linkcube.png", "images/icons/lisa.ico",
+                "images/icons/ltyun.png", "images/icons/mesl.png", "images/icons/miaona.png", "images/icons/nicecc.png",
+                "images/icons/nmcloud.png", "images/icons/noww.webp", "images/icons/nvenix.svg", "images/icons/ohno.png",
+                "images/icons/oixcloud.png", "images/icons/qingyunti.png", "images/icons/qqpw.png", "images/icons/rancho.png",
+                "images/icons/recloud.svg", "images/icons/resip.png", "images/icons/ridc.svg", "images/icons/riolu.png",
+                "images/icons/shouhou.png", "images/icons/sixtynet.png", "images/icons/sola.webp", "images/icons/ssid.png",
+                "images/icons/suda.png", "images/icons/sufe.webp", "images/icons/tag.png", "images/icons/taphip.svg",
+                "images/icons/vircs.svg", "images/icons/voluri.png", "images/icons/voyracloud.png", "images/icons/vvcloud.webp",
+                "images/icons/weitu.png", "images/icons/xingchen.png", "images/icons/xlw.webp", "images/icons/xzwl.png",
+                "images/icons/yingzi.png", "images/icons/yingzi.svg", "images/icons/yueto.png", "images/icons/yunfan.png",
+                "images/icons/yunfan.webp", "images/icons/zorocloud.png"
+            ].map(p => ({
+                filename: p.split('/').pop(),
+                path: p,
+                size: 4096
+            }));
 
-                        document.getElementById('sw-version-display').textContent = `SW: ${cmsData.swVersion || 'v1.1.12'}`;
-                    } else {
-                        showToast('读取数据失败: ' + (res.error || '未知错误'), 'error');
+            // 纯前端 HTML 与数据静态解析器 (脱离后端运行)
+            function clientParseCards(html, linksMap = {}) {
+                const cardRegex = /<!--\s*([^\n\r]+?)\s*-->\s*(<a\b[^>]*class=["'][^"']*button-xzwl[^"']*["'][^>]*>[\s\S]*?<\/a>)/gi;
+                let match;
+                const cards = [];
+
+                while ((match = cardRegex.exec(html)) !== null) {
+                    const commentTitle = match[1];
+                    const cardHtml = match[2];
+
+                    const slugMatch = cardHtml.match(/data-slug=["']([^"']+)["']/i);
+                    const slug = slugMatch ? slugMatch[1] : '';
+
+                    const catMatch = cardHtml.match(/data-category=["']([^"']+)["']/i);
+                    const category = catMatch ? catMatch[1] : 'airport';
+
+                    const iconMatch = cardHtml.match(/<img[^>]*class=["'][^"']*icon[^"']*["'][^>]*src=["']([^"']+)["']/i);
+                    const icon = iconMatch ? iconMatch[1] : '';
+
+                    const titleMatch = cardHtml.match(/<h3[^>]*class=["'][^"']*card-title[^"']*["'][^>]*>([\s\S]*?)<\/h3>/i);
+                    const rawTitle = titleMatch ? titleMatch[1].trim() : commentTitle;
+                    const isHighlight = rawTitle.startsWith('#') || rawTitle.startsWith('＃');
+                    const isHidden = rawTitle.startsWith('!') || rawTitle.startsWith('！') || cardHtml.includes('card-hidden');
+                    const cleanTitle = rawTitle.replace(/^[!！#＃\s]+/, '').trim();
+
+                    const headerMatch = cardHtml.match(/<div class=["']card-header["']>([\s\S]*?)<\/div>/i);
+                    let headerTags = [];
+                    if (headerMatch) {
+                        const tagMatches = [...headerMatch[1].matchAll(/<span class=["']card-tag\s*([^"']*)["']>([\s\S]*?)<\/span>/gi)];
+                        headerTags = tagMatches.map(m => ({ cls: m[1].trim(), text: m[2].trim() }));
                     }
+
+                    const metaMatch = cardHtml.match(/<div class=["']card-meta["']>([\s\S]*?)<\/div>/i);
+                    let metaText = '';
+                    let metaTag = null;
+                    if (metaMatch) {
+                        const metaTagMatch = metaMatch[1].match(/<span class=["']card-tag\s*([^"']*)["']>([\s\S]*?)<\/span>/i);
+                        if (metaTagMatch) {
+                            metaTag = { cls: metaTagMatch[1].trim(), text: metaTagMatch[2].trim() };
+                            metaText = metaMatch[1].replace(metaTagMatch[0], '').trim();
+                        } else {
+                            metaText = metaMatch[1].trim();
+                        }
+                    }
+
+                    const target = (linksMap[slug] && linksMap[slug].target) ? linksMap[slug].target : '';
+
+                    cards.push({
+                        slug,
+                        commentTitle,
+                        rawTitle,
+                        cleanTitle,
+                        isHighlight,
+                        isHidden,
+                        category,
+                        icon,
+                        headerTags,
+                        metaText,
+                        metaTag,
+                        target
+                    });
+                }
+                return cards;
+            }
+
+            function clientParseModalItems(html) {
+                const modalBodyRegex = /<div class=["']guide-modal-body["']>([\s\S]*?)<\/div>\s*<\/div>\s*<\/dialog>/i;
+                const match = html.match(modalBodyRegex);
+                if (!match) return [];
+                const listItems = [...match[1].matchAll(/<li class=["']guide-item["']>([\s\S]*?)<\/li>/gi)];
+                return listItems.map((m, idx) => {
+                    const textMatch = m[1].match(/<div class=["']guide-item-text["']>([\s\S]*?)<\/div>/i);
+                    return {
+                        index: idx + 1,
+                        content: textMatch ? textMatch[1].trim() : ''
+                    };
+                });
+            }
+
+            function clientParseFaqItems(html) {
+                const faqAccordionRegex = /<div class=["']faq-accordion["']>([\s\S]*?)<\/div>\s*<\/article>/i;
+                const match = html.match(faqAccordionRegex);
+                if (!match) return [];
+                const detailsMatches = [...match[1].matchAll(/<details class=["']faq-item["']>([\s\S]*?)<\/details>/gi)];
+                return detailsMatches.map(d => {
+                    const qMatch = d[1].match(/<summary class=["']faq-question["']>([\s\S]*?)<\/summary>/i);
+                    const aMatch = d[1].match(/<div class=["']faq-answer["']>([\s\S]*?)<\/div>/i);
+                    return {
+                        question: qMatch ? qMatch[1].trim() : '',
+                        answer: aMatch ? aMatch[1].trim() : ''
+                    };
+                });
+            }
+
+            function clientParseSwVersion(swText) {
+                if (!swText) return 'v1.1.18';
+                const m = swText.match(/CACHE_VERSION\s*=\s*['"]([^'"]+)['"]/);
+                return m ? m[1] : 'v1.1.18';
+            }
+
+            function clientBumpSwVersion(version) {
+                const m = (version || 'v1.1.18').match(/v?(\d+)\.(\d+)\.(\d+)/);
+                if (!m) return 'v1.1.19';
+                return `v${m[1]}.${m[2]}.${parseInt(m[3], 10) + 1}`;
+            }
+
+            function clientRenderCardHtml(card) {
+                const isAirport = card.category === 'airport';
+                const displayTitle = (card.isHighlight ? '#' : (card.isHidden ? '!' : '')) + card.cleanTitle;
+                const cardHiddenClass = card.isHidden ? ' card-hidden' : '';
+                const filterClass = isAirport ? '' : ' category-filtered-out';
+                const displayStyle = isAirport ? '' : ' style="display: none;"';
+
+                let headerTagsHtml = '';
+                if (card.headerTags && card.headerTags.length > 0) {
+                    headerTagsHtml = '\n                            ' + card.headerTags
+                        .filter(t => t && t.text)
+                        .map(t => `<span class="card-tag ${t.cls || ''}">${t.text}</span>`)
+                        .join('\n                            ');
+                }
+
+                let metaTagHtml = '';
+                if (card.metaTag && card.metaTag.text) {
+                    metaTagHtml = ` <span class="card-tag ${card.metaTag.cls || ''}">${card.metaTag.text}</span>`;
+                }
+
+                return `                <!-- ${card.cleanTitle} -->
+                <a data-slug="${card.slug}" class="button button-xzwl${cardHiddenClass}${filterClass}" href="https://jiakuan.link/${card.slug}" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="${card.category}"${displayStyle}>
+                    <img class="icon" aria-hidden="true" src="${card.icon}" alt="${card.cleanTitle} Logo" width="30" height="30" loading="lazy" decoding="async">
+                    <div class="card-info">
+                        <div class="card-header">
+                            <h3 class="card-title">${displayTitle}</h3>${headerTagsHtml}
+                        </div>
+                        <div class="card-meta">${card.metaText || ''}${metaTagHtml}</div>
+                    </div>
+                </a>`;
+            }
+
+            function clientRenderButtonStackHtml(cards) {
+                const sortFn = (a, b) => (b.isHighlight ? 1 : 0) - (a.isHighlight ? 1 : 0);
+                const nobleCards = cards.filter(c => c.category === 'noble').sort(sortFn);
+                const airportCards = cards.filter(c => c.category === 'airport').sort(sortFn);
+                const vpsCards = cards.filter(c => c.category === 'vps').sort(sortFn);
+                const otherCards = cards.filter(c => !['noble', 'airport', 'vps'].includes(c.category)).sort(sortFn);
+
+                const sections = [];
+                if (nobleCards.length > 0) {
+                    sections.push('                <!-- ========== 老站 ========== -->\n' + nobleCards.map(clientRenderCardHtml).join('\n\n'));
+                }
+                if (airportCards.length > 0) {
+                    sections.push('                <!-- ========== 机场 ========== -->\n' + airportCards.map(clientRenderCardHtml).join('\n\n'));
+                }
+                if (vpsCards.length > 0) {
+                    sections.push('                <!-- ========== VPS ========== -->\n' + vpsCards.map(clientRenderCardHtml).join('\n\n'));
+                }
+                if (otherCards.length > 0) {
+                    sections.push('                <!-- ========== 其他 ========== -->\n' + otherCards.map(clientRenderCardHtml).join('\n\n'));
+                }
+
+                return `            <div class="button-stack" role="navigation">\n\n${sections.join('\n\n\n')}\n\n            </div>`;
+            }
+
+            function clientRenderGuideModalBodyHtml(items) {
+                const itemsHtml = items.map((it, idx) => `                    <li class="guide-item">
+                        <span class="guide-item-badge">${idx + 1}</span>
+                        <div class="guide-item-text">
+                            ${it.content}
+                        </div>
+                    </li>`).join('\n');
+
+                return `            <div class="guide-modal-body">
+                <ol class="guide-list">
+${itemsHtml}
+                </ol>
+            </div>`;
+            }
+
+            function clientRenderFaqAccordionHtml(faqs) {
+                const faqsHtml = faqs.map(f => `                        <details class="faq-item">
+                            <summary class="faq-question">${f.question}</summary>
+                            <div class="faq-answer">
+                                ${f.answer}
+                            </div>
+                        </details>`).join('\n');
+
+                return `                    <div class="faq-accordion">\n${faqsHtml}\n                    </div>`;
+            }
+
+            function clientReconstructIndexHtml(originalHtml, cards, modalItems, faqItems) {
+                let html = originalHtml;
+
+                if (Array.isArray(cards)) {
+                    const stackStart = '<div class="button-stack" role="navigation">';
+                    const stackEnd = '<!-- 展开隐藏卡片按钮';
+                    const startIdx = html.indexOf(stackStart);
+                    const endIdx = html.indexOf(stackEnd, startIdx);
+                    if (startIdx !== -1 && endIdx !== -1) {
+                        const before = html.substring(0, startIdx);
+                        const after = html.substring(endIdx);
+                        const newStackHtml = clientRenderButtonStackHtml(cards);
+                        html = before + newStackHtml.trim() + '\n\n            ' + after;
+                    }
+                }
+
+                if (Array.isArray(modalItems)) {
+                    const modalBodyRegex = /<div class=["']guide-modal-body["']>([\s\S]*?)<\/div>\s*<\/div>\s*<\/dialog>/i;
+                    if (html.match(modalBodyRegex)) {
+                        const newModalBody = clientRenderGuideModalBodyHtml(modalItems);
+                        html = html.replace(modalBodyRegex, `${newModalBody}\n        </div>\n    </dialog>`);
+                    }
+                }
+
+                if (Array.isArray(faqItems)) {
+                    const faqRegex = /<div class=["']faq-accordion["']>([\s\S]*?)<\/div>\s*<\/article>/i;
+                    if (html.match(faqRegex)) {
+                        const newFaqHtml = clientRenderFaqAccordionHtml(faqItems);
+                        html = html.replace(faqRegex, `${newFaqHtml}\n                </article>`);
+                    }
+
+                    const faqSchemaRegex = /"@type":\s*"FAQPage"[\s\S]*?"mainEntity":\s*\[[\s\S]*?\]\s*\}/i;
+                    if (html.match(faqSchemaRegex)) {
+                        const mainEntities = faqItems.map(f => ({
+                            '@type': 'Question',
+                            name: f.question,
+                            acceptedAnswer: {
+                                '@type': 'Answer',
+                                text: f.answer.replace(/<[^>]+>/g, '').trim()
+                            }
+                        }));
+                        const newSchemaSnippet = `"@type": "FAQPage",\n          "@id": "https://jiakuan.link/#faq",\n          "mainEntity": ${JSON.stringify(mainEntities, null, 12).replace(/\n\s*}/g, '\n          }')}`;
+                        html = html.replace(faqSchemaRegex, newSchemaSnippet);
+                    }
+                }
+
+                return html;
+            }
+
+            function onDataReady() {
+                if (!cmsData.availableIcons || cmsData.availableIcons.length === 0) {
+                    cmsData.availableIcons = DEFAULT_ICONS_LIST;
+                }
+                renderCardsList();
+                renderModalItems();
+                renderFaqItems();
+                renderGuideArticlesDropdown();
+                renderIconsLibrary();
+                if (isLocal) loadBackups();
+                document.getElementById('sw-version-display').textContent = `SW: ${cmsData.swVersion || 'v1.1.18'}`;
+            }
+
+            // 1. 加载数据 (双模式智能适配：本地 /api/data 优先，公网静态文件直读降级)
+            async function loadData() {
+                // 本地模式优先尝试 Node.js 接口
+                if (isLocal) {
+                    try {
+                        const resp = await fetch('/api/data');
+                        const res = await resp.json();
+                        if (res.success && res.data) {
+                            cmsData = res.data;
+                            onDataReady();
+                            return;
+                        }
+                    } catch (e) {
+                        console.warn('[CMS] 本地 /api/data 不可用，切换至纯静态读取模式');
+                    }
+                }
+
+                // 在线公网模式 (或本地降级模式)：直接 fetch 静态资源解析
+                try {
+                    isOnlineMode = true;
+                    modeBadge.textContent = '🌐 在线 GitHub 模式';
+                    modeBadge.className = 'cms-badge badge-online';
+
+                    const [htmlText, mapJson, swText] = await Promise.all([
+                        fetch('/index.html?_t=' + Date.now()).then(r => {
+                            if (!r.ok) throw new Error(`无法获取 index.html (${r.status})`);
+                            return r.text();
+                        }),
+                        fetch('/links-map.json?_t=' + Date.now()).then(r => r.ok ? r.json() : {}).catch(() => ({})),
+                        fetch('/sw.js?_t=' + Date.now()).then(r => r.ok ? r.text() : '').catch(() => '')
+                    ]);
+
+                    const cards = clientParseCards(htmlText, mapJson);
+                    const modalItems = clientParseModalItems(htmlText);
+                    const faqItems = clientParseFaqItems(htmlText);
+                    const swVersion = clientParseSwVersion(swText);
+
+                    cmsData = {
+                        cards,
+                        modalItems,
+                        faqItems,
+                        guideArticles: [],
+                        availableIcons: DEFAULT_ICONS_LIST,
+                        swVersion,
+                        linksMap: mapJson
+                    };
+
+                    onDataReady();
+                    showToast(`在线数据加载成功！共装载 ${cards.length} 张卡片`);
                 } catch (err) {
-                    showToast('连接 API 失败: ' + err.message, 'error');
+                    showToast('在线加载数据失败: ' + err.message, 'error');
                 }
             }
 
@@ -2646,7 +2955,92 @@
                 } catch (e) {}
             });
 
-            // 8. 保存全量数据
+            // 8. GitHub REST API 原子提交引擎 (用于公网在线模式)
+            async function commitToGitHub({ token, message, files }) {
+                const owner = 'kanpianer';
+                const repo = 'jk.bxkp.org';
+                const branch = 'main';
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                };
+
+                // 1. 获取当前分支的 HEAD commit SHA
+                const refResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${branch}`, { headers });
+                if (!refResp.ok) {
+                    const err = await refResp.json().catch(() => ({}));
+                    throw new Error(err.message || `读取分支引用失败 (HTTP ${refResp.status})`);
+                }
+                const refData = await refResp.json();
+                const latestCommitSha = refData.object.sha;
+
+                // 2. 获取该 commit 对应的 base tree SHA
+                const commitResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/commits/${latestCommitSha}`, { headers });
+                if (!commitResp.ok) {
+                    throw new Error(`读取最新提交树失败 (HTTP ${commitResp.status})`);
+                }
+                const commitData = await commitResp.json();
+                const baseTreeSha = commitData.tree.sha;
+
+                // 3. 构建新的 tree 项
+                const treeItems = files.map(f => ({
+                    path: f.path,
+                    mode: '100644',
+                    type: 'blob',
+                    content: f.content
+                }));
+
+                const treeResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                        base_tree: baseTreeSha,
+                        tree: treeItems
+                    })
+                });
+                if (!treeResp.ok) {
+                    const err = await treeResp.json().catch(() => ({}));
+                    throw new Error(err.message || `创建 Git Tree 失败 (HTTP ${treeResp.status})`);
+                }
+                const treeData = await treeResp.json();
+                const newTreeSha = treeData.sha;
+
+                // 4. 创建新的 Commit
+                const newCommitResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/commits`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                        message: message || 'chore: update navigation cards and links via Online CMS',
+                        tree: newTreeSha,
+                        parents: [latestCommitSha]
+                    })
+                });
+                if (!newCommitResp.ok) {
+                    const err = await newCommitResp.json().catch(() => ({}));
+                    throw new Error(err.message || `创建 Commit 失败 (HTTP ${newCommitResp.status})`);
+                }
+                const newCommitData = await newCommitResp.json();
+                const newCommitSha = newCommitData.sha;
+
+                // 5. 更新分支 ref
+                const updateRefResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/refs/heads/${branch}`, {
+                    method: 'PATCH',
+                    headers,
+                    body: JSON.stringify({
+                        sha: newCommitSha,
+                        force: false
+                    })
+                });
+                if (!updateRefResp.ok) {
+                    const err = await updateRefResp.json().catch(() => ({}));
+                    throw new Error(err.message || `更新分支引用失败 (HTTP ${updateRefResp.status})`);
+                }
+
+                return { commitSha: newCommitSha, htmlUrl: `https://github.com/${owner}/${repo}/commit/${newCommitSha}` };
+            }
+
+            // 8. 保存全量数据 (支持本地 /api/save 与线上 GitHub REST API 直连双模式)
             document.getElementById('btn-save-all').addEventListener('click', async () => {
                 const btn = document.getElementById('btn-save-all');
                 btn.disabled = true;
@@ -2654,35 +3048,132 @@
 
                 const bumpSw = document.getElementById('bump-sw-checkbox').checked;
 
+                // 优先检查是否处于本地模式且本地接口有效
+                if (isLocal) {
+                    try {
+                        const resp = await fetch('/api/save', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                cards: cmsData.cards,
+                                modalItems: cmsData.modalItems,
+                                faqItems: cmsData.faqItems,
+                                bumpSw
+                            })
+                        });
+                        const res = await resp.json();
+                        btn.disabled = false;
+                        btn.textContent = '💾 应用';
+
+                        if (res.success) {
+                            showToast(`全站数据应用成功！短链跳板与 redirects 已更新 (SW: ${res.result.swVersion})`);
+                            loadData();
+                            return;
+                        } else {
+                            alert('本地保存失败: ' + res.error);
+                            return;
+                        }
+                    } catch (err) {
+                        console.warn('[CMS] 本地 /api/save 无法连接，转入 GitHub 在线提交模式');
+                    }
+                }
+
+                // 在线公网模式：通过 GitHub REST API 原子提交
                 try {
-                    const resp = await fetch('/api/save', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            cards: cmsData.cards,
-                            modalItems: cmsData.modalItems,
-                            faqItems: cmsData.faqItems,
-                            bumpSw
-                        })
+                    let token = localStorage.getItem('jk_cms_github_pat') || '';
+                    if (!token) {
+                        token = prompt('【公网在线管理】\n检测到当前处于公网环境。保存并发布必须使用作者的 GitHub Personal Access Token (仅保存在您的本地浏览器中)。\n\n请输入您的 GitHub Token (github_pat_... 或 ghp_...)：');
+                        if (!token || !token.trim()) {
+                            btn.disabled = false;
+                            btn.textContent = '💾 应用';
+                            return alert('已取消保存：未提供 GitHub 授权 Token。');
+                        }
+                        token = token.trim();
+                        localStorage.setItem('jk_cms_github_pat', token);
+                        document.getElementById('github-pat-input').value = token;
+                        checkGitHubTokenStatus(token);
+                    }
+
+                    showToast('正在向 GitHub 仓库提交原子更新，请稍候...');
+
+                    // 1. 获取线上最新静态原件作为合成底板
+                    const [indexHtmlBase, mapJsonBase, swJsBase] = await Promise.all([
+                        fetch('/index.html?_t=' + Date.now()).then(r => r.text()),
+                        fetch('/links-map.json?_t=' + Date.now()).then(r => r.ok ? r.json() : {}).catch(() => ({})),
+                        fetch('/sw.js?_t=' + Date.now()).then(r => r.ok ? r.text() : '').catch(() => '')
+                    ]);
+
+                    // 2. 客户端合成更新后的 index.html
+                    const newIndexHtml = clientReconstructIndexHtml(indexHtmlBase, cmsData.cards, cmsData.modalItems, cmsData.faqItems);
+
+                    // 3. 客户端合成 links-map.json
+                    const today = new Date().toISOString().split('T')[0];
+                    const newLinksMap = { ...mapJsonBase };
+                    for (const card of cmsData.cards) {
+                        if (card.slug && card.target) {
+                            const displayTitle = (card.isHighlight ? '#' : (card.isHidden ? '!' : '')) + card.cleanTitle;
+                            newLinksMap[card.slug] = {
+                                title: displayTitle,
+                                target: card.target,
+                                category: card.category,
+                                updatedAt: today
+                            };
+                        }
+                    }
+                    const sortedMap = Object.keys(newLinksMap)
+                        .sort()
+                        .reduce((acc, key) => { acc[key] = newLinksMap[key]; return acc; }, {});
+                    const newLinksMapJson = JSON.stringify(sortedMap, null, 2) + '\n';
+
+                    // 4. 客户端合成 public/_redirects
+                    const redirectLines = ['# Cloudflare Pages 302 Redirects'];
+                    for (const [slug, item] of Object.entries(sortedMap)) {
+                        if (item.target && !item.target.startsWith('https://jiakuan.link')) {
+                            redirectLines.push(`/${slug}  ${item.target}  302!`);
+                        }
+                    }
+                    const newRedirects = redirectLines.join('\n') + '\n';
+
+                    // 5. 客户端递增 sw.js 版本
+                    let newSwJs = swJsBase;
+                    let newSwVersion = cmsData.swVersion;
+                    if (bumpSw) {
+                        newSwVersion = clientBumpSwVersion(cmsData.swVersion);
+                        newSwJs = swJsBase.replace(/CACHE_VERSION\s*=\s*['"][^'"]+['"]/, `CACHE_VERSION = '${newSwVersion}'`);
+                    }
+
+                    // 6. 构造原子提交文件列表
+                    const filesToCommit = [
+                        { path: 'index.html', content: newIndexHtml },
+                        { path: 'links-map.json', content: newLinksMapJson },
+                        { path: 'public/_redirects', content: newRedirects }
+                    ];
+                    if (newSwJs) {
+                        filesToCommit.push({ path: 'sw.js', content: newSwJs });
+                        filesToCommit.push({ path: 'public/sw.js', content: newSwJs });
+                    }
+
+                    const commitMsg = 'chore: update navigation cards and links via Online CMS';
+                    const result = await commitToGitHub({
+                        token,
+                        message: commitMsg,
+                        files: filesToCommit
                     });
-                    const res = await resp.json();
+
                     btn.disabled = false;
                     btn.textContent = '💾 应用';
 
-                    if (res.success) {
-                        showToast(`全站数据应用成功！短链跳板与 redirects 已更新 (SW: ${res.result.swVersion})`);
-                        loadData();
-                    } else {
-                        alert('应用失败: ' + res.error);
-                    }
+                    alert(`🎉 恭喜！已通过 GitHub API 成功提交到仓库！\n提交 ID: ${result.commitSha.substring(0, 7)}\nCloudflare Pages 已自动开始部署，预计 1 分钟内全球生效！`);
+                    loadData();
                 } catch (err) {
                     btn.disabled = false;
                     btn.textContent = '💾 应用';
-                    alert('网络异常: ' + err.message);
+                    console.error('在线提交失败:', err);
+                    alert('GitHub 在线提交失败:\n' + err.message + '\n\n请检查您的 Token 是否具备 Contents 读写权限。');
                 }
             });
 
-            // 9. Git Commit & Push
+            // 9. Git Commit & Push (本地 Node.js 模式快捷按钮)
             document.getElementById('btn-git-push').addEventListener('click', async () => {
                 const msg = document.getElementById('git-commit-msg-input').value.trim() || 'chore: update content via CMS';
                 if (!confirm(`确定执行 Git 提交并推送到 GitHub 远程仓库吗？\n日志信息：${msg}`)) return;
@@ -2713,21 +3204,74 @@
                 }
             });
 
-            // 10. 保存 GitHub Token 到本地存储
+            // 10. GitHub Token 管理与状态检测
+            async function checkGitHubTokenStatus(token) {
+                const statusEl = document.getElementById('github-token-status');
+                if (!statusEl) return;
+                if (!token) {
+                    statusEl.innerHTML = '<span style="color: #64748b;">⚪ 未配置 GitHub Token（公网在线访问仅限只读预览）</span>';
+                    return;
+                }
+                statusEl.innerHTML = '<span style="color: #38bdf8;">⏳ 正在校验 Token 连通性与权限...</span>';
+                try {
+                    const resp = await fetch('https://api.github.com/repos/kanpianer/jk.bxkp.org', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Accept': 'application/vnd.github.v3+json'
+                        }
+                    });
+                    if (resp.ok) {
+                        const repo = await resp.json();
+                        const canPush = repo.permissions && (repo.permissions.push || repo.permissions.admin);
+                        if (canPush) {
+                            statusEl.innerHTML = `🟢 Token 验证通过：已成功授权 <strong>${repo.full_name}</strong> (具备写入权限，可在线应用保存)`;
+                        } else {
+                            statusEl.innerHTML = `🟡 Token 有效但权限不足：对 <strong>${repo.full_name}</strong> 仅有只读权限，请检查 PAT 的 Contents 读写权限配置。`;
+                        }
+                    } else if (resp.status === 401) {
+                        statusEl.innerHTML = '🔴 Token 鉴权失败：Token 已失效或格式错误 (HTTP 401)。';
+                    } else if (resp.status === 404) {
+                        statusEl.innerHTML = '🔴 未找到仓库或无权访问：请确保 Token 已授权 kanpianer/jk.bxkp.org (HTTP 404)。';
+                    } else {
+                        statusEl.innerHTML = `🔴 校验遇到异常状态: HTTP ${resp.status}`;
+                    }
+                } catch (err) {
+                    statusEl.innerHTML = `🔴 网络连接异常: ${err.message}`;
+                }
+            }
+
             const savedToken = localStorage.getItem('jk_cms_github_pat');
             if (savedToken) {
                 document.getElementById('github-pat-input').value = savedToken;
+                checkGitHubTokenStatus(savedToken);
+            } else {
+                checkGitHubTokenStatus('');
             }
 
             document.getElementById('btn-save-github-token').addEventListener('click', () => {
                 const token = document.getElementById('github-pat-input').value.trim();
                 if (token) {
                     localStorage.setItem('jk_cms_github_pat', token);
-                    showToast('GitHub Token 已安全加密保存在本地浏览器！');
+                    showToast('GitHub Token 已安全保存在本地浏览器！');
+                    checkGitHubTokenStatus(token);
                 } else {
                     localStorage.removeItem('jk_cms_github_pat');
                     showToast('已清除本地 GitHub Token');
+                    checkGitHubTokenStatus('');
                 }
+            });
+
+            document.getElementById('btn-test-github-token').addEventListener('click', () => {
+                const token = document.getElementById('github-pat-input').value.trim();
+                if (!token) return alert('请先输入 GitHub Token 后再进行测试！');
+                checkGitHubTokenStatus(token);
+            });
+
+            document.getElementById('btn-clear-github-token').addEventListener('click', () => {
+                document.getElementById('github-pat-input').value = '';
+                localStorage.removeItem('jk_cms_github_pat');
+                showToast('已清除本地 GitHub Token');
+                checkGitHubTokenStatus('');
             });
 
             // 启动初始化

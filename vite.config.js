@@ -61,9 +61,14 @@ function cmsApiPlugin() {
           return;
         }
 
-        // 处理 /Donttouchmyshit 访问规范化重定向到 /Donttouchmyshit/
+        // 处理 /Donttouchmyshit 与 /public/Donttouchmyshit 访问规范化重定向
         if (lowerPath === '/donttouchmyshit') {
           res.writeHead(301, { Location: '/Donttouchmyshit/' });
+          res.end();
+          return;
+        }
+        if (lowerPath === '/public/donttouchmyshit') {
+          res.writeHead(301, { Location: '/public/Donttouchmyshit/' });
           res.end();
           return;
         }
