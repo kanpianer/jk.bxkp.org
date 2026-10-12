@@ -1513,7 +1513,7 @@
         <div class="cms-tab-item active" data-tab="tab-cards">🗂️ 网站卡片管理 (<span id="cards-count">0</span>)</div>
         <div class="cms-tab-item" data-tab="tab-modal">💡 指南弹窗内容</div>
         <div class="cms-tab-item" data-tab="tab-faq">❓ 首页 SEO FAQ</div>
-        <div class="cms-tab-item" data-tab="tab-guides">📚 深度指南文章</div>
+        <div class="cms-tab-item" data-tab="tab-guides">📚 深度指南文章 (<span id="guides-count">0</span>)</div>
         <div class="cms-tab-item" data-tab="tab-icons">🖼️ 图标资源库</div>
         <div class="cms-tab-item" data-tab="tab-health">🩺 链接健康体检</div>
         <div class="cms-tab-item" data-tab="tab-backup">📦 历史备份与回滚</div>
@@ -1593,11 +1593,14 @@
         <section id="tab-guides" class="tab-panel">
             <div style="max-width: 960px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px;">
                 <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0;">深度知识专题文章管理 (guides/*.html)</h2>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <label class="form-label">选择要编辑的文章：</label>
-                    <select id="guide-article-select" class="form-control" style="width: auto; flex: 1;">
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <label class="form-label" style="margin: 0;">选择要编辑的文章：</label>
+                    <select id="guide-article-select" class="form-control" style="width: auto; flex: 1; min-width: 240px;">
                         <!-- 动态填充 -->
                     </select>
+                    <a id="guide-view-link" href="#" target="_blank" rel="noopener" class="btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                        🔗 浏览器预览文章
+                    </a>
                 </div>
 
                 <div class="card-table-wrap" style="padding: 20px; display: flex; flex-direction: column; gap: 14px;">
@@ -2184,6 +2187,91 @@ ${itemsHtml}
                 return html;
             }
 
+            // 默认深度指南文章列表 (保证离线与极速兜底)
+            const DEFAULT_GUIDE_FILES = [
+                'dual-isp-residential-ip.html',
+                'ip-fraud-check.html',
+                'cross-border-ecommerce-setup.html'
+            ];
+
+            // 从首页 HTML 动态提取深度指南文章文件名
+            function clientExtractGuideFilenames(html) {
+                const filenames = new Set(DEFAULT_GUIDE_FILES);
+                if (html) {
+                    const regex = /href=["'](?:(?:\.\/|\/)?guides\/([^"'?#]+))["']/gi;
+                    let m;
+                    while ((m = regex.exec(html)) !== null) {
+                        if (m[1]) {
+                            let fn = m[1].trim();
+                            if (!fn.endsWith('.html')) fn += '.html';
+                            filenames.add(fn);
+                        }
+                    }
+                }
+                return Array.from(filenames);
+            }
+
+            // 解析单篇深度文章 HTML
+            function clientParseGuideArticle(filename, content) {
+                if (!content) return null;
+                const titleMatch = content.match(/<title>([^<]+)<\/title>/i);
+                const descMatch = content.match(/<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i);
+                const h1Match = content.match(/<h1 class=["']guide-title["']>([\s\S]*?)<\/h1>/i);
+                const articleMatch = content.match(/<article class=["']guide-article["']>([\s\S]*?)<\/article>/i);
+
+                return {
+                    filename,
+                    slug: filename.replace(/\.html$/, ''),
+                    path: `guides/${filename}`,
+                    title: titleMatch ? titleMatch[1].trim() : filename,
+                    headline: h1Match ? h1Match[1].trim() : '',
+                    description: descMatch ? descMatch[1].trim() : '',
+                    contentHtml: articleMatch ? articleMatch[1].trim() : '',
+                    rawHtml: content
+                };
+            }
+
+            // 并发加载深度指南文章列表
+            async function clientLoadGuideArticles(guideFilenames) {
+                const articles = [];
+                await Promise.all(guideFilenames.map(async (filename) => {
+                    try {
+                        let resp = await fetch(`/guides/${filename}?_t=` + Date.now());
+                        if (!resp.ok) {
+                            const slug = filename.replace(/\.html$/, '');
+                            resp = await fetch(`/guides/${slug}?_t=` + Date.now());
+                        }
+                        if (resp.ok) {
+                            const content = await resp.text();
+                            const art = clientParseGuideArticle(filename, content);
+                            if (art) articles.push(art);
+                        }
+                    } catch (e) {
+                        console.warn(`[CMS] 获取指南文章 ${filename} 失败:`, e);
+                    }
+                }));
+
+                const orderMap = new Map(guideFilenames.map((f, i) => [f, i]));
+                articles.sort((a, b) => (orderMap.get(a.filename) ?? 99) - (orderMap.get(b.filename) ?? 99));
+                return articles;
+            }
+
+            // 合成更新后的单篇指南 HTML
+            function clientReconstructGuideHtml(originalHtml, headline, description, contentHtml) {
+                let html = originalHtml || '';
+                if (description) {
+                    html = html.replace(/<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i, `<meta name="description" content="${description}">`);
+                }
+                if (contentHtml) {
+                    html = html.replace(/<article class=["']guide-article["']>([\s\S]*?)<\/article>/i, `<article class="guide-article">\n${contentHtml}\n            </article>`);
+                }
+                if (headline) {
+                    html = html.replace(/<h1 class=["']guide-title["']>([\s\S]*?)<\/h1>/i, `<h1 class="guide-title">${headline}</h1>`);
+                    html = html.replace(/<title>([^<]+)<\/title>/i, `<title>${headline} | 家宽导航</title>`);
+                }
+                return html;
+            }
+
             function onDataReady() {
                 if (!cmsData.availableIcons || cmsData.availableIcons.length === 0) {
                     cmsData.availableIcons = DEFAULT_ICONS_LIST;
@@ -2234,18 +2322,22 @@ ${itemsHtml}
                     const faqItems = clientParseFaqItems(htmlText);
                     const swVersion = clientParseSwVersion(swText);
 
+                    // 动态加载深度指南文章
+                    const guideFilenames = clientExtractGuideFilenames(htmlText);
+                    const guideArticles = await clientLoadGuideArticles(guideFilenames);
+
                     cmsData = {
                         cards,
                         modalItems,
                         faqItems,
-                        guideArticles: [],
+                        guideArticles,
                         availableIcons: DEFAULT_ICONS_LIST,
                         swVersion,
                         linksMap: mapJson
                     };
 
                     onDataReady();
-                    showToast(`在线数据加载成功！共装载 ${cards.length} 张卡片`);
+                    showToast(`在线数据加载成功！共装载 ${cards.length} 张卡片，${guideArticles.length} 篇深度指南文章`);
                 } catch (err) {
                     showToast('在线加载数据失败: ' + err.message, 'error');
                 }
@@ -2797,48 +2889,168 @@ ${itemsHtml}
             // 5. 深度指南文章管理
             function renderGuideArticlesDropdown() {
                 const select = document.getElementById('guide-article-select');
+                const viewLink = document.getElementById('guide-view-link');
+                const countEl = document.getElementById('guides-count');
+                const articles = cmsData.guideArticles || [];
+                if (countEl) countEl.textContent = articles.length;
+
+                const prevSelectedVal = select.value;
                 select.innerHTML = '';
-                (cmsData.guideArticles || []).forEach(art => {
+
+                if (articles.length === 0) {
+                    const opt = document.createElement('option');
+                    opt.value = '';
+                    opt.textContent = '暂无已载入的深度指南文章';
+                    select.appendChild(opt);
+                    document.getElementById('guide-edit-headline').value = '';
+                    document.getElementById('guide-edit-description').value = '';
+                    document.getElementById('guide-edit-content').value = '';
+                    if (viewLink) viewLink.style.display = 'none';
+                    return;
+                }
+
+                if (viewLink) viewLink.style.display = 'inline-flex';
+
+                articles.forEach(art => {
                     const opt = document.createElement('option');
                     opt.value = art.filename;
-                    opt.textContent = `${art.title} (${art.filename})`;
+                    const displayTitle = art.headline || art.title || art.filename;
+                    opt.textContent = `${displayTitle} (${art.filename})`;
                     select.appendChild(opt);
                 });
 
+                if (prevSelectedVal && articles.some(a => a.filename === prevSelectedVal)) {
+                    select.value = prevSelectedVal;
+                }
+
                 select.onchange = () => {
-                    const selected = cmsData.guideArticles.find(a => a.filename === select.value);
+                    const selected = articles.find(a => a.filename === select.value);
                     if (selected) {
-                        document.getElementById('guide-edit-headline').value = selected.headline || selected.title;
+                        document.getElementById('guide-edit-headline').value = selected.headline || selected.title || '';
                         document.getElementById('guide-edit-description').value = selected.description || '';
                         document.getElementById('guide-edit-content').value = selected.contentHtml || '';
+                        if (viewLink) {
+                            viewLink.href = `/guides/${selected.filename}`;
+                        }
                     }
                 };
 
-                if (cmsData.guideArticles.length > 0) {
-                    select.dispatchEvent(new Event('change'));
-                }
+                select.dispatchEvent(new Event('change'));
             }
 
+            // 实时同步表单输入到当前编辑的指南文章对象
+            ['guide-edit-headline', 'guide-edit-description', 'guide-edit-content'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('input', () => {
+                        const select = document.getElementById('guide-article-select');
+                        const selected = (cmsData.guideArticles || []).find(a => a.filename === select.value);
+                        if (selected) {
+                            if (id === 'guide-edit-headline') selected.headline = el.value.trim();
+                            if (id === 'guide-edit-description') selected.description = el.value.trim();
+                            if (id === 'guide-edit-content') selected.contentHtml = el.value;
+                            selected._modified = true;
+                        }
+                    });
+                }
+            });
+
             document.getElementById('btn-save-guide').addEventListener('click', async () => {
-                const filename = document.getElementById('guide-article-select').value;
+                const btn = document.getElementById('btn-save-guide');
+                const select = document.getElementById('guide-article-select');
+                const filename = select.value;
+                if (!filename) {
+                    return alert('请先选择要保存的文章');
+                }
                 const headline = document.getElementById('guide-edit-headline').value.trim();
                 const description = document.getElementById('guide-edit-description').value.trim();
                 const contentHtml = document.getElementById('guide-edit-content').value.trim();
 
-                try {
-                    const resp = await fetch('/api/save-guide', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ filename, headline, description, contentHtml })
-                    });
-                    const res = await resp.json();
-                    if (res.success) {
-                        showToast(`文章 ${filename} 保存成功！`);
-                    } else {
-                        alert('保存失败: ' + res.error);
+                const selected = (cmsData.guideArticles || []).find(a => a.filename === filename);
+                if (selected) {
+                    selected.headline = headline;
+                    selected.description = description;
+                    selected.contentHtml = contentHtml;
+                    selected._modified = true;
+                }
+
+                btn.disabled = true;
+                btn.textContent = '⏳ 正在保存...';
+
+                // 1. 本地模式优先尝试 Node.js 接口
+                if (isLocal) {
+                    try {
+                        const resp = await fetch('/api/save-guide', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ filename, headline, description, contentHtml })
+                        });
+                        const res = await resp.json();
+                        btn.disabled = false;
+                        btn.textContent = '保存文章更改';
+                        if (res.success) {
+                            showToast(`文章 ${filename} 本地保存成功！`);
+                            if (selected) selected._modified = false;
+                            renderGuideArticlesDropdown();
+                            select.value = filename;
+                            return;
+                        } else {
+                            alert('本地保存失败: ' + res.error);
+                            return;
+                        }
+                    } catch (err) {
+                        console.warn('[CMS] 本地 /api/save-guide 异常，转入 GitHub 在线提交模式');
                     }
+                }
+
+                // 2. 在线模式：通过 GitHub REST API 提交
+                try {
+                    let token = localStorage.getItem('jk_cms_github_pat') || '';
+                    if (!token) {
+                        token = prompt('【公网在线管理】\n检测到当前处于公网环境。保存文章更改必须使用作者的 GitHub Personal Access Token。\n\n请输入您的 GitHub Token (github_pat_... 或 ghp_...)：');
+                        if (!token || !token.trim()) {
+                            btn.disabled = false;
+                            btn.textContent = '保存文章更改';
+                            return alert('已取消保存：未提供 GitHub 授权 Token。');
+                        }
+                        token = token.trim();
+                        localStorage.setItem('jk_cms_github_pat', token);
+                        document.getElementById('github-pat-input').value = token;
+                        checkGitHubTokenStatus(token);
+                    }
+
+                    showToast(`正在向 GitHub 提交文章 ${filename} 更新...`);
+
+                    let originalHtml = selected ? selected.rawHtml : '';
+                    if (!originalHtml) {
+                        originalHtml = await fetch(`/guides/${filename}?_t=` + Date.now()).then(r => r.text());
+                    }
+
+                    const newGuideHtml = clientReconstructGuideHtml(originalHtml, headline, description, contentHtml);
+                    if (selected) {
+                        selected.rawHtml = newGuideHtml;
+                    }
+
+                    const result = await commitToGitHub({
+                        token,
+                        message: `docs: update guide article ${filename} via Online CMS`,
+                        files: [
+                            { path: `guides/${filename}`, content: newGuideHtml }
+                        ]
+                    });
+
+                    btn.disabled = false;
+                    btn.textContent = '保存文章更改';
+                    if (selected) selected._modified = false;
+                    alert(`🎉 恭喜！文章 ${filename} 已成功通过 GitHub API 提交到仓库！\n提交 ID: ${result.commitSha.substring(0, 7)}\nCloudflare Pages 已自动开始部署！`);
+                    showToast(`文章 ${filename} 保存成功！`);
+                    renderGuideArticlesDropdown();
+                    document.getElementById('guide-article-select').value = filename;
                 } catch (err) {
-                    alert('网络异常: ' + err.message);
+                    btn.disabled = false;
+                    btn.textContent = '保存文章更改';
+                    console.error('保存文章失败:', err);
+                    alert('保存文章失败: ' + err.message);
                 }
             });
 
@@ -3058,6 +3270,7 @@ ${itemsHtml}
                                 cards: cmsData.cards,
                                 modalItems: cmsData.modalItems,
                                 faqItems: cmsData.faqItems,
+                                guideArticles: cmsData.guideArticles,
                                 bumpSw
                             })
                         });
@@ -3148,6 +3361,22 @@ ${itemsHtml}
                         { path: 'links-map.json', content: newLinksMapJson },
                         { path: 'public/_redirects', content: newRedirects }
                     ];
+
+                    // 6.1 如果有被修改的深度文章，一并打包进原子提交
+                    for (const art of (cmsData.guideArticles || [])) {
+                        if (art._modified && art.filename) {
+                            let orig = art.rawHtml;
+                            if (!orig) {
+                                orig = await fetch(`/guides/${art.filename}?_t=` + Date.now()).then(r => r.text()).catch(() => '');
+                            }
+                            if (orig) {
+                                const newArtHtml = clientReconstructGuideHtml(orig, art.headline, art.description, art.contentHtml);
+                                filesToCommit.push({ path: `guides/${art.filename}`, content: newArtHtml });
+                                art.rawHtml = newArtHtml;
+                                art._modified = false;
+                            }
+                        }
+                    }
                     if (newSwJs) {
                         filesToCommit.push({ path: 'sw.js', content: newSwJs });
                         filesToCommit.push({ path: 'public/sw.js', content: newSwJs });

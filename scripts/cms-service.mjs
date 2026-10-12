@@ -307,7 +307,8 @@ export function parseGuideArticles() {
       title: titleMatch ? titleMatch[1].trim() : filename,
       headline: h1Match ? h1Match[1].trim() : '',
       description: descMatch ? descMatch[1].trim() : '',
-      contentHtml: articleMatch ? articleMatch[1].trim() : ''
+      contentHtml: articleMatch ? articleMatch[1].trim() : '',
+      rawHtml: content
     });
   }
 
@@ -462,7 +463,7 @@ export function runGenerateLinks() {
 /**
  * 保存全量 CMS 数据
  */
-export async function saveAllData({ cards, modalItems, faqItems, bumpSw = true }) {
+export async function saveAllData({ cards, modalItems, faqItems, guideArticles, bumpSw = true }) {
   // 1. 创建备份
   createBackup('before_cms_save');
 
@@ -554,13 +555,26 @@ export async function saveAllData({ cards, modalItems, faqItems, bumpSw = true }
     fs.writeFileSync(MAP_FILE, JSON.stringify(sortedMap, null, 2) + '\n', 'utf8');
   }
 
-  // 6. 是否递增 Service Worker 缓存版本
+  // 6. 如果有被修改的深度文章，一并保存
+  if (Array.isArray(guideArticles)) {
+    for (const art of guideArticles) {
+      if (art && art.filename && (art._modified || art.isModified)) {
+        try {
+          saveGuideArticle(art);
+        } catch (e) {
+          console.warn(`[CMS Warning] 自动保存文章 ${art.filename} 失败:`, e.message);
+        }
+      }
+    }
+  }
+
+  // 7. 是否递增 Service Worker 缓存版本
   let newSwVersion = getSwVersion();
   if (bumpSw) {
     newSwVersion = bumpSwVersion();
   }
 
-  // 7. 运行 generate-links 脚本同步短链跳板
+  // 8. 运行 generate-links 脚本同步短链跳板
   let buildOutput = '';
   try {
     buildOutput = await runGenerateLinks();
@@ -587,17 +601,27 @@ export function saveGuideArticle({ filename, headline, description, contentHtml 
 
   let html = fs.readFileSync(targetFile, 'utf8');
 
-  if (headline) {
-    html = html.replace(/<h1 class=["']guide-title["']>([\s\S]*?)<\/h1>/i, `<h1 class="guide-title">${headline}</h1>`);
-  }
   if (description) {
     html = html.replace(/<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i, `<meta name="description" content="${description}">`);
   }
   if (contentHtml) {
     html = html.replace(/<article class=["']guide-article["']>([\s\S]*?)<\/article>/i, `<article class="guide-article">\n${contentHtml}\n            </article>`);
   }
+  if (headline) {
+    html = html.replace(/<h1 class=["']guide-title["']>([\s\S]*?)<\/h1>/i, `<h1 class="guide-title">${headline}</h1>`);
+    html = html.replace(/<title>([^<]+)<\/title>/i, `<title>${headline} | 家宽导航</title>`);
+  }
 
   fs.writeFileSync(targetFile, html, 'utf8');
+
+  // 如果 dist 目录存在，同步写入 dist
+  const distFile = path.resolve(ROOT_DIR, 'dist/guides', filename);
+  if (fs.existsSync(distFile)) {
+    try {
+      fs.writeFileSync(distFile, html, 'utf8');
+    } catch (e) {}
+  }
+
   return { success: true, filename };
 }
 
