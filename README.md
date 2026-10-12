@@ -29,11 +29,11 @@
 | **MESL** | ⭐ 重点推荐 | `专线` `新疆优化` | ¥50/月 500GB 起 | [jiakuan.link/mesl](https://jiakuan.link/mesl) | [直达官网](https://dash.makemesl.com/#/register?code=tMEAQMp0) |
 | **E-IX** | ⭐ 重点推荐 | `专线` `非家宽` `新疆优化` | ¥25/月 150GB 起 | [jiakuan.link/eix](https://jiakuan.link/eix) | [直达官网](https://ap.cdn.e-ix.com/#/register?code=w56accjm) |
 | **TAG** | 精选 | `专线` `卫星网络` | ¥114/月 500GB 起 | [jiakuan.link/tag](https://jiakuan.link/tag) | [直达官网](https://tagss.pro/#/auth/lCnWmez3) |
-| **Godetia** | 精选 | `专线` | ¥35/月 85GB 起 | [jiakuan.link/godetia](https://jiakuan.link/godetia) | [直达官网](https://ssltd.xyz/#/register?code=eUmnecoA) |
 | **SNTP** | 精选 | `专线` `非家宽` `Emby` | ¥18/月 100GB 起 | [jiakuan.link/sntp](https://jiakuan.link/sntp) | [直达官网](https://ncdn1.sntp.uk/auth/register?code=zsyVQ1fa) |
-| **Just My Socks** | 精选 | `精品线路` `非家宽` | $5.88/月 500GB 起 | [jiakuan.link/jms](https://jiakuan.link/jms) | [直达官网](https://justmysocks5.net/members/aff.php?aff=39292) |
 | **SS-ID** | 精选 | `专线` `非家宽` | ¥20/月 100GB 起 | [jiakuan.link/ssid](https://jiakuan.link/ssid) | [直达官网](https://qe.newssid.com/#/register?code=fdRMww9M) |
+| **Just My Socks** | 精选 | `精品线路` `非家宽` | $5.88/月 500GB 起 | [jiakuan.link/jms](https://jiakuan.link/jms) | [直达官网](https://justmysocks5.net/members/aff.php?aff=39292) |
 | **BiuBiu** | 精选 | `精品线路` `非家宽` | ¥26/月 50GB 起 | [jiakuan.link/biu](https://jiakuan.link/biu) | [直达官网](https://biubiu.one/#/register?code=9zhyjLWY) |
+| **Godetia** | 精选 | `专线` | ¥35/月 85GB 起 | [jiakuan.link/godetia](https://jiakuan.link/godetia) | [直达官网](https://ssltd.xyz/#/register?code=eUmnecoA) |
 
 ### 机场推荐 (Airport)
 
@@ -57,12 +57,12 @@
 
 | 站点名称 | 推荐级别 | 特性标签 | 价格 / 规格起步 | 快速访问短链 | 官方直达链接 |
 | :--- | :---: | :--- | :--- | :--- | :--- |
+| **干杯CLOUD** | ⭐ 重点推荐 | - | ¥138 不限流量 起 | [jiakuan.link/ganbei](https://jiakuan.link/ganbei) | [直达官网](https://usvps24.com/r/YMJLG4LH) |
 | **学长网络** | ⭐ 重点推荐 | `NAT` | ¥15起 | [jiakuan.link/xzwl](https://jiakuan.link/xzwl) | [直达官网](https://xuezhangvps.shop/aff.php?aff=130) |
 | **Lamhosting LLC** | ⭐ 重点推荐 | `NAT` | ￥8.80/月 512GB[单向] 起 | [jiakuan.link/lam](https://jiakuan.link/lam) | [直达官网](https://lamhosting.com/aff.php?aff=368) |
-| **干杯CLOUD** | ⭐ 重点推荐 | - | ¥138 不限流量 起 | [jiakuan.link/ganbei](https://jiakuan.link/ganbei) | [直达官网](https://usvps24.com/r/YMJLG4LH) |
+| **VoyraCloud** | 精选 | - | $9/月 1TB 起 | [jiakuan.link/voyra](https://jiakuan.link/voyra) | [直达官网](https://www.voyracloud.com/?ref_code=PYUJNEW3) |
 | **OHNO** | 精选 | `NAT` | $2.99/月 1024GB 起 | [jiakuan.link/ohno](https://jiakuan.link/ohno) | [直达官网](https://ohno.icu/aff.php?aff=38) |
 | **ZoroCloud** | 精选 | - | ¥188/月 1000GB 起 | [jiakuan.link/zoro](https://jiakuan.link/zoro) | [直达官网](https://my.zorocloud.com/aff.php?aff=1371) |
-| **VoyraCloud** | 精选 | - | $9/月 1TB 起 | [jiakuan.link/voyra](https://jiakuan.link/voyra) | [直达官网](https://www.voyracloud.com/?ref_code=PYUJNEW3) |
 | **AkileCloud** | 精选 | - | ¥149.99/年 1000GB/月 起 | [jiakuan.link/akile](https://jiakuan.link/akile) | [直达官网](https://akile.ai/register?aff_code=0c0d0c15-1f7b-4079-a9ba-967393ab2421) |
 | **Voluri** | 精选 | - | $30/月 不限流量 起 | [jiakuan.link/voluri](https://jiakuan.link/voluri) | [直达官网](https://voluri.net/aff.php?aff=27) |
 | **SixtyNet** | 精选 | - | $35 5TB/月 起 | [jiakuan.link/sixty](https://jiakuan.link/sixty) | [直达官网](https://sixtynet.net/aff.php?aff=307) |
