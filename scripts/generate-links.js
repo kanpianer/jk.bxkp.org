@@ -31,7 +31,7 @@ const ROOT_404_FILE = path.resolve(ROOT_DIR, '404.html');
 
 // 排除可能与网站系统路由或核心静态资源冲突的保留词
 const RESERVED_SLUGS = new Set([
-  'guide', 'admin', 'asset', 'image', 'fonts', 'media', 'about',
+  'guide', 'admin', 'donttouchmyshit', 'asset', 'image', 'fonts', 'media', 'about',
   'index', 'login', 'share', 'terms', 'links', 'nodes', 'stats',
   'reset', 'style', 'tests', 'debug', 'error', 'setup', 'pages',
   'posts', 'files', 'cloud', 'robot', 'swjs0', 'cname'
@@ -624,14 +624,14 @@ export async function main() {
       const existingEntries = fs.readdirSync(targetDir);
       for (const entry of existingEntries) {
         const fullPath = path.resolve(targetDir, entry);
-        // 如果是 5 位小写纯字母，且不在新的 sortedMap 中，清理旧目录/文件
-        if (/^[a-z]{5}$/.test(entry) && !sortedMap[entry]) {
+        // 如果是 5 位小写纯字母，且不在新的 sortedMap 中，且不是保留词，清理旧目录/文件
+        if (/^[a-z]{5}$/.test(entry) && !sortedMap[entry] && !RESERVED_SLUGS.has(entry)) {
           if (fs.statSync(fullPath).isDirectory()) {
             fs.rmSync(fullPath, { recursive: true, force: true });
           }
         } else if (/^[a-z]{5}\.html$/.test(entry)) {
           const base = entry.replace(/\.html$/, '');
-          if (!sortedMap[base]) {
+          if (!sortedMap[base] && !RESERVED_SLUGS.has(base)) {
             fs.unlinkSync(fullPath);
           }
         }
