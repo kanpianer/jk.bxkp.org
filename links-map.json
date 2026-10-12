@@ -17,6 +17,12 @@
     "category": "noble",
     "updatedAt": "2026-10-12"
   },
+  "blossom": {
+    "title": "!Blossom主机",
+    "target": "https://blossomhost.us/#/dashboard",
+    "category": "vps",
+    "updatedAt": "2026-10-12"
+  },
   "cloudie": {
     "title": "!CLOUDIE",
     "target": "https://p2.cloud-ie.cc/#/register?code=V5KEjuC7",
@@ -142,6 +148,12 @@
     "target": "https://jiakuan.link/#old",
     "category": "noble"
   },
+  "qqpw": {
+    "title": "!qq.pw",
+    "target": "https://qq.pw/index.php",
+    "category": "vps",
+    "updatedAt": "2026-10-12"
+  },
   "qyt": {
     "title": "!青云梯",
     "target": "https://inv02.qytaff.cc/register?aff=GaP2YyRn",
@@ -158,6 +170,12 @@
     "title": "#RESIP",
     "target": "https://resip.net/?r=EJT9ZQ",
     "category": "airport",
+    "updatedAt": "2026-10-12"
+  },
+  "ridc": {
+    "title": "!Residential-IDC",
+    "target": "https://residential-service.com/",
+    "category": "vps",
     "updatedAt": "2026-10-12"
   },
   "sixty": {

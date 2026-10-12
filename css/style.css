@@ -556,6 +556,13 @@ a:hover {
 	border: 1px solid rgba(165, 180, 252, 0.6);
 }
 
+.tag-commercial,
+.tag-business {
+	background: rgba(14, 165, 233, 0.25);
+	color: #bae6fd;
+	border: 1px solid rgba(56, 189, 248, 0.6);
+}
+
 .tag-direct {
 	background: rgba(186, 230, 253, 0.25);
 	color: #bae6fd;
@@ -640,6 +647,13 @@ a:hover {
 		background: rgba(99, 102, 241, 0.18);
 		color: #3730a3;
 		border-color: rgba(79, 70, 229, 0.45);
+	}
+
+	.button:hover .tag-commercial,
+	.button:hover .tag-business {
+		background: rgba(14, 165, 233, 0.18);
+		color: #0369a1;
+		border-color: rgba(2, 132, 199, 0.45);
 	}
 
 	.button:hover .tag-direct {
@@ -1159,6 +1173,12 @@ footer a:hover,
 		color: #e0e7ff;
 		border-color: rgba(165, 180, 252, 0.6);
 	}
+	:root.theme-dark .button:hover .tag-commercial,
+	:root.theme-dark .button:hover .tag-business {
+		background: rgba(14, 165, 233, 0.25);
+		color: #bae6fd;
+		border-color: rgba(56, 189, 248, 0.6);
+	}
 	:root.theme-dark .button:hover .tag-direct {
 		background: rgba(186, 230, 253, 0.25);
 		color: #bae6fd;
@@ -1277,6 +1297,12 @@ footer a:hover,
 		background: rgba(199, 210, 254, 0.25);
 		color: #e0e7ff;
 		border-color: rgba(165, 180, 252, 0.6);
+	}
+	:root.theme-auto .button:hover .tag-commercial,
+	:root.theme-auto .button:hover .tag-business {
+		background: rgba(14, 165, 233, 0.25);
+		color: #bae6fd;
+		border-color: rgba(56, 189, 248, 0.6);
 	}
 	:root.theme-auto .button:hover .tag-direct {
 		background: rgba(186, 230, 253, 0.25);

@@ -94,7 +94,13 @@ const FIXED_SLUG_MAP = {
   'akilecloud': 'akile',
   'voluri': 'voluri',
   'sixtynet': 'sixty',
-  'soladrive': 'sola'
+  'soladrive': 'sola',
+  'residential-idc': 'ridc',
+  'qq.pw': 'qqpw',
+  'blossom主机': 'blossom',
+  'blossom host': 'blossom',
+  'blossomhost': 'blossom',
+  'blossom': 'blossom'
 };
 
 /**
