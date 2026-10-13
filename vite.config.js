@@ -200,6 +200,18 @@ function syncJsPlugin() {
           fs.copyFileSync(swSrc, swDest);
         }
       } catch (e) {}
+    },
+    closeBundle() {
+      try {
+        const distPublicDont = resolve(__dirname, 'dist/public/Donttouchmyshit');
+        if (!fs.existsSync(distPublicDont)) {
+          fs.mkdirSync(distPublicDont, { recursive: true });
+        }
+        const adminHtml = resolve(__dirname, 'public/Donttouchmyshit/index.html');
+        if (fs.existsSync(adminHtml)) {
+          fs.copyFileSync(adminHtml, resolve(distPublicDont, 'index.html'));
+        }
+      } catch (e) {}
     }
   };
 }

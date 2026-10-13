@@ -661,7 +661,14 @@
                 const copyLink = async (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    const urlToCopy = btn.href || href;
+                    let urlToCopy = btn.href || href;
+                    if (window.location.hostname !== 'jiakuan.link') {
+                        const m = urlToCopy.match(/^https?:\/\/jiakuan\.link\/([a-z0-9_-]+)/i) || urlToCopy.match(/^\/([a-z0-9_-]+)/i);
+                        if (m) {
+                            const currentOrigin = window.location.origin || `${window.location.protocol}//${window.location.host}`;
+                            urlToCopy = `${currentOrigin}/${m[1].toLowerCase()}`;
+                        }
+                    }
                     try {
                         if (navigator.clipboard && window.isSecureContext) {
                             await navigator.clipboard.writeText(urlToCopy);
@@ -707,8 +714,16 @@
                 qrRendered = true;
                 const codeBox = popup.querySelector('.qr-code-box');
                 if (codeBox && typeof QRCode !== 'undefined') {
+                    let qrUrl = href;
+                    if (window.location.hostname !== 'jiakuan.link') {
+                        const m = qrUrl.match(/^https?:\/\/jiakuan\.link\/([a-z0-9_-]+)/i) || qrUrl.match(/^\/([a-z0-9_-]+)/i);
+                        if (m) {
+                            const currentOrigin = window.location.origin || `${window.location.protocol}//${window.location.host}`;
+                            qrUrl = `${currentOrigin}/${m[1].toLowerCase()}`;
+                        }
+                    }
                     new QRCode(codeBox, {
-                        text: href,
+                        text: qrUrl,
                         width: 112,
                         height: 112,
                         colorDark: "#0f172a",
@@ -1109,15 +1124,23 @@
                 return;
             }
 
-            const isLocal = ['localhost', '127.0.0.1'].indexOf(window.location.hostname) !== -1 || window.location.protocol === 'file:';
-            if (isLocal) {
+            // 多域名自适应：如果当前访问的域名不是主域名 jiakuan.link（如 jkdh.pages.dev, jkdh.sld.tw, jk.bxkp.org 或本地开发）
+            // 确保在新标签页使用当前域名的短链（如 https://jkdh.pages.dev/rancho），避免依赖外部可能受阻的主域名
+            if (window.location.hostname !== 'jiakuan.link') {
                 const cardEl = this || (e && e.currentTarget);
                 const href = cardEl ? cardEl.getAttribute('href') : '';
                 if (href) {
                     const m = href.match(/^https?:\/\/jiakuan\.link\/([a-z0-9_-]+)/i) || href.match(/^\/([a-z0-9_-]+)/i);
-                    if (m && window.__SHORTLINK_MAP__ && window.__SHORTLINK_MAP__[m[1].toLowerCase()]) {
+                    if (m) {
+                        const slug = m[1].toLowerCase();
                         if (e) e.preventDefault();
-                        window.open(window.__SHORTLINK_MAP__[m[1].toLowerCase()], '_blank', 'noopener,noreferrer');
+                        const isLocal = ['localhost', '127.0.0.1'].indexOf(window.location.hostname) !== -1 || window.location.protocol === 'file:';
+                        if (isLocal && window.__SHORTLINK_MAP__ && window.__SHORTLINK_MAP__[slug]) {
+                            window.open(window.__SHORTLINK_MAP__[slug], '_blank', 'noopener,noreferrer');
+                        } else {
+                            const currentOrigin = window.location.origin || `${window.location.protocol}//${window.location.host}`;
+                            window.open(`${currentOrigin}/${slug}`, '_blank', 'noopener,noreferrer');
+                        }
                     }
                 }
             }
@@ -1165,6 +1188,80 @@
         }
     }
 
+    // 9. 网页空白处连续点击5次直达内容管理后台 (CMS) 彩蛋
+    let isSecretEntranceInitialized = false;
+
+    function initCmsSecretEntrance() {
+        if (isSecretEntranceInitialized) return;
+        isSecretEntranceInitialized = true;
+
+        let blankClickCount = 0;
+        let resetTimer = null;
+        const TARGET_CLICKS = 5;
+        const MAX_INTERVAL = 1000; // 连续点击的最大时间间隔 (毫秒)
+
+        document.addEventListener('click', (e) => {
+            // 仅响应鼠标主键（左键）或触控点击
+            if (e.button !== 0) return;
+
+            // 判断点击目标是否属于可交互元素或组件
+            const interactiveElement = e.target.closest(
+                'a, button, input, textarea, select, option, summary, dialog, [role="button"], [role="link"], [role="tab"], .button, .airplane, .airplane-wrapper, .guide-modal-content, .card-link-popup'
+            );
+
+            // 若点击了可交互元素，立即重置计数
+            if (interactiveElement) {
+                blankClickCount = 0;
+                if (resetTimer) {
+                    clearTimeout(resetTimer);
+                    resetTimer = null;
+                }
+                return;
+            }
+
+            // 属于网页空白区域点击
+            if (resetTimer) {
+                clearTimeout(resetTimer);
+            }
+
+            blankClickCount++;
+
+            if (blankClickCount >= TARGET_CLICKS) {
+                blankClickCount = 0;
+                resetTimer = null;
+
+                // 清除多次连击可能产生的文本选中高亮
+                try {
+                    if (window.getSelection) {
+                        window.getSelection().removeAllRanges();
+                    }
+                } catch (_) {}
+
+                // 在新标签页打开后台内容管理页面：域名/public/Donttouchmyshit/
+                const origin = window.location.origin || `${window.location.protocol}//${window.location.host}`;
+                const targetUrl = `${origin}/public/Donttouchmyshit/`;
+
+                const newWindow = window.open(targetUrl, '_blank');
+
+                // 针对部分浏览器拦截 window.open 的兜底容灾处理
+                if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                    const fallbackLink = document.createElement('a');
+                    fallbackLink.href = targetUrl;
+                    fallbackLink.target = '_blank';
+                    fallbackLink.rel = 'noopener noreferrer';
+                    document.body.appendChild(fallbackLink);
+                    fallbackLink.click();
+                    document.body.removeChild(fallbackLink);
+                }
+            } else {
+                resetTimer = setTimeout(() => {
+                    blankClickCount = 0;
+                    resetTimer = null;
+                }, MAX_INTERVAL);
+            }
+        }, true);
+    }
+
     // 全局初始化入口（供 SPA 路由返回主页时唤醒交互）
     window.__initHomePageInteractive = function () {
         initGuideModal();
@@ -1183,6 +1280,7 @@
     // 页面加载就绪后统一启动
     function bootstrap() {
         initThemeManager();
+        initCmsSecretEntrance();
         window.__initHomePageInteractive();
     }
 

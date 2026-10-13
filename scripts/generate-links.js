@@ -43,12 +43,12 @@ const RESERVED_SLUGS = new Set([
 const CATEGORY_LINKS = {
   old: {
     title: '老站',
-    target: `${BASE_URL}/#old`,
+    target: '/#old',
     category: 'noble'
   },
   vps: {
     title: 'VPS',
-    target: `${BASE_URL}/#vps`,
+    target: '/#vps',
     category: 'vps'
   }
 };
@@ -746,11 +746,25 @@ export async function main() {
     redirectLines.push(`/${slug}  ${item.target}  302!`);
   }
 
+  // 确保 /public/Donttouchmyshit 在 Cloudflare Pages 等平台作为 Clean URL 正确响应
+  redirectLines.unshift('/public/Donttouchmyshit/*  /Donttouchmyshit/:splat  200');
+  redirectLines.unshift('/public/Donttouchmyshit  /public/Donttouchmyshit/  301!');
+
   // 9. 写入 public/_redirects
   const redirectsContent = redirectLines.join('\n') + '\n';
   fs.writeFileSync(path.resolve(PUBLIC_DIR, '_redirects'), redirectsContent, 'utf8');
   if (fs.existsSync(DIST_DIR)) {
     fs.writeFileSync(path.resolve(DIST_DIR, '_redirects'), redirectsContent, 'utf8');
+
+    // 保证 dist 生产打包包含 public/Donttouchmyshit 路径
+    const distPublicDont = path.resolve(DIST_DIR, 'public/Donttouchmyshit');
+    if (!fs.existsSync(distPublicDont)) {
+      fs.mkdirSync(distPublicDont, { recursive: true });
+    }
+    const adminHtml = path.resolve(PUBLIC_DIR, 'Donttouchmyshit/index.html');
+    if (fs.existsSync(adminHtml)) {
+      fs.copyFileSync(adminHtml, path.resolve(distPublicDont, 'index.html'));
+    }
   }
 
   // 10. 生成 404.html (根目录与 public 目录)

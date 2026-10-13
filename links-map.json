@@ -151,7 +151,7 @@
   },
   "old": {
     "title": "老站",
-    "target": "https://jiakuan.link/#old",
+    "target": "/#old",
     "category": "noble"
   },
   "qqpw": {
@@ -228,7 +228,7 @@
   },
   "vps": {
     "title": "VPS",
-    "target": "https://jiakuan.link/#vps",
+    "target": "/#vps",
     "category": "vps"
   },
   "wjkc": {
