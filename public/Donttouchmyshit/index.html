@@ -768,6 +768,7 @@
         }
 
         .icon-grid-item {
+            position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -802,6 +803,44 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+        }
+
+        .icon-del-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.85);
+            color: #ffffff;
+            border: none;
+            font-size: 11px;
+            font-weight: bold;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.2s;
+            z-index: 5;
+            padding: 0;
+        }
+
+        .icon-grid-item:hover .icon-del-btn {
+            opacity: 1;
+        }
+
+        .icon-del-btn:hover {
+            background: #ef4444;
+            transform: scale(1.18);
+        }
+
+        @media (hover: none) {
+            .icon-del-btn {
+                opacity: 0.75;
+            }
         }
 
         /* 实时 1:1 前端卡片渲染预览器 (与网站前端保持像素级一致) */
@@ -1604,6 +1643,9 @@
                     <select id="guide-article-select" class="form-control" style="width: auto; flex: 1; min-width: 240px;">
                         <!-- 动态填充 -->
                     </select>
+                    <button id="btn-new-guide-trigger" class="btn btn-success" type="button" style="display: inline-flex; align-items: center; gap: 6px;">
+                        ➕ 新建深度文章
+                    </button>
                     <a id="guide-view-link" href="#" target="_blank" rel="noopener" class="btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
                         🔗 浏览器预览文章
                     </a>
@@ -1622,7 +1664,10 @@
                         <label class="form-label">正文 HTML 内容 (Article Content)：</label>
                         <textarea id="guide-edit-content" class="form-control" style="min-height: 280px; font-family: monospace;"></textarea>
                     </div>
-                    <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <button id="btn-delete-guide" class="btn btn-danger" type="button" style="display: inline-flex; align-items: center; gap: 6px;">
+                            🗑️ 删除文章
+                        </button>
                         <button id="btn-save-guide" class="btn btn-primary">保存文章更改</button>
                     </div>
                 </div>
@@ -1843,6 +1888,49 @@
             <div class="cms-modal-footer">
                 <button type="button" class="btn" data-close="card-modal">取消</button>
                 <button type="button" id="btn-save-card-item" class="btn btn-primary">保存卡片</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新建深度文章模态窗 -->
+    <div id="guide-create-modal" class="cms-modal-backdrop">
+        <div class="cms-modal-dialog" style="max-width: 620px;">
+            <div class="cms-modal-header">
+                <div class="cms-modal-title">➕ 新建深度指南文章</div>
+                <button class="cms-modal-close" data-close="guide-create-modal">&times;</button>
+            </div>
+            <div class="cms-modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+                <div class="form-group">
+                    <label class="form-label">文件名 / URL Slug：<span style="color: #ef4444;">*</span></label>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="color: #64748b; font-family: monospace;">guides/</span>
+                        <input type="text" id="new-guide-slug" class="form-control" placeholder="residential-vps-guide" style="flex: 1;">
+                        <span style="color: #64748b; font-family: monospace;">.html</span>
+                    </div>
+                    <span style="font-size: 0.75rem; color: #64748b;">支持小写英文、数字与横杠，例如 residential-vps-guide</span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">文章标题 (Headline / Title)：<span style="color: #ef4444;">*</span></label>
+                    <input type="text" id="new-guide-headline" class="form-control" placeholder="例如：2026年高质量住宅VPS与原生IP选择指南">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">SEO 描述 (Meta Description)：</label>
+                    <input type="text" id="new-guide-description" class="form-control" placeholder="例如：深入分析住宅VPS网络架构、欺诈分排坑与自建要点...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">分类标签 (Category)：</label>
+                    <input type="text" id="new-guide-category" class="form-control" value="网络基础 / 风险排坑" placeholder="网络基础 / 风险排坑">
+                </div>
+                <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="new-guide-add-to-index" checked style="width: 18px; height: 18px; cursor: pointer;">
+                    <label for="new-guide-add-to-index" style="margin: 0; cursor: pointer; font-size: 0.88rem; color: #e2e8f0;">
+                        同步在首页「📚 深度知识专题（Topic Clusters）」卡片集群中展示
+                    </label>
+                </div>
+            </div>
+            <div class="cms-modal-footer">
+                <button type="button" class="btn" data-close="guide-create-modal">取消</button>
+                <button type="button" id="btn-submit-new-guide" class="btn btn-primary">🚀 立即创建文章</button>
             </div>
         </div>
     </div>
@@ -2263,11 +2351,276 @@ ${itemsHtml}
                 return articles;
             }
 
+            // 标准指南文章客户端模板生成器
+            function clientGenerateGuideHtml({ slug, filename, headline, description, category = '网络基础 / 风险排坑', contentHtml = '' }) {
+                const cleanSlug = slug || filename.replace(/\.html$/, '');
+                const cleanFilename = filename.endsWith('.html') ? filename : `${filename}.html`;
+                const now = new Date();
+                const yearMonth = `${now.getFullYear()}年${now.getMonth() + 1}月`;
+                const defaultBody = contentHtml || `            <h2>一、 背景与概述</h2>
+            <p>这里填写文章第一章节的详细分析与背景介绍...</p>
+
+            <div class="callout callout-warning">
+                <strong>核心风险提示：</strong><br>
+                在这里提醒用户需要重点关注的避坑指南与核心要点。
+            </div>
+
+            <h2>二、 技术深度解析</h2>
+            <p>深入分析业务逻辑、IP纯净度或网络架构细节...</p>
+
+            <h2>三、 选购与配置指南</h2>
+            <p>结合实际场景给出具体建议...</p>`;
+
+                return `<!DOCTYPE html>
+<html class="theme-auto" lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <script>
+        (function() {
+            try {
+                var urlParams = new URLSearchParams(window.location.search);
+                var urlTheme = urlParams.get('theme');
+                if (urlTheme === 'light' || urlTheme === 'dark') {
+                    localStorage.setItem('theme', urlTheme);
+                }
+                var stored = localStorage.getItem('theme');
+                var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (stored === 'dark' || (!stored && prefersDark)) {
+                    document.documentElement.classList.add('theme-dark');
+                    document.documentElement.classList.remove('theme-light', 'theme-auto');
+                } else if (stored === 'light' || (!stored && !prefersDark)) {
+                    document.documentElement.classList.add('theme-light');
+                    document.documentElement.classList.remove('theme-dark', 'theme-auto');
+                }
+            } catch (e) {}
+        })();
+    <\/script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>${headline} | 家宽导航</title>
+    <meta name="description" content="${description || ''}">
+    <link rel="canonical" href="https://jiakuan.link/guides/${cleanFilename}">
+    <link rel="icon" type="image/x-icon" href="../images/avatar.png">
+
+    <!-- Preload Critical Sky Texture -->
+    <link rel="preload" as="image" href="../images/anime_sky_bg.jpg">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@300;400;700&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@300;400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@300;400;700&display=swap" rel="stylesheet"></noscript>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="../css/reset.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/guide.css">
+
+    <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Article",
+          "headline": ${JSON.stringify(headline || cleanSlug)},
+          "description": ${JSON.stringify(description || '')},
+          "mainEntityOfPage": "https://jiakuan.link/guides/${cleanFilename}",
+          "author": {
+            "@type": "Organization",
+            "name": "家宽导航",
+            "url": "https://jiakuan.link/"
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "家宽导航",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://jiakuan.link/images/avatar.png"
+            }
+          }
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "首页",
+              "item": "https://jiakuan.link/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "深度指南",
+              "item": "https://jiakuan.link/#seo-knowledge"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": ${JSON.stringify(headline || cleanSlug)},
+              "item": "https://jiakuan.link/guides/${cleanFilename}"
+            }
+          ]
+        }
+      ]
+    }
+    <\/script>
+</head>
+<body class="guide-body">
+    <!-- 极简悬浮返回按钮（全局常驻层，无背景、极简纯白图标） -->
+    <a href="/" id="floating-back-btn" class="floating-back-btn" title="返回" aria-label="返回">
+        <svg viewBox="0 0 88 88" fill="none" stroke="currentColor" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
+            <path d="M 16 44 L 43 23.5 L 43 34 C 62 34 73 46 76.5 64 C 68 55.5 56 52 43 53 L 43 64.5 Z"></path>
+        </svg>
+    </a>
+
+    <!-- 极简左上角指南按钮（主页常驻，文章页隐藏） -->
+    <button id="guide-toggle" class="guide-toggle-btn" type="button" aria-label="指南" title="指南" style="display: none;">
+        <svg class="guide-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+        </svg>
+        <span>指南</span>
+    </button>
+
+    <!-- 极简右上角小太阳/主题切换按钮（全局常驻层） -->
+    <button id="theme-toggle" class="theme-toggle-btn" type="button" aria-label="切换主题" title="切换主题">
+        <span class="theme-stage">
+            <svg class="theme-icon sun-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="4.5"></circle>
+                <line x1="12" y1="2" x2="12" y2="4.5"></line>
+                <line x1="12" y1="19.5" x2="12" y2="22"></line>
+                <line x1="2" y1="12" x2="4.5" y2="12"></line>
+                <line x1="19.5" y1="12" x2="22" y2="12"></line>
+                <line x1="4.93" y1="4.93" x2="6.7" y2="6.7"></line>
+                <line x1="17.3" y1="17.3" x2="19.07" y2="19.07"></line>
+                <line x1="4.93" y1="19.07" x2="6.7" y2="17.3"></line>
+                <line x1="17.3" y1="6.7" x2="19.07" y2="4.93"></line>
+            </svg>
+            <svg class="theme-icon moon-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+        </span>
+    </button>
+
+    <!-- 极简右下角返回顶部按钮（全局常驻层，无背景、透明、纯白极简箭头图标） -->
+    <button id="back-to-top" class="back-to-top-btn" type="button" aria-label="返回顶部" title="返回顶部">
+        <svg class="back-to-top-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 19V5M5 12l7-7 7 7"></path>
+        </svg>
+    </button>
+
+    <!-- 深度指南文章视图容器 -->
+    <div id="guide-view" class="guide-view">
+        <div class="guide-wrapper">
+            <article class="guide-article">
+                <h1 class="guide-title">${headline}</h1>
+                <div class="guide-meta">
+                    <span>📅 发布时间：${yearMonth}</span>
+                    <span>🏷️ 分类：${category}</span>
+                    <span>⏱️ 阅读时长：约 5 分钟</span>
+                </div>
+
+${defaultBody}
+
+                <div class="guide-footer-cta">
+                    <a href="/" class="guide-footer-btn" title="返回" aria-label="返回">
+                        <svg viewBox="0 0 88 88" fill="none" stroke="currentColor" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
+                            <path d="M 16 44 L 43 23.5 L 43 34 C 62 34 73 46 76.5 64 C 68 55.5 56 52 43 53 L 43 64.5 Z"></path>
+                        </svg>
+                        <span>返回</span>
+                    </a>
+                </div>
+            </article>
+        </div>
+    </div>
+    <!-- guide-view END -->
+
+    <!-- 首页主视图容器（直访文章返回首页时动态挂载） -->
+    <div id="homepage-view" class="homepage-view" style="display: none;"></div>
+
+    <!-- 2.5D Living Anime Sky Background -->
+    <div id="sky-canvas-container" class="sky-container">
+        <canvas id="sky-canvas"></canvas>
+    </div>
+
+    <!-- 核心脚本体系 (全部使用 defer 确保非阻塞按序加载与解析) -->
+    <script src="../js/three.min.js" defer><\/script>
+    <script src="../js/sky.js" defer><\/script>
+    <script src="../js/page-router.js" defer><\/script>
+    <script src="../js/main.js" defer><\/script>
+</body>
+</html>\n`;
+            }
+
+            // 同步添加文章卡片到首页深度知识专题集群
+            function clientAddGuideToTopicClusters(html, filename, headline, description) {
+                const clusterGridRegex = /(<div class=["']seo-cluster-grid["']>)([\s\S]*?)(<\/div>\s*<\/article>)/i;
+                const match = html.match(clusterGridRegex);
+                if (match) {
+                    const gridContent = match[2];
+                    const targetHref = `guides/${filename}`;
+                    if (!gridContent.includes(targetHref)) {
+                        const newCard = `                        <a href="${targetHref}" class="seo-cluster-card">
+                            <div>
+                                <h3>${headline || filename}</h3>
+                                <p>${description || ''}</p>
+                            </div>
+                            <span class="seo-cluster-link-text">阅读完整指南 →</span>
+                        </a>\n`;
+                        const newGridContent = gridContent.trimEnd() + '\n' + newCard + '                    ';
+                        return html.replace(clusterGridRegex, `$1\n${newGridContent}$3`);
+                    }
+                }
+                return html;
+            }
+
+            // 在线模式：动态向 GitHub 探测全部深度文章列表
+            async function getOnlineGuideFilenames(fallbackList) {
+                try {
+                    const token = getGitHubToken();
+                    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+                    const resp = await fetch('https://api.github.com/repos/kanpianer/jk.bxkp.org/contents/guides', { headers });
+                    if (resp.ok) {
+                        const list = await resp.json();
+                        if (Array.isArray(list)) {
+                            const files = list.filter(item => item.name && item.name.endsWith('.html')).map(item => item.name);
+                            if (files.length > 0) return Array.from(new Set([...fallbackList, ...files]));
+                        }
+                    }
+                } catch (e) {}
+                return fallbackList;
+            }
+
+            // 在线模式：动态向 GitHub 探测全部图标资源列表
+            async function getOnlineIconsList(fallbackList) {
+                try {
+                    const token = getGitHubToken();
+                    const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+                    const resp = await fetch('https://api.github.com/repos/kanpianer/jk.bxkp.org/contents/images/icons', { headers });
+                    if (resp.ok) {
+                        const list = await resp.json();
+                        if (Array.isArray(list)) {
+                            const icons = list
+                                .filter(item => /\.(png|svg|ico|webp|jpg|jpeg)$/i.test(item.name))
+                                .map(item => ({
+                                    filename: item.name,
+                                    path: `images/icons/${item.name}`,
+                                    size: item.size || 4096
+                                }));
+                            if (icons.length > 0) return icons;
+                        }
+                    }
+                } catch (e) {}
+                return fallbackList;
+            }
+
             // 合成更新后的单篇指南 HTML
             function clientReconstructGuideHtml(originalHtml, headline, description, contentHtml) {
                 let html = originalHtml || '';
                 if (description) {
-                    html = html.replace(/<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i, `<meta name="description" content="${description}">`);
+                    html = html.replace(/<meta\s+name=["']description["']\s+content=["']([^"']*)["']/i, `<meta name="description" content="${description}">`);
                 }
                 if (contentHtml) {
                     html = html.replace(/<article class=["']guide-article["']>([\s\S]*?)<\/article>/i, `<article class="guide-article">\n${contentHtml}\n            </article>`);
@@ -2330,15 +2683,19 @@ ${itemsHtml}
                     const swVersion = clientParseSwVersion(swText);
 
                     // 动态加载深度指南文章
-                    const guideFilenames = clientExtractGuideFilenames(htmlText);
+                    let guideFilenames = clientExtractGuideFilenames(htmlText);
+                    guideFilenames = await getOnlineGuideFilenames(guideFilenames);
                     const guideArticles = await clientLoadGuideArticles(guideFilenames);
+
+                    // 动态加载可用图标列表
+                    const availableIcons = await getOnlineIconsList(DEFAULT_ICONS_LIST);
 
                     cmsData = {
                         cards,
                         modalItems,
                         faqItems,
                         guideArticles,
-                        availableIcons: DEFAULT_ICONS_LIST,
+                        availableIcons,
                         swVersion,
                         linksMap: mapJson
                     };
@@ -2776,6 +3133,7 @@ ${itemsHtml}
                     item.className = 'icon-grid-item';
                     item.style.padding = '12px 6px';
                     item.innerHTML = `
+                        <button type="button" class="icon-del-btn" title="删除该图标" onclick="event.stopPropagation(); deleteIcon('${ico.filename}')">×</button>
                         <img src="/${ico.path}" alt="${ico.filename}" style="width: 44px; height: 44px;">
                         <span style="font-size: 0.75rem; color: #fff; max-width: 100px;">${ico.filename}</span>
                         <span style="font-size: 0.65rem; color: #64748b;">${(ico.size / 1024).toFixed(1)} KB</span>
@@ -2783,6 +3141,68 @@ ${itemsHtml}
                     grid.appendChild(item);
                 });
             }
+
+            window.deleteIcon = async function(filename) {
+                // 安全防误删拦截：扫描是否有卡片正在使用此图标
+                const usingCards = (cmsData.cards || []).filter(c => c.icon && (c.icon === `images/icons/${filename}` || c.icon.endsWith(`/${filename}`)));
+                if (usingCards.length > 0) {
+                    const titles = usingCards.map(c => `• ${c.cleanTitle}`).join('\n');
+                    const confirmForce = confirm(`⚠️ 核心警告！当前有 ${usingCards.length} 个卡片正在使用此图标：\n\n${titles}\n\n如果删除，上述卡片的图标将无法正常显示！\n您确定仍然要强制删除【${filename}】吗？`);
+                    if (!confirmForce) return;
+                } else {
+                    const ok = confirm(`确定要永久删除图标【${filename}】吗？此操作无法撤销。`);
+                    if (!ok) return;
+                }
+
+                // 本地模式优先尝试 Node.js 接口
+                if (isLocal) {
+                    try {
+                        const resp = await fetch('/api/delete-icon', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ filename })
+                        });
+                        if (resp.ok) {
+                            const res = await resp.json();
+                            if (res.success) {
+                                cmsData.availableIcons = (cmsData.availableIcons || []).filter(i => i.filename !== filename);
+                                renderIconsLibrary(document.getElementById('icon-filter-input').value.trim());
+                                renderPickerIconsGrid();
+                                showToast(`图标 ${filename} 删除成功！`);
+                                return;
+                            } else {
+                                return alert('本地删除失败: ' + (res.error || '未知错误'));
+                            }
+                        } else {
+                            const errJson = await resp.json().catch(() => ({}));
+                            const errMsg = errJson.error || `HTTP ${resp.status}`;
+                            const tryGitHub = confirm(`本地服务删除接口异常 (${errMsg})。\n\n💡 提示：如果您更新了系统代码，请在终端按 Ctrl+C 并重新运行 npm run cms 重启本地服务。\n\n是否需要改用 GitHub 在线授权模式提交删除？`);
+                            if (!tryGitHub) return;
+                        }
+                    } catch (e) {
+                        console.warn('[CMS] 本地 /api/delete-icon 异常', e);
+                        const tryGitHub = confirm(`无法连接到本地服务接口 (${e.message})。\n\n💡 提示：请确认本地服务 (npm run cms 或 npm run dev) 正在运行。\n\n是否改用 GitHub 在线授权模式提交删除？`);
+                        if (!tryGitHub) return;
+                    }
+                }
+
+                // 在线公网模式：通过 GitHub API 删除
+                try {
+                    const token = getOrPromptGitHubToken('删除图标');
+                    if (!token) return;
+
+                    showToast(`正在从 GitHub 仓库删除图标 ${filename}...`);
+                    await deleteIconFromGitHub({ token, filename });
+
+                    cmsData.availableIcons = (cmsData.availableIcons || []).filter(i => i.filename !== filename);
+                    renderIconsLibrary(document.getElementById('icon-filter-input').value.trim());
+                    renderPickerIconsGrid();
+                    showToast(`图标 ${filename} 已成功从 GitHub 仓库删除！Cloudflare 正在部署中。`);
+                } catch (err) {
+                    console.error('删除图标失败:', err);
+                    alert('删除图标失败:\n' + err.message);
+                }
+            };
 
             document.getElementById('icon-filter-input').addEventListener('input', (e) => {
                 renderIconsLibrary(e.target.value.trim());
@@ -2799,21 +3219,80 @@ ${itemsHtml}
                 const reader = new FileReader();
                 reader.onload = async () => {
                     const base64Data = reader.result.split(',')[1];
-                    try {
-                        const resp = await fetch('/api/upload-icon', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ filename: file.name, base64Data })
-                        });
-                        const res = await resp.json();
-                        if (res.success) {
-                            showToast(`图标 ${res.filename} 上传成功！`);
-                            loadData(); // 重新加载图标库
-                        } else {
-                            alert('上传失败: ' + res.error);
+                    const cleanName = file.name.toLowerCase().replace(/[^a-z0-9._-]/g, '_');
+
+                    // 1. 本地模式优先尝试 Node.js 接口
+                    if (isLocal) {
+                        try {
+                            const resp = await fetch('/api/upload-icon', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ filename: file.name, base64Data })
+                            });
+                            if (resp.ok) {
+                                const res = await resp.json();
+                                if (res.success) {
+                                    showToast(`图标 ${res.filename} 上传成功！`);
+                                    loadData();
+                                    e.target.value = '';
+                                    return;
+                                } else {
+                                    alert('上传失败: ' + (res.error || '未知错误'));
+                                    e.target.value = '';
+                                    return;
+                                }
+                            } else {
+                                const errJson = await resp.json().catch(() => ({}));
+                                const errMsg = errJson.error || `HTTP ${resp.status}`;
+                                const tryGitHub = confirm(`本地服务上传接口异常 (${errMsg})。\n\n💡 提示：请在终端按 Ctrl+C 并重新运行 npm run cms 重启本地服务。\n\n是否改用 GitHub 在线授权模式上传？`);
+                                if (!tryGitHub) {
+                                    e.target.value = '';
+                                    return;
+                                }
+                            }
+                        } catch (err) {
+                            console.warn('[CMS] 本地 /api/upload-icon 失败', err);
+                            const tryGitHub = confirm(`无法连接到本地上传接口 (${err.message})。\n\n是否改用 GitHub 在线授权模式上传？`);
+                            if (!tryGitHub) {
+                                e.target.value = '';
+                                return;
+                            }
                         }
+                    }
+
+                    // 2. 在线模式：直接通过 GitHub Contents API 上传
+                    try {
+                        const token = getOrPromptGitHubToken('上传图标');
+                        if (!token) {
+                            e.target.value = '';
+                            return;
+                        }
+
+                        showToast(`正在向 GitHub 仓库上传图标 ${cleanName}...`);
+                        await uploadIconToGitHub({ token, filename: cleanName, base64Data });
+
+                        const newIconObj = {
+                            filename: cleanName,
+                            path: `images/icons/${cleanName}`,
+                            size: file.size,
+                            updatedAt: new Date().toISOString()
+                        };
+
+                        const existingIdx = (cmsData.availableIcons || []).findIndex(i => i.filename === cleanName);
+                        if (existingIdx !== -1) {
+                            cmsData.availableIcons[existingIdx] = newIconObj;
+                        } else {
+                            cmsData.availableIcons.unshift(newIconObj);
+                        }
+
+                        renderIconsLibrary(document.getElementById('icon-filter-input').value.trim());
+                        renderPickerIconsGrid();
+                        showToast(`🎉 图标 ${cleanName} 上传成功并已提交至 GitHub！Cloudflare 正在部署中。`);
                     } catch (err) {
-                        alert('上传异常: ' + err.message);
+                        console.error('上传图标失败:', err);
+                        alert('上传图标失败:\n' + err.message + '\n\n请确保 GitHub Token 具备 Contents 写入权限。');
+                    } finally {
+                        e.target.value = '';
                     }
                 };
                 reader.readAsDataURL(file);
@@ -2962,6 +3441,250 @@ ${itemsHtml}
                 }
             });
 
+            // 触发新建深度指南文章模态弹窗
+            document.getElementById('btn-new-guide-trigger').addEventListener('click', () => {
+                document.getElementById('new-guide-slug').value = '';
+                document.getElementById('new-guide-headline').value = '';
+                document.getElementById('new-guide-description').value = '';
+                document.getElementById('new-guide-category').value = '网络基础 / 风险排坑';
+                document.getElementById('new-guide-add-to-index').checked = true;
+                document.getElementById('guide-create-modal').classList.add('open');
+            });
+
+            // 提交创建新深度文章
+            document.getElementById('btn-submit-new-guide').addEventListener('click', async () => {
+                const slugInput = document.getElementById('new-guide-slug').value.trim();
+                const headline = document.getElementById('new-guide-headline').value.trim();
+                const description = document.getElementById('new-guide-description').value.trim();
+                const category = document.getElementById('new-guide-category').value.trim() || '网络基础 / 风险排坑';
+                const addToIndex = document.getElementById('new-guide-add-to-index').checked;
+
+                if (!slugInput) return alert('请输入文件名 / URL Slug！');
+                if (!headline) return alert('请输入文章大标题！');
+
+                let cleanSlug = slugInput.toLowerCase().replace(/[^a-z0-9_-]/g, '-').replace(/^-+|-+$/g, '');
+                if (!cleanSlug) return alert('无效的文件名 / Slug，请使用小写英文和数字！');
+                const filename = cleanSlug.endsWith('.html') ? cleanSlug : `${cleanSlug}.html`;
+
+                if ((cmsData.guideArticles || []).some(a => a.filename === filename)) {
+                    return alert(`文章 ${filename} 已经存在，无法重复创建！`);
+                }
+
+                const btn = document.getElementById('btn-submit-new-guide');
+                btn.disabled = true;
+                btn.textContent = '⏳ 创建中...';
+
+                // 1. 本地模式优先尝试 Node.js 接口
+                if (isLocal) {
+                    try {
+                        const resp = await fetch('/api/save-guide', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                filename,
+                                headline,
+                                description,
+                                category,
+                                addToIndex
+                            })
+                        });
+                        if (resp.ok) {
+                            const res = await resp.json();
+                            if (res.success) {
+                                btn.disabled = false;
+                                btn.textContent = '🚀 立即创建文章';
+                                document.getElementById('guide-create-modal').classList.remove('open');
+                                showToast(`🎉 深度文章 ${filename} 本地创建成功！`);
+
+                                const newArtObj = {
+                                    filename,
+                                    slug: cleanSlug,
+                                    path: `guides/${filename}`,
+                                    title: `${headline} | 家宽导航`,
+                                    headline,
+                                    description,
+                                    contentHtml: '',
+                                    rawHtml: ''
+                                };
+                                cmsData.guideArticles.push(newArtObj);
+                                renderGuideArticlesDropdown();
+                                document.getElementById('guide-article-select').value = filename;
+                                document.getElementById('guide-article-select').dispatchEvent(new Event('change'));
+                                return;
+                            } else {
+                                btn.disabled = false;
+                                btn.textContent = '🚀 立即创建文章';
+                                return alert('本地创建文章失败: ' + (res.error || '未知错误'));
+                            }
+                        } else {
+                            const errJson = await resp.json().catch(() => ({}));
+                            const errMsg = errJson.error || `HTTP ${resp.status}`;
+                            const tryGitHub = confirm(`本地服务创建文章接口异常 (${errMsg})。\n\n💡 提示：请在终端按 Ctrl+C 并重新运行 npm run cms 重启本地服务。\n\n是否改用 GitHub 在线授权模式提交创建？`);
+                            if (!tryGitHub) {
+                                btn.disabled = false;
+                                btn.textContent = '🚀 立即创建文章';
+                                return;
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('[CMS] 本地创建文章失败', e);
+                        const tryGitHub = confirm(`无法连接到本地接口 (${e.message})。\n\n是否改用 GitHub 在线授权模式提交创建？`);
+                        if (!tryGitHub) {
+                            btn.disabled = false;
+                            btn.textContent = '🚀 立即创建文章';
+                            return;
+                        }
+                    }
+                }
+
+                // 2. 在线模式：直接通过 GitHub API 提交新文章
+                try {
+                    const token = getOrPromptGitHubToken('创建新文章');
+                    if (!token) {
+                        btn.disabled = false;
+                        btn.textContent = '🚀 立即创建文章';
+                        return;
+                    }
+
+                    showToast(`正在向 GitHub 仓库创建新文章 ${filename}...`);
+                    const newArticleHtml = clientGenerateGuideHtml({
+                        slug: cleanSlug,
+                        filename,
+                        headline,
+                        description,
+                        category
+                    });
+
+                    const filesToCommit = [
+                        { path: `guides/${filename}`, content: newArticleHtml }
+                    ];
+
+                    if (addToIndex) {
+                        const indexHtmlBase = await fetch('/index.html?_t=' + Date.now()).then(r => r.text());
+                        const updatedIndexHtml = clientAddGuideToTopicClusters(indexHtmlBase, filename, headline, description);
+                        filesToCommit.push({ path: 'index.html', content: updatedIndexHtml });
+                    }
+
+                    const result = await commitToGitHub({
+                        token,
+                        message: `docs: create guide article ${filename} via Online CMS`,
+                        files: filesToCommit
+                    });
+
+                    btn.disabled = false;
+                    btn.textContent = '🚀 立即创建文章';
+                    document.getElementById('guide-create-modal').classList.remove('open');
+
+                    const newArtObj = {
+                        filename,
+                        slug: cleanSlug,
+                        path: `guides/${filename}`,
+                        title: `${headline} | 家宽导航`,
+                        headline,
+                        description,
+                        contentHtml: '',
+                        rawHtml: newArticleHtml
+                    };
+                    cmsData.guideArticles.push(newArtObj);
+                    renderGuideArticlesDropdown();
+                    document.getElementById('guide-article-select').value = filename;
+                    document.getElementById('guide-article-select').dispatchEvent(new Event('change'));
+
+                    alert(`🎉 恭喜！新文章 ${filename} 已成功通过 GitHub 提交到仓库！\n提交 ID: ${result.commitSha.substring(0, 7)}\nCloudflare Pages 已自动开始部署！`);
+                    showToast(`文章 ${filename} 创建并发布成功！`);
+                } catch (err) {
+                    btn.disabled = false;
+                    btn.textContent = '🚀 立即创建文章';
+                    console.error('在线创建文章失败:', err);
+                    alert('在线创建文章失败:\n' + err.message);
+                }
+            });
+
+            // 删除选中的深度文章
+            document.getElementById('btn-delete-guide').addEventListener('click', async () => {
+                const select = document.getElementById('guide-article-select');
+                const filename = select.value;
+                if (!filename) return alert('请先选择要删除的文章！');
+
+                const selected = (cmsData.guideArticles || []).find(a => a.filename === filename);
+                const title = selected ? (selected.headline || selected.title || filename) : filename;
+
+                if (!confirm(`⚠️ 确定要彻底删除深度指南文章【${title}】(${filename}) 吗？\n删除后该文章文件及首页知识专题的关联卡片都将被移除，此操作无法撤销！`)) {
+                    return;
+                }
+
+                const btn = document.getElementById('btn-delete-guide');
+                btn.disabled = true;
+                btn.textContent = '⏳ 删除中...';
+
+                // 1. 本地模式优先尝试 Node.js 接口
+                if (isLocal) {
+                    try {
+                        const resp = await fetch('/api/delete-guide', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ filename })
+                        });
+                        if (resp.ok) {
+                            const res = await resp.json();
+                            if (res.success) {
+                                btn.disabled = false;
+                                btn.textContent = '🗑️ 删除文章';
+                                cmsData.guideArticles = (cmsData.guideArticles || []).filter(a => a.filename !== filename);
+                                renderGuideArticlesDropdown();
+                                showToast(`文章 ${filename} 已成功删除！`);
+                                return;
+                            } else {
+                                btn.disabled = false;
+                                btn.textContent = '🗑️ 删除文章';
+                                return alert('本地删除文章失败: ' + (res.error || '未知错误'));
+                            }
+                        } else {
+                            const errJson = await resp.json().catch(() => ({}));
+                            const errMsg = errJson.error || `HTTP ${resp.status}`;
+                            const tryGitHub = confirm(`本地服务删除文章接口异常 (${errMsg})。\n\n💡 提示：如果您更新了代码，请在终端按 Ctrl+C 并重新运行 npm run cms 重启本地服务。\n\n是否改用 GitHub 在线授权模式提交删除？`);
+                            if (!tryGitHub) {
+                                btn.disabled = false;
+                                btn.textContent = '🗑️ 删除文章';
+                                return;
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('[CMS] 本地 /api/delete-guide 失败', e);
+                        const tryGitHub = confirm(`无法连接到本地接口 (${e.message})。\n\n是否改用 GitHub 在线授权模式提交删除？`);
+                        if (!tryGitHub) {
+                            btn.disabled = false;
+                            btn.textContent = '🗑️ 删除文章';
+                            return;
+                        }
+                    }
+                }
+
+                // 2. 在线模式：通过 GitHub API 删除文章
+                try {
+                    const token = getOrPromptGitHubToken('删除文章');
+                    if (!token) {
+                        btn.disabled = false;
+                        btn.textContent = '🗑️ 删除文章';
+                        return;
+                    }
+
+                    showToast(`正在向 GitHub 仓库删除文章 ${filename}...`);
+                    await deleteGuideFromGitHub({ token, filename });
+
+                    btn.disabled = false;
+                    btn.textContent = '🗑️ 删除文章';
+                    cmsData.guideArticles = (cmsData.guideArticles || []).filter(a => a.filename !== filename);
+                    renderGuideArticlesDropdown();
+                    showToast(`文章 ${filename} 已成功从 GitHub 仓库删除！`);
+                } catch (err) {
+                    btn.disabled = false;
+                    btn.textContent = '🗑️ 删除文章';
+                    console.error('删除文章失败:', err);
+                    alert('删除文章失败:\n' + err.message);
+                }
+            });
+
             document.getElementById('btn-save-guide').addEventListener('click', async () => {
                 const btn = document.getElementById('btn-save-guide');
                 const select = document.getElementById('guide-article-select');
@@ -2992,38 +3715,48 @@ ${itemsHtml}
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ filename, headline, description, contentHtml })
                         });
-                        const res = await resp.json();
-                        btn.disabled = false;
-                        btn.textContent = '保存文章更改';
-                        if (res.success) {
-                            showToast(`文章 ${filename} 本地保存成功！`);
-                            if (selected) selected._modified = false;
-                            renderGuideArticlesDropdown();
-                            select.value = filename;
-                            return;
+                        if (resp.ok) {
+                            const res = await resp.json();
+                            btn.disabled = false;
+                            btn.textContent = '保存文章更改';
+                            if (res.success) {
+                                showToast(`文章 ${filename} 本地保存成功！`);
+                                if (selected) selected._modified = false;
+                                renderGuideArticlesDropdown();
+                                select.value = filename;
+                                return;
+                            } else {
+                                alert('本地保存失败: ' + res.error);
+                                return;
+                            }
                         } else {
-                            alert('本地保存失败: ' + res.error);
-                            return;
+                            const errJson = await resp.json().catch(() => ({}));
+                            const errMsg = errJson.error || `HTTP ${resp.status}`;
+                            const tryGitHub = confirm(`本地服务保存文章接口异常 (${errMsg})。\n\n是否改用 GitHub 在线授权模式提交保存？`);
+                            if (!tryGitHub) {
+                                btn.disabled = false;
+                                btn.textContent = '保存文章更改';
+                                return;
+                            }
                         }
                     } catch (err) {
-                        console.warn('[CMS] 本地 /api/save-guide 异常，转入 GitHub 在线提交模式');
+                        console.warn('[CMS] 本地 /api/save-guide 异常', err);
+                        const tryGitHub = confirm(`无法连接到本地接口 (${err.message})。\n\n是否改用 GitHub 在线授权模式提交保存？`);
+                        if (!tryGitHub) {
+                            btn.disabled = false;
+                            btn.textContent = '保存文章更改';
+                            return;
+                        }
                     }
                 }
 
                 // 2. 在线模式：通过 GitHub REST API 提交
                 try {
-                    let token = localStorage.getItem('jk_cms_github_pat') || '';
+                    const token = getOrPromptGitHubToken('保存文章更改');
                     if (!token) {
-                        token = prompt('【公网在线管理】\n检测到当前处于公网环境。保存文章更改必须使用作者的 GitHub Personal Access Token。\n\n请输入您的 GitHub Token (github_pat_... 或 ghp_...)：');
-                        if (!token || !token.trim()) {
-                            btn.disabled = false;
-                            btn.textContent = '保存文章更改';
-                            return alert('已取消保存：未提供 GitHub 授权 Token。');
-                        }
-                        token = token.trim();
-                        localStorage.setItem('jk_cms_github_pat', token);
-                        document.getElementById('github-pat-input').value = token;
-                        checkGitHubTokenStatus(token);
+                        btn.disabled = false;
+                        btn.textContent = '保存文章更改';
+                        return alert('已取消保存：未提供 GitHub 授权 Token。');
                     }
 
                     showToast(`正在向 GitHub 提交文章 ${filename} 更新...`);
@@ -3259,6 +3992,183 @@ ${itemsHtml}
                 return { commitSha: newCommitSha, htmlUrl: `https://github.com/${owner}/${repo}/commit/${newCommitSha}` };
             }
 
+            // 获取当前已存储或输入的 GitHub Token (优先读取输入框，次选 localStorage)
+            function getGitHubToken() {
+                const patInput = document.getElementById('github-pat-input');
+                if (patInput && patInput.value.trim()) {
+                    const token = patInput.value.trim();
+                    localStorage.setItem('jk_cms_github_pat', token);
+                    return token;
+                }
+                const stored = localStorage.getItem('jk_cms_github_pat') || '';
+                if (stored && stored.trim()) {
+                    if (patInput && !patInput.value) {
+                        patInput.value = stored.trim();
+                    }
+                    return stored.trim();
+                }
+                return '';
+            }
+
+            // 获取或提示输入 GitHub Token
+            function getOrPromptGitHubToken(actionName = '操作') {
+                let token = getGitHubToken();
+                if (!token) {
+                    const envHint = isLocal
+                        ? `【GitHub 授权模式】\n当前处于本地环境，但本地后端接口未能处理请求。如需通过 GitHub API 在线完成「${actionName}」，需要使用您的 GitHub Token 进行在线提交。`
+                        : `【公网在线管理】\n检测到当前处于公网环境。「${actionName}」必须使用作者的 GitHub Personal Access Token (仅保存在您的本地浏览器中)。`;
+                    const inputToken = prompt(`${envHint}\n\n请输入您的 GitHub Token (github_pat_... 或 ghp_...)：`);
+                    if (!inputToken || !inputToken.trim()) {
+                        return null;
+                    }
+                    token = inputToken.trim();
+                    localStorage.setItem('jk_cms_github_pat', token);
+                    const patInput = document.getElementById('github-pat-input');
+                    if (patInput) patInput.value = token;
+                    checkGitHubTokenStatus(token);
+                }
+                return token;
+            }
+
+            // 在线模式：上传图标到 GitHub 仓库
+            async function uploadIconToGitHub({ token, filename, base64Data }) {
+                const owner = 'kanpianer';
+                const repo = 'jk.bxkp.org';
+                const branch = 'main';
+                const cleanName = filename.toLowerCase().replace(/[^a-z0-9._-]/g, '_');
+                const filePath = `images/icons/${cleanName}`;
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                };
+
+                let existingSha = null;
+                try {
+                    const checkResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?ref=${branch}`, { headers });
+                    if (checkResp.ok) {
+                        const checkData = await checkResp.json();
+                        existingSha = checkData.sha;
+                    }
+                } catch (e) {}
+
+                const bodyPayload = {
+                    message: `feat: upload icon ${cleanName} via Online CMS`,
+                    content: base64Data,
+                    branch
+                };
+                if (existingSha) {
+                    bodyPayload.sha = existingSha;
+                }
+
+                const putResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
+                    method: 'PUT',
+                    headers,
+                    body: JSON.stringify(bodyPayload)
+                });
+
+                if (!putResp.ok) {
+                    const err = await putResp.json().catch(() => ({}));
+                    throw new Error(err.message || `上传图标失败 (HTTP ${putResp.status})`);
+                }
+
+                const putData = await putResp.json();
+                return {
+                    success: true,
+                    filename: cleanName,
+                    path: filePath,
+                    content: putData.content
+                };
+            }
+
+            // 在线模式：从 GitHub 仓库删除图标
+            async function deleteIconFromGitHub({ token, filename }) {
+                const owner = 'kanpianer';
+                const repo = 'jk.bxkp.org';
+                const branch = 'main';
+                const cleanName = filename.toLowerCase().replace(/[^a-z0-9._-]/g, '_');
+                const filePath = `images/icons/${cleanName}`;
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                };
+
+                const checkResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?ref=${branch}`, { headers });
+                if (!checkResp.ok) {
+                    if (checkResp.status === 404) {
+                        return { success: true, filename: cleanName };
+                    }
+                    const err = await checkResp.json().catch(() => ({}));
+                    throw new Error(err.message || `查询图标信息失败 (HTTP ${checkResp.status})`);
+                }
+                const checkData = await checkResp.json();
+                const fileSha = checkData.sha;
+
+                const delResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
+                    method: 'DELETE',
+                    headers,
+                    body: JSON.stringify({
+                        message: `chore: delete icon ${cleanName} via Online CMS`,
+                        sha: fileSha,
+                        branch
+                    })
+                });
+
+                if (!delResp.ok) {
+                    const err = await delResp.json().catch(() => ({}));
+                    throw new Error(err.message || `删除图标失败 (HTTP ${delResp.status})`);
+                }
+
+                return { success: true, filename: cleanName };
+            }
+
+            // 在线模式：从 GitHub 仓库删除深度文章
+            async function deleteGuideFromGitHub({ token, filename }) {
+                const owner = 'kanpianer';
+                const repo = 'jk.bxkp.org';
+                const branch = 'main';
+                let cleanFilename = filename.trim();
+                if (!cleanFilename.endsWith('.html')) cleanFilename += '.html';
+                const filePath = `guides/${cleanFilename}`;
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json'
+                };
+
+                try {
+                    const checkResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?ref=${branch}`, { headers });
+                    if (checkResp.ok) {
+                        const checkData = await checkResp.json();
+                        await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
+                            method: 'DELETE',
+                            headers,
+                            body: JSON.stringify({
+                                message: `docs: delete guide article ${cleanFilename} via Online CMS`,
+                                sha: checkData.sha,
+                                branch
+                            })
+                        });
+                    }
+                } catch (e) {}
+
+                try {
+                    const indexHtmlBase = await fetch('/index.html?_t=' + Date.now()).then(r => r.text());
+                    const cardRegex = new RegExp(`\\s*<a href=["']guides\\/${cleanFilename}["'][\\s\\S]*?<\\/a>`, 'i');
+                    if (cardRegex.test(indexHtmlBase)) {
+                        const newIndexHtml = indexHtmlBase.replace(cardRegex, '');
+                        await commitToGitHub({
+                            token,
+                            message: `docs: remove ${cleanFilename} from index.html topic clusters`,
+                            files: [{ path: 'index.html', content: newIndexHtml }]
+                        });
+                    }
+                } catch (e) {}
+
+                return { success: true, filename: cleanFilename };
+            }
+
             // 8. 保存全量数据 (支持本地 /api/save 与线上 GitHub REST API 直连双模式)
             document.getElementById('btn-save-all').addEventListener('click', async () => {
                 const btn = document.getElementById('btn-save-all');
@@ -3281,37 +4191,47 @@ ${itemsHtml}
                                 bumpSw
                             })
                         });
-                        const res = await resp.json();
-                        btn.disabled = false;
-                        btn.textContent = '💾 应用';
+                        if (resp.ok) {
+                            const res = await resp.json();
+                            btn.disabled = false;
+                            btn.textContent = '💾 应用';
 
-                        if (res.success) {
-                            showToast(`全站数据应用成功！短链跳板与 redirects 已更新 (SW: ${res.result.swVersion})`);
-                            loadData();
-                            return;
+                            if (res.success) {
+                                showToast(`全站数据应用成功！短链跳板与 redirects 已更新 (SW: ${res.result.swVersion})`);
+                                loadData();
+                                return;
+                            } else {
+                                alert('本地保存失败: ' + res.error);
+                                return;
+                            }
                         } else {
-                            alert('本地保存失败: ' + res.error);
-                            return;
+                            const errJson = await resp.json().catch(() => ({}));
+                            const errMsg = errJson.error || `HTTP ${resp.status}`;
+                            const tryGitHub = confirm(`本地服务保存接口异常 (${errMsg})。\n\n💡 提示：如果您更新了代码，请在终端按 Ctrl+C 并重新运行 npm run cms 重启本地服务。\n\n是否改用 GitHub 在线授权模式保存并发布？`);
+                            if (!tryGitHub) {
+                                btn.disabled = false;
+                                btn.textContent = '💾 应用';
+                                return;
+                            }
                         }
                     } catch (err) {
-                        console.warn('[CMS] 本地 /api/save 无法连接，转入 GitHub 在线提交模式');
+                        console.warn('[CMS] 本地 /api/save 无法连接', err);
+                        const tryGitHub = confirm(`无法连接到本地保存接口 (${err.message})。\n\n是否改用 GitHub 在线授权模式保存并发布？`);
+                        if (!tryGitHub) {
+                            btn.disabled = false;
+                            btn.textContent = '💾 应用';
+                            return;
+                        }
                     }
                 }
 
                 // 在线公网模式：通过 GitHub REST API 原子提交
                 try {
-                    let token = localStorage.getItem('jk_cms_github_pat') || '';
+                    const token = getOrPromptGitHubToken('保存并发布');
                     if (!token) {
-                        token = prompt('【公网在线管理】\n检测到当前处于公网环境。保存并发布必须使用作者的 GitHub Personal Access Token (仅保存在您的本地浏览器中)。\n\n请输入您的 GitHub Token (github_pat_... 或 ghp_...)：');
-                        if (!token || !token.trim()) {
-                            btn.disabled = false;
-                            btn.textContent = '💾 应用';
-                            return alert('已取消保存：未提供 GitHub 授权 Token。');
-                        }
-                        token = token.trim();
-                        localStorage.setItem('jk_cms_github_pat', token);
-                        document.getElementById('github-pat-input').value = token;
-                        checkGitHubTokenStatus(token);
+                        btn.disabled = false;
+                        btn.textContent = '💾 应用';
+                        return alert('已取消保存：未提供 GitHub 授权 Token。');
                     }
 
                     showToast('正在向 GitHub 仓库提交原子更新，请稍候...');
@@ -3477,11 +4397,24 @@ ${itemsHtml}
             }
 
             const savedToken = localStorage.getItem('jk_cms_github_pat');
+            const patInputEl = document.getElementById('github-pat-input');
             if (savedToken) {
-                document.getElementById('github-pat-input').value = savedToken;
+                if (patInputEl) patInputEl.value = savedToken;
                 checkGitHubTokenStatus(savedToken);
             } else {
                 checkGitHubTokenStatus('');
+            }
+
+            if (patInputEl) {
+                // 用户输入或粘贴 Token 时立即同步到本地缓存，无需强制点击保存按钮
+                patInputEl.addEventListener('input', (e) => {
+                    const token = e.target.value.trim();
+                    if (token) {
+                        localStorage.setItem('jk_cms_github_pat', token);
+                    } else {
+                        localStorage.removeItem('jk_cms_github_pat');
+                    }
+                });
             }
 
             document.getElementById('btn-save-github-token').addEventListener('click', () => {

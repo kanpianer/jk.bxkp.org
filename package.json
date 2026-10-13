@@ -9,7 +9,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "update-links": "node scripts/generate-links.js",
-    "cms": "node scripts/cms-server.mjs"
+    "cms": "node --watch scripts/cms-server.mjs"
   },
   "devDependencies": {
     "vite": "^6.2.0"

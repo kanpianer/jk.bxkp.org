@@ -100,7 +100,8 @@ const FIXED_SLUG_MAP = {
   'blossom主机': 'blossom',
   'blossom host': 'blossom',
   'blossomhost': 'blossom',
-  'blossom': 'blossom'
+  'blossom': 'blossom',
+  'attvps': 'attvps'
 };
 
 /**

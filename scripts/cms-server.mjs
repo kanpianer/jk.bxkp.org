@@ -27,7 +27,10 @@ import {
   readAllData,
   saveAllData,
   saveGuideArticle,
+  deleteGuideArticle,
   saveUploadedIcon,
+  deleteUploadedIcon,
+  generateGuideArticleHtml,
   checkLinkHealth,
   createBackup,
   listBackups,
@@ -178,12 +181,30 @@ async function handleRequest(req, res) {
         return sendJson(res, 200, { success: true, result });
       }
 
+      if (pathname === '/api/delete-guide' && req.method === 'POST') {
+        const { filename } = await parseRequestBody(req);
+        if (!filename) {
+          return sendJson(res, 400, { error: '缺少 filename' });
+        }
+        const result = deleteGuideArticle(filename);
+        return sendJson(res, 200, result);
+      }
+
       if (pathname === '/api/upload-icon' && req.method === 'POST') {
         const { filename, base64Data } = await parseRequestBody(req);
         if (!filename || !base64Data) {
           return sendJson(res, 400, { error: '缺少 filename 或 base64Data' });
         }
         const result = saveUploadedIcon(filename, base64Data);
+        return sendJson(res, 200, result);
+      }
+
+      if (pathname === '/api/delete-icon' && req.method === 'POST') {
+        const { filename } = await parseRequestBody(req);
+        if (!filename) {
+          return sendJson(res, 400, { error: '缺少 filename' });
+        }
+        const result = deleteUploadedIcon(filename);
         return sendJson(res, 200, result);
       }
 

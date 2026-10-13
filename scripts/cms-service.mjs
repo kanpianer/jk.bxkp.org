@@ -590,39 +590,310 @@ export async function saveAllData({ cards, modalItems, faqItems, guideArticles, 
 }
 
 /**
- * 保存单个深度指南文章
+ * 标准深度指南文章 HTML 模板生成器
  */
-export function saveGuideArticle({ filename, headline, description, contentHtml }) {
+export function generateGuideArticleHtml({ slug, filename, headline, description, category = '网络基础 / 风险排坑', contentHtml = '' }) {
+  const cleanSlug = slug || filename.replace(/\.html$/, '');
+  const cleanFilename = filename.endsWith('.html') ? filename : `${filename}.html`;
+  const now = new Date();
+  const yearMonth = `${now.getFullYear()}年${now.getMonth() + 1}月`;
+  const defaultBody = contentHtml || `            <h2>一、 背景与概述</h2>
+            <p>这里填写文章第一章节的详细分析与背景介绍...</p>
+
+            <div class="callout callout-warning">
+                <strong>核心风险提示：</strong><br>
+                在这里提醒用户需要重点关注的避坑指南与核心要点。
+            </div>
+
+            <h2>二、 技术深度解析</h2>
+            <p>深入分析业务逻辑、IP纯净度或网络架构细节...</p>
+
+            <h2>三、 选购与配置指南</h2>
+            <p>结合实际场景给出具体建议...</p>`;
+
+  return `<!DOCTYPE html>
+<html class="theme-auto" lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <script>
+        (function() {
+            try {
+                var urlParams = new URLSearchParams(window.location.search);
+                var urlTheme = urlParams.get('theme');
+                if (urlTheme === 'light' || urlTheme === 'dark') {
+                    localStorage.setItem('theme', urlTheme);
+                }
+                var stored = localStorage.getItem('theme');
+                var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (stored === 'dark' || (!stored && prefersDark)) {
+                    document.documentElement.classList.add('theme-dark');
+                    document.documentElement.classList.remove('theme-light', 'theme-auto');
+                } else if (stored === 'light' || (!stored && !prefersDark)) {
+                    document.documentElement.classList.add('theme-light');
+                    document.documentElement.classList.remove('theme-dark', 'theme-auto');
+                }
+            } catch (e) {}
+        })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>${headline} | 家宽导航</title>
+    <meta name="description" content="${description || ''}">
+    <link rel="canonical" href="https://jiakuan.link/guides/${cleanFilename}">
+    <link rel="icon" type="image/x-icon" href="../images/avatar.png">
+
+    <!-- Preload Critical Sky Texture -->
+    <link rel="preload" as="image" href="../images/anime_sky_bg.jpg">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@300;400;700&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@300;400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@300;400;700&display=swap" rel="stylesheet"></noscript>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="../css/reset.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/guide.css">
+
+    <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Article",
+          "headline": ${JSON.stringify(headline || cleanSlug)},
+          "description": ${JSON.stringify(description || '')},
+          "mainEntityOfPage": "https://jiakuan.link/guides/${cleanFilename}",
+          "author": {
+            "@type": "Organization",
+            "name": "家宽导航",
+            "url": "https://jiakuan.link/"
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "家宽导航",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://jiakuan.link/images/avatar.png"
+            }
+          }
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "首页",
+              "item": "https://jiakuan.link/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "深度指南",
+              "item": "https://jiakuan.link/#seo-knowledge"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": ${JSON.stringify(headline || cleanSlug)},
+              "item": "https://jiakuan.link/guides/${cleanFilename}"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body class="guide-body">
+    <!-- 极简悬浮返回按钮（全局常驻层，无背景、极简纯白图标） -->
+    <a href="/" id="floating-back-btn" class="floating-back-btn" title="返回" aria-label="返回">
+        <svg viewBox="0 0 88 88" fill="none" stroke="currentColor" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
+            <path d="M 16 44 L 43 23.5 L 43 34 C 62 34 73 46 76.5 64 C 68 55.5 56 52 43 53 L 43 64.5 Z"></path>
+        </svg>
+    </a>
+
+    <!-- 极简左上角指南按钮（主页常驻，文章页隐藏） -->
+    <button id="guide-toggle" class="guide-toggle-btn" type="button" aria-label="指南" title="指南" style="display: none;">
+        <svg class="guide-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+        </svg>
+        <span>指南</span>
+    </button>
+
+    <!-- 极简右上角小太阳/主题切换按钮（全局常驻层） -->
+    <button id="theme-toggle" class="theme-toggle-btn" type="button" aria-label="切换主题" title="切换主题">
+        <span class="theme-stage">
+            <svg class="theme-icon sun-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="4.5"></circle>
+                <line x1="12" y1="2" x2="12" y2="4.5"></line>
+                <line x1="12" y1="19.5" x2="12" y2="22"></line>
+                <line x1="2" y1="12" x2="4.5" y2="12"></line>
+                <line x1="19.5" y1="12" x2="22" y2="12"></line>
+                <line x1="4.93" y1="4.93" x2="6.7" y2="6.7"></line>
+                <line x1="17.3" y1="17.3" x2="19.07" y2="19.07"></line>
+                <line x1="4.93" y1="19.07" x2="6.7" y2="17.3"></line>
+                <line x1="17.3" y1="6.7" x2="19.07" y2="4.93"></line>
+            </svg>
+            <svg class="theme-icon moon-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+        </span>
+    </button>
+
+    <!-- 极简右下角返回顶部按钮（全局常驻层，无背景、透明、纯白极简箭头图标） -->
+    <button id="back-to-top" class="back-to-top-btn" type="button" aria-label="返回顶部" title="返回顶部">
+        <svg class="back-to-top-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 19V5M5 12l7-7 7 7"></path>
+        </svg>
+    </button>
+
+    <!-- 深度指南文章视图容器 -->
+    <div id="guide-view" class="guide-view">
+        <div class="guide-wrapper">
+            <article class="guide-article">
+                <h1 class="guide-title">${headline}</h1>
+                <div class="guide-meta">
+                    <span>📅 发布时间：${yearMonth}</span>
+                    <span>🏷️ 分类：${category}</span>
+                    <span>⏱️ 阅读时长：约 5 分钟</span>
+                </div>
+
+${defaultBody}
+
+                <div class="guide-footer-cta">
+                    <a href="/" class="guide-footer-btn" title="返回" aria-label="返回">
+                        <svg viewBox="0 0 88 88" fill="none" stroke="currentColor" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
+                            <path d="M 16 44 L 43 23.5 L 43 34 C 62 34 73 46 76.5 64 C 68 55.5 56 52 43 53 L 43 64.5 Z"></path>
+                        </svg>
+                        <span>返回</span>
+                    </a>
+                </div>
+            </article>
+        </div>
+    </div>
+    <!-- guide-view END -->
+
+    <!-- 首页主视图容器（直访文章返回首页时动态挂载） -->
+    <div id="homepage-view" class="homepage-view" style="display: none;"></div>
+
+    <!-- 2.5D Living Anime Sky Background -->
+    <div id="sky-canvas-container" class="sky-container">
+        <canvas id="sky-canvas"></canvas>
+    </div>
+
+    <!-- 核心脚本体系 (全部使用 defer 确保非阻塞按序加载与解析) -->
+    <script src="../js/three.min.js" defer></script>
+    <script src="../js/sky.js" defer></script>
+    <script src="../js/page-router.js" defer></script>
+    <script src="../js/main.js" defer></script>
+</body>
+</html>\n`;
+}
+
+/**
+ * 保存单个深度指南文章（支持修改与自动新建）
+ */
+export function saveGuideArticle({ filename, headline, description, contentHtml, category, addToIndex, homeDesc }) {
   ensureDir(GUIDES_DIR);
-  const targetFile = path.resolve(GUIDES_DIR, filename);
+  let cleanFilename = path.basename(filename).trim();
+  if (!cleanFilename.endsWith('.html')) {
+    cleanFilename += '.html';
+  }
+  const targetFile = path.resolve(GUIDES_DIR, cleanFilename);
+
+  let html;
   if (!fs.existsSync(targetFile)) {
-    throw new Error(`文章 ${filename} 不存在`);
-  }
-
-  let html = fs.readFileSync(targetFile, 'utf8');
-
-  if (description) {
-    html = html.replace(/<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i, `<meta name="description" content="${description}">`);
-  }
-  if (contentHtml) {
-    html = html.replace(/<article class=["']guide-article["']>([\s\S]*?)<\/article>/i, `<article class="guide-article">\n${contentHtml}\n            </article>`);
-  }
-  if (headline) {
-    html = html.replace(/<h1 class=["']guide-title["']>([\s\S]*?)<\/h1>/i, `<h1 class="guide-title">${headline}</h1>`);
-    html = html.replace(/<title>([^<]+)<\/title>/i, `<title>${headline} | 家宽导航</title>`);
+    // 新建文章
+    html = generateGuideArticleHtml({
+      slug: cleanFilename.replace(/\.html$/, ''),
+      filename: cleanFilename,
+      headline: headline || cleanFilename.replace(/\.html$/, ''),
+      description: description || '',
+      category: category || '网络基础 / 风险排坑',
+      contentHtml
+    });
+  } else {
+    html = fs.readFileSync(targetFile, 'utf8');
+    if (description !== undefined) {
+      html = html.replace(/<meta\s+name=["']description["']\s+content=["']([^"']*)["']/i, `<meta name="description" content="${description}">`);
+    }
+    if (contentHtml !== undefined) {
+      html = html.replace(/<article class=["']guide-article["']>([\s\S]*?)<\/article>/i, `<article class="guide-article">\n${contentHtml}\n            </article>`);
+    }
+    if (headline !== undefined) {
+      html = html.replace(/<h1 class=["']guide-title["']>([\s\S]*?)<\/h1>/i, `<h1 class="guide-title">${headline}</h1>`);
+      html = html.replace(/<title>([^<]+)<\/title>/i, `<title>${headline} | 家宽导航</title>`);
+    }
   }
 
   fs.writeFileSync(targetFile, html, 'utf8');
 
   // 如果 dist 目录存在，同步写入 dist
-  const distFile = path.resolve(ROOT_DIR, 'dist/guides', filename);
-  if (fs.existsSync(distFile)) {
+  if (fs.existsSync(path.resolve(ROOT_DIR, 'dist'))) {
     try {
-      fs.writeFileSync(distFile, html, 'utf8');
+      ensureDir(path.resolve(ROOT_DIR, 'dist/guides'));
+      fs.writeFileSync(path.resolve(ROOT_DIR, 'dist/guides', cleanFilename), html, 'utf8');
     } catch (e) {}
   }
 
-  return { success: true, filename };
+  // 同步更新 index.html 中的知识专题集群卡片
+  if (addToIndex && fs.existsSync(INDEX_HTML_FILE)) {
+    let indexHtml = fs.readFileSync(INDEX_HTML_FILE, 'utf8');
+    const clusterGridRegex = /(<div class=["']seo-cluster-grid["']>)([\s\S]*?)(<\/div>\s*<\/article>)/i;
+    const match = indexHtml.match(clusterGridRegex);
+    if (match) {
+      const gridContent = match[2];
+      const targetHref = `guides/${cleanFilename}`;
+      if (!gridContent.includes(targetHref)) {
+        const newCard = `                        <a href="${targetHref}" class="seo-cluster-card">
+                            <div>
+                                <h3>${headline || cleanFilename}</h3>
+                                <p>${homeDesc || description || ''}</p>
+                            </div>
+                            <span class="seo-cluster-link-text">阅读完整指南 →</span>
+                        </a>\n`;
+        const newGridContent = gridContent.trimEnd() + '\n' + newCard + '                    ';
+        indexHtml = indexHtml.replace(clusterGridRegex, `$1\n${newGridContent}$3`);
+        fs.writeFileSync(INDEX_HTML_FILE, indexHtml, 'utf8');
+      }
+    }
+  }
+
+  return { success: true, filename: cleanFilename };
+}
+
+/**
+ * 删除单个深度指南文章
+ */
+export function deleteGuideArticle(filename) {
+  ensureDir(GUIDES_DIR);
+  let cleanFilename = path.basename(filename).trim();
+  if (!cleanFilename.endsWith('.html')) cleanFilename += '.html';
+  const targetFile = path.resolve(GUIDES_DIR, cleanFilename);
+
+  if (fs.existsSync(targetFile)) {
+    fs.unlinkSync(targetFile);
+  }
+  const distFile = path.resolve(ROOT_DIR, 'dist/guides', cleanFilename);
+  if (fs.existsSync(distFile)) {
+    try { fs.unlinkSync(distFile); } catch (e) {}
+  }
+
+  // 从 index.html 中移除卡片
+  if (fs.existsSync(INDEX_HTML_FILE)) {
+    let indexHtml = fs.readFileSync(INDEX_HTML_FILE, 'utf8');
+    const cardRegex = new RegExp(`\\s*<a href=["']guides\\/${cleanFilename}["'][\\s\\S]*?<\\/a>`, 'i');
+    if (cardRegex.test(indexHtml)) {
+      indexHtml = indexHtml.replace(cardRegex, '');
+      fs.writeFileSync(INDEX_HTML_FILE, indexHtml, 'utf8');
+    }
+  }
+
+  return { success: true, filename: cleanFilename };
 }
 
 /**
@@ -642,6 +913,31 @@ export function saveUploadedIcon(filename, base64Data) {
     filename: cleanName,
     path: `images/icons/${cleanName}`
   };
+}
+
+/**
+ * 删除图标
+ */
+export function deleteUploadedIcon(filename) {
+  ensureDir(ICONS_DIR);
+  const cleanName = path.basename(filename).toLowerCase().replace(/[^a-z0-9._-]/g, '_');
+  const targetPath = path.resolve(ICONS_DIR, cleanName);
+
+  if (!targetPath.startsWith(ICONS_DIR)) {
+    throw new Error('非法文件路径');
+  }
+  if (!fs.existsSync(targetPath)) {
+    throw new Error(`图标 ${cleanName} 不存在`);
+  }
+  fs.unlinkSync(targetPath);
+
+  // 如果 dist/assets 或 dist/images/icons 存在也清理
+  const distIcon = path.resolve(ROOT_DIR, 'dist/images/icons', cleanName);
+  if (fs.existsSync(distIcon)) {
+    try { fs.unlinkSync(distIcon); } catch (e) {}
+  }
+
+  return { success: true, filename: cleanName };
 }
 
 /**

@@ -6,7 +6,9 @@ import {
   readAllData,
   saveAllData,
   saveGuideArticle,
+  deleteGuideArticle,
   saveUploadedIcon,
+  deleteUploadedIcon,
   checkLinkHealth,
   createBackup,
   listBackups,
@@ -89,9 +91,17 @@ function cmsApiPlugin() {
               const body = await parseBody(req);
               return sendJson(res, 200, { success: true, result: saveGuideArticle(body) });
             }
+            if (pathname === '/api/delete-guide' && req.method === 'POST') {
+              const { filename } = await parseBody(req);
+              return sendJson(res, 200, deleteGuideArticle(filename));
+            }
             if (pathname === '/api/upload-icon' && req.method === 'POST') {
               const { filename, base64Data } = await parseBody(req);
               return sendJson(res, 200, saveUploadedIcon(filename, base64Data));
+            }
+            if (pathname === '/api/delete-icon' && req.method === 'POST') {
+              const { filename } = await parseBody(req);
+              return sendJson(res, 200, deleteUploadedIcon(filename));
             }
             if (pathname === '/api/check-links' && req.method === 'POST') {
               const { urls } = await parseBody(req);
@@ -221,9 +231,13 @@ export default defineConfig(async ({ command }) => {
       rollupOptions: {
         input: {
           main: resolve(__dirname, 'index.html'),
-          dualIsp: resolve(__dirname, 'guides/dual-isp-residential-ip.html'),
-          ipFraud: resolve(__dirname, 'guides/ip-fraud-check.html'),
-          crossBorder: resolve(__dirname, 'guides/cross-border-ecommerce-setup.html'),
+          ...Object.fromEntries(
+            fs.existsSync(resolve(__dirname, 'guides'))
+              ? fs.readdirSync(resolve(__dirname, 'guides'))
+                  .filter(f => f.endsWith('.html'))
+                  .map(f => [f.replace(/\.html$/, ''), resolve(__dirname, 'guides', f)])
+              : []
+          )
         },
       },
     },
