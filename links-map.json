@@ -60,7 +60,7 @@
     "updatedAt": "2026-10-15"
   },
   "ganbei": {
-    "title": "#干杯CLOUD",
+    "title": "干杯CLOUD",
     "target": "https://usvps24.com/r/YMJLG4LH",
     "category": "vps",
     "updatedAt": "2026-10-15"
@@ -181,6 +181,12 @@
   "ridc": {
     "title": "!Residential-IDC",
     "target": "https://residential-service.com/",
+    "category": "vps",
+    "updatedAt": "2026-10-15"
+  },
+  "shlii": {
+    "title": "#Shlii",
+    "target": "https://shlii.io/instances/create?promoCode=AFF-7087-QG7QXSLX",
     "category": "vps",
     "updatedAt": "2026-10-15"
   },
