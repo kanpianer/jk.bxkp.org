@@ -138,7 +138,7 @@
     "updatedAt": "2026-10-16"
   },
   "ohno": {
-    "title": "!OHNO",
+    "title": "OHNO",
     "target": "https://ohno.icu/aff.php?aff=38",
     "category": "vps",
     "updatedAt": "2026-10-16"
@@ -185,8 +185,8 @@
     "updatedAt": "2026-10-16"
   },
   "shlii": {
-    "title": "#Shlii",
-    "target": "https://shlii.io/instances/create?promoCode=AFF-7087-QG7QXSLX&package=350&plan=579",
+    "title": "!Shlii",
+    "target": "https://shlii.io/instances/create?promoCode=AFF-7087-QG7QXSLX",
     "category": "vps",
     "updatedAt": "2026-10-16"
   },
@@ -256,7 +256,7 @@
     "updatedAt": "2026-10-16"
   },
   "xzwl": {
-    "title": "学长网络",
+    "title": "#学长网络",
     "target": "https://xuezhangvps.shop/aff.php?aff=130",
     "category": "vps",
     "updatedAt": "2026-10-16"
