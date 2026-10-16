@@ -3908,7 +3908,8 @@ ${defaultBody}
             });
 
             // 8. GitHub REST API 原子提交引擎 (用于公网在线模式)
-            async function commitToGitHub({ token, message, files }) {
+            //    files: [{ path, content }]；deletePaths: 需要从仓库中移除的旧文件路径
+            async function commitToGitHub({ token, message, files, deletePaths }) {
                 const owner = 'kanpianer';
                 const repo = 'jk.bxkp.org';
                 const branch = 'main';
@@ -3942,6 +3943,26 @@ ${defaultBody}
                     type: 'blob',
                     content: f.content
                 }));
+
+                // 3.1 解析需要删除的旧文件 (仅在 base tree 中确实存在时才删除，绝不误删)
+                if (Array.isArray(deletePaths) && deletePaths.length > 0) {
+                    try {
+                        const treeListResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/${baseTreeSha}?recursive=1`, { headers });
+                        if (treeListResp.ok) {
+                            const treeListData = await treeListResp.json();
+                            const existingPaths = new Set(
+                                (treeListData.tree || []).filter(t => t.type === 'blob').map(t => t.path)
+                            );
+                            for (const path of deletePaths) {
+                                if (path && existingPaths.has(path)) {
+                                    treeItems.push({ path, mode: '100644', type: 'blob', sha: null });
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('[CMS] 解析待删除的短链跳板失败，已跳过删除步骤:', e);
+                    }
+                }
 
                 const treeResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees`, {
                     method: 'POST',
@@ -4272,7 +4293,33 @@ ${defaultBody}
                             redirectLines.push(`/${slug}  ${item.target}  302!`);
                         }
                     }
+                    // 保证 /public/Donttouchmyshit 在 Cloudflare Pages 等平台作为 Clean URL 正确响应
+                    redirectLines.unshift('/public/Donttouchmyshit/*  /Donttouchmyshit/:splat  200');
+                    redirectLines.unshift('/public/Donttouchmyshit  /public/Donttouchmyshit/  301!');
                     const newRedirects = redirectLines.join('\n') + '\n';
+
+                    // 4.1 复用统一模板 (js/shortlink-templates.js) 合成短链跳板页与 404 兜底页
+                    //     —— 这是「CMS 新增链接后短链 404」的根因修复：
+                    //     线上静态托管按 Clean URL 规则把 /[slug] 解析为仓库根目录的 /[slug].html，
+                    //     而旧版在线 CMS 只提交 public/_redirects，从未生成这些跳板页。
+                    const shortlinkTemplates = await import(`/js/shortlink-templates.js?v=${Date.now()}`);
+                    const finalIndexHtml = shortlinkTemplates.injectShortlinkRouter(newIndexHtml, sortedMap);
+                    const fallback404Html = shortlinkTemplates.render404Html(sortedMap);
+                    const shortlinkFiles = [];
+                    for (const [slug, item] of shortlinkTemplates.collectFallbackEntries(sortedMap)) {
+                        const fallbackHtml = shortlinkTemplates.renderRedirectHtml(item.title, item.target, slug);
+                        // 仓库根目录：线上真实生效的短链入口 (/[slug] -> /[slug].html)
+                        shortlinkFiles.push({ path: `${slug}.html`, content: fallbackHtml });
+                        // public/ 镜像：供 vite build / dist 产物使用
+                        shortlinkFiles.push({ path: `public/${slug}.html`, content: fallbackHtml });
+                        shortlinkFiles.push({ path: `public/${slug}/index.html`, content: fallbackHtml });
+                    }
+                    // 已从导航中移除的短链：同步删除其跳板页
+                    const deletePaths = [];
+                    for (const slug of Object.keys(mapJsonBase)) {
+                        if (sortedMap[slug]) continue;
+                        deletePaths.push(`${slug}.html`, `public/${slug}.html`, `public/${slug}/index.html`);
+                    }
 
                     // 5. 客户端递增 sw.js 版本
                     let newSwJs = swJsBase;
@@ -4284,9 +4331,12 @@ ${defaultBody}
 
                     // 6. 构造原子提交文件列表
                     const filesToCommit = [
-                        { path: 'index.html', content: newIndexHtml },
+                        { path: 'index.html', content: finalIndexHtml },
                         { path: 'links-map.json', content: newLinksMapJson },
-                        { path: 'public/_redirects', content: newRedirects }
+                        { path: 'public/_redirects', content: newRedirects },
+                        { path: '404.html', content: fallback404Html },
+                        { path: 'public/404.html', content: fallback404Html },
+                        ...shortlinkFiles
                     ];
 
                     // 6.1 如果有被修改的深度文章，一并打包进原子提交
@@ -4313,7 +4363,8 @@ ${defaultBody}
                     const result = await commitToGitHub({
                         token,
                         message: commitMsg,
-                        files: filesToCommit
+                        files: filesToCommit,
+                        deletePaths
                     });
 
                     btn.disabled = false;

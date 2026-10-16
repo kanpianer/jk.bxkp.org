@@ -6,11 +6,14 @@
  * 1. 扫描 index.html 中的推荐卡片，维护 links-map.json 单一真相源；
  * 2. 将每个网站卡片绑定至指定的固定自定义短链接（如 rancho -> /rancho，RESIP -> /resip）；
  * 3. 源链接在 index.html 或 links-map.json 中发生任何更新变动时，短链保持固定不变并自动重定向至最新网址；
- * 4. 自动生成各个 public/[slug]/index.html 及 public/[slug].html 静态跳板（支持 Meta Refresh + JS location.replace）；
- * 5. 自动生成 public/_redirects（Cloudflare Pages 边缘 302 规则）；
- * 6. 自动生成 404.html 客户端智能路由兜底页；
- * 7. 将 __SHORTLINK_MAP__ 注入到 index.html <head>，确保即使被 SPA 机制回退到 index.html 也能瞬间执行跳转；
- * 8. 支持 --sync-html 参数将 index.html 中的卡片 href 同步替换为固定短链 (https://jiakuan.link/[slug])。
+ * 4. 自动生成仓库根目录 [slug].html 静态跳板（线上静态托管的 clean URL 入口 /[slug] -> /[slug].html）；
+ * 5. 自动生成各个 public/[slug]/index.html 及 public/[slug].html 静态跳板（供 vite/dist 产物使用）；
+ * 6. 自动生成 public/_redirects（Cloudflare Pages 边缘 302 规则）；
+ * 7. 自动生成 404.html 客户端智能路由兜底页（根目录提供最终兜底）；
+ * 8. 将 __SHORTLINK_MAP__ 注入到 index.html <head>，确保即使被 SPA 机制回退到 index.html 也能瞬间执行跳转；
+ * 9. 支持 --no-sync-html 参数跳过 index.html 卡片 href 的短链回写。
+ *
+ * 模板唯一来源：js/shortlink-templates.js（在线 CMS 与本脚本共用，避免两端产物漂移）。
  */
 
 import fs from 'fs';
@@ -18,12 +21,19 @@ import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import { parseCardsFromHtml } from './cms-service.mjs';
+import {
+  SHORTLINK_BASE_URL,
+  renderRedirectHtml,
+  render404Html,
+  injectShortlinkRouter,
+  collectFallbackEntries
+} from '../js/shortlink-templates.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const ROOT_DIR = path.resolve(__dirname, '..');
-const BASE_URL = 'https://jiakuan.link';
+const BASE_URL = SHORTLINK_BASE_URL;
 const MAP_FILE = path.resolve(ROOT_DIR, 'links-map.json');
 const INDEX_HTML_FILE = path.resolve(ROOT_DIR, 'index.html');
 const PUBLIC_DIR = path.resolve(ROOT_DIR, 'public');
@@ -123,315 +133,6 @@ function getCustomSlugForTitle(title) {
 }
 
 /**
- * 转移字符，防止 HTML 注入
- */
-function escapeHtml(str) {
-  return String(str || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-/**
- * 生成单个短链静态 HTML 跳板
- */
-function renderRedirectHtml(title, targetUrl, slug) {
-  const cleanTitle = String(title || '').replace(/^[!！#＃]+\s*/, '');
-  const safeTitle = escapeHtml(cleanTitle);
-  const safeUrl = escapeHtml(targetUrl);
-
-  return `<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>正在前往 ${safeTitle}...</title>
-    <meta http-equiv="refresh" content="0; url=${safeUrl}">
-    <meta name="robots" content="noindex, nofollow">
-    <link rel="canonical" href="${safeUrl}">
-    <script>
-        (function() {
-            try {
-                window.location.replace("${targetUrl.replace(/"/g, '\\"')}");
-            } catch(e) {
-                window.location.href = "${targetUrl.replace(/"/g, '\\"')}";
-            }
-        })();
-    </script>
-    <style>
-        body {
-            background-color: #0b0f19;
-            color: #94a3b8;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 24px;
-            box-sizing: border-box;
-            text-align: center;
-        }
-        .container {
-            max-width: 460px;
-            background: rgba(30, 41, 59, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
-            padding: 32px 24px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(12px);
-        }
-        .spinner {
-            width: 36px;
-            height: 36px;
-            border: 3px solid rgba(56, 189, 248, 0.2);
-            border-top-color: #38bdf8;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 20px;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        .title {
-            font-size: 1.15rem;
-            color: #f1f5f9;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-        .desc {
-            font-size: 0.875rem;
-            color: #64748b;
-            line-height: 1.6;
-        }
-        .link {
-            display: inline-block;
-            margin-top: 14px;
-            color: #38bdf8;
-            text-decoration: underline;
-            font-size: 0.875rem;
-            word-break: break-all;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="spinner"></div>
-        <div class="title">正在前往 ${safeTitle}...</div>
-        <div class="desc">若浏览器未在数秒内自动跳转，请点击下方链接直接访问：</div>
-        <a class="link" href="${safeUrl}">点击直接前往</a>
-    </div>
-</body>
-</html>
-`;
-}
-
-/**
- * 生成 404 智能兜底 HTML
- */
-function render404Html(slugMap) {
-  const mapJson = JSON.stringify(
-    Object.fromEntries(
-      Object.entries(slugMap).map(([slug, info]) => [slug, info.target])
-    )
-  );
-
-  return `<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>404 - 您访问的链接已失效</title>
-    <meta name="robots" content="noindex, nofollow">
-    <script>
-        (function() {
-            var map = ${mapJson};
-            var path = window.location.pathname.replace(/^\\/+|\\/+$/g, '').toLowerCase();
-            var slug = path.split('/').pop();
-            if (map[slug]) {
-                window.location.replace(map[slug]);
-                return;
-            }
-        })();
-    </script>
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            overscroll-behavior: none;
-            background-color: #000000;
-        }
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            min-height: 100dvh;
-            height: 100vh;
-            height: 100dvh;
-            padding: 0 20px 10vh 20px;
-            color: #ffffff;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-            text-align: center;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-        .stars {
-            position: fixed;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            overflow: hidden;
-            z-index: 1;
-        }
-        .star {
-            position: absolute;
-            background-color: #ffffff;
-            border-radius: 50%;
-            opacity: 0.2;
-            animation: twinkle ease-in-out infinite alternate;
-        }
-        @keyframes twinkle {
-            0% {
-                opacity: 0.15;
-                transform: scale(0.7);
-            }
-            50% {
-                opacity: 0.95;
-                box-shadow: 0 0 3px rgba(255, 255, 255, 0.85);
-                transform: scale(1.2);
-            }
-            100% {
-                opacity: 0.25;
-                transform: scale(0.8);
-            }
-        }
-        .content {
-            position: relative;
-            z-index: 2;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        .num-404 {
-            font-size: clamp(5.5rem, 16vw, 8rem);
-            font-weight: 800;
-            line-height: 1;
-            margin: 0;
-            color: #ffffff;
-            letter-spacing: 2px;
-        }
-        .desc {
-            font-size: clamp(1rem, 3.2vw, 1.15rem);
-            color: #cbd5e1;
-            margin: 8px 0 0 0;
-            line-height: 1.4;
-            font-weight: 400;
-        }
-        .category-btn {
-            margin-top: 28px;
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: auto !important;
-            max-width: none !important;
-            min-width: 5rem;
-            height: 2.5rem !important;
-            min-height: 2.5rem !important;
-            padding: 0 1.5rem !important;
-            font-size: 1rem !important;
-            font-weight: 700;
-            font-family: inherit;
-            color: #ffffff !important;
-            background-color: transparent !important;
-            background: transparent !important;
-            border: 1px solid rgba(255, 255, 255, 0.6) !important;
-            border-radius: 9999px !important;
-            cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            outline: none;
-            text-decoration: none !important;
-            white-space: nowrap;
-            -webkit-tap-highlight-color: transparent;
-            pointer-events: auto;
-        }
-        @media (hover: hover) and (pointer: fine) {
-            .category-btn:hover {
-                color: #ffffff !important;
-                background-color: rgba(255, 255, 255, 0.12) !important;
-                background: rgba(255, 255, 255, 0.12) !important;
-                border-color: #ffffff !important;
-                transform: scale(1.05);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-            }
-        }
-        .category-btn:active {
-            transform: scale(0.97);
-        }
-        @media (max-width: 34.375rem) {
-            .category-btn {
-                min-width: 4.2rem;
-                height: 2.25rem !important;
-                min-height: 2.25rem !important;
-                padding: 0 1.15rem !important;
-                font-size: 0.9375rem !important;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="stars" aria-hidden="true">
-        <div class="star" style="top: 12%; left: 18%; width: 2px; height: 2px; animation-duration: 2.8s; animation-delay: 0.2s;"></div>
-        <div class="star" style="top: 22%; left: 78%; width: 1.5px; height: 1.5px; animation-duration: 3.4s; animation-delay: 1.1s;"></div>
-        <div class="star" style="top: 9%; left: 63%; width: 2px; height: 2px; animation-duration: 2.6s; animation-delay: 0.7s;"></div>
-        <div class="star" style="top: 35%; left: 22%; width: 1px; height: 1px; animation-duration: 2.2s; animation-delay: 1.5s;"></div>
-        <div class="star" style="top: 73%; left: 16%; width: 2px; height: 2px; animation-duration: 3.6s; animation-delay: 2.0s;"></div>
-        <div class="star" style="top: 84%; left: 74%; width: 1.5px; height: 1.5px; animation-duration: 3.1s; animation-delay: 0.4s;"></div>
-        <div class="star" style="top: 58%; left: 86%; width: 2px; height: 2px; animation-duration: 2.9s; animation-delay: 1.8s;"></div>
-        <div class="star" style="top: 18%; left: 43%; width: 1.5px; height: 1.5px; animation-duration: 2.4s; animation-delay: 2.3s;"></div>
-        <div class="star" style="top: 48%; left: 88%; width: 1px; height: 1px; animation-duration: 3.3s; animation-delay: 0.9s;"></div>
-        <div class="star" style="top: 89%; left: 34%; width: 2px; height: 2px; animation-duration: 2.7s; animation-delay: 1.3s;"></div>
-        <div class="star" style="top: 76%; left: 57%; width: 1.5px; height: 1.5px; animation-duration: 3.5s; animation-delay: 0.6s;"></div>
-        <div class="star" style="top: 31%; left: 8%; width: 2px; height: 2px; animation-duration: 2.3s; animation-delay: 1.7s;"></div>
-        <div class="star" style="top: 65%; left: 41%; width: 1px; height: 1px; animation-duration: 3.2s; animation-delay: 2.5s;"></div>
-        <div class="star" style="top: 15%; left: 91%; width: 2px; height: 2px; animation-duration: 2.7s; animation-delay: 1.0s;"></div>
-        <div class="star" style="top: 80%; left: 12%; width: 1.5px; height: 1.5px; animation-duration: 3.7s; animation-delay: 0.8s;"></div>
-        <div class="star" style="top: 43%; left: 68%; width: 2px; height: 2px; animation-duration: 2.5s; animation-delay: 2.2s;"></div>
-        <div class="star" style="top: 7%; left: 33%; width: 1.5px; height: 1.5px; animation-duration: 3.0s; animation-delay: 1.4s;"></div>
-        <div class="star" style="top: 92%; left: 87%; width: 2px; height: 2px; animation-duration: 2.8s; animation-delay: 0.3s;"></div>
-        <div class="star" style="top: 54%; left: 14%; width: 1px; height: 1px; animation-duration: 3.1s; animation-delay: 1.9s;"></div>
-        <div class="star" style="top: 25%; left: 53%; width: 2px; height: 2px; animation-duration: 2.2s; animation-delay: 2.6s;"></div>
-        <div class="star" style="top: 68%; left: 81%; width: 1.5px; height: 1.5px; animation-duration: 3.6s; animation-delay: 1.2s;"></div>
-        <div class="star" style="top: 87%; left: 49%; width: 1px; height: 1px; animation-duration: 2.6s; animation-delay: 1.6s;"></div>
-    </div>
-    <div class="content">
-        <h1 class="num-404">404</h1>
-        <p class="desc">您访问的链接已失效</p>
-        <a class="category-btn" href="/">返回家宽导航</a>
-    </div>
-</body>
-</html>
-`;
-}
-
-/**
  * 生成 README.md 中的精选站点表格 (严格排除隐藏卡片)
  */
 export function renderReadmeSiteDirectory(cards) {
@@ -515,6 +216,9 @@ export async function main() {
       titleToTarget.set(normalizeTitle(item.title), item.target);
     }
   }
+
+  // 记录上一版已登记的短链，用于安全清理已下线的根目录跳板页
+  const previousSlugs = new Set(Object.keys(linksMap));
 
   // 1.1 注入官方分类自定义短链（老站、VPS）
   for (const [slug, item] of Object.entries(CATEGORY_LINKS)) {
@@ -661,30 +365,8 @@ export async function main() {
   fs.writeFileSync(MAP_FILE, JSON.stringify(sortedMap, null, 2) + '\n', 'utf8');
   console.log(`[Success] links-map.json 已更新，当前维护 ${Object.keys(sortedMap).length} 个固定短链。`);
 
-  // 6. 更新 index.html 中的顶部短链路由
-  const targetMapObj = Object.fromEntries(
-    Object.entries(sortedMap).map(([s, item]) => [s, item.target])
-  );
-  const routerCode = `<!-- SHORTLINK_ROUTER_START -->
-    <script>
-        (function() {
-            try {
-                window.__SHORTLINK_MAP__ = ${JSON.stringify(targetMapObj)};
-                var p = window.location.pathname.replace(/^\\/+|\\/+$/g, '').toLowerCase().split('/').pop();
-                if (p && window.__SHORTLINK_MAP__[p]) {
-                    window.location.replace(window.__SHORTLINK_MAP__[p]);
-                }
-            } catch(e) {}
-        })();
-    </script>
-    <!-- SHORTLINK_ROUTER_END -->`;
-
-  let finalHtml = updatedHtml;
-  if (finalHtml.includes('<!-- SHORTLINK_ROUTER_START -->')) {
-    finalHtml = finalHtml.replace(/<!-- SHORTLINK_ROUTER_START -->[\s\S]*?<!-- SHORTLINK_ROUTER_END -->/, routerCode);
-  } else {
-    finalHtml = finalHtml.replace('<head>', `<head>\n    ${routerCode}`);
-  }
+  // 6. 更新 index.html 中的顶部短链路由（与在线 CMS 共用同一份模板）
+  const finalHtml = injectShortlinkRouter(updatedHtml, sortedMap);
 
   fs.writeFileSync(INDEX_HTML_FILE, finalHtml, 'utf8');
 
@@ -709,19 +391,28 @@ export async function main() {
     }
   }
 
-  // 8. 生成 public/ 和 dist/ 下的静态跳板目录、.html 及 index.html
+  // 7.1 清理已从 links-map.json 下线的根目录短链跳板（只删上一版登记过的短链，绝不误删人工文件）
+  for (const slug of previousSlugs) {
+    if (sortedMap[slug] || RESERVED_SLUGS.has(slug)) continue;
+    const staleRootFallback = path.resolve(ROOT_DIR, `${slug}.html`);
+    if (fs.existsSync(staleRootFallback)) {
+      fs.unlinkSync(staleRootFallback);
+      console.log(`[Clean] 已移除下线的根目录短链跳板: /${slug}.html`);
+    }
+  }
+
+  // 8. 生成仓库根目录 / public / dist 下的静态跳板目录、.html 及 index.html
   if (!fs.existsSync(PUBLIC_DIR)) {
     fs.mkdirSync(PUBLIC_DIR, { recursive: true });
   }
 
   const redirectLines = ['# Cloudflare Pages 302 Redirects'];
 
-  for (const [slug, item] of Object.entries(sortedMap)) {
-    if (!item.target || item.target.startsWith(BASE_URL)) {
-      continue;
-    }
-
+  for (const [slug, item] of collectFallbackEntries(sortedMap, BASE_URL)) {
     const htmlContent = renderRedirectHtml(item.title, item.target, slug);
+
+    // 根目录 Clean URL 型跳板：线上静态托管会把 /[slug] 解析到 /[slug].html
+    fs.writeFileSync(path.resolve(ROOT_DIR, `${slug}.html`), htmlContent, 'utf8');
 
     // 目录型跳板：public/[slug]/index.html
     const slugDir = path.resolve(PUBLIC_DIR, slug);
