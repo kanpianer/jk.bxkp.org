@@ -1760,7 +1760,7 @@
                         <li>在 GitHub Settings -> Developer settings -> Personal access tokens (fine-grained) 中生成一个仅针对 <code>kanpianer/jk.bxkp.org</code> 仓库具备 Contents 写入权限的专用 Token。</li>
                         <li>在下方输入您的 Token（<strong>仅保存在您的本地浏览器 localStorage 中，绝不上传到任何服务器</strong>）。</li>
                         <li>保存时，前端将直接调用 GitHub API 向仓库提交 Commit，只有作者账号有权成功写入，任何其他人均无权篡改！</li>
-                        <li><strong>进阶安全建议</strong>：在 Cloudflare Zero Trust 中为 <code>/public/Donttouchmyshit/*</code> 配置 Access 策略，要求输入您的作者邮箱接收 PIN 码后方可打开。</li>
+                        <li><strong>进阶安全建议</strong>：在 Cloudflare Zero Trust 中为 <code>/dtms/*</code> 配置 Access 策略，要求输入您的作者邮箱接收 PIN 码后方可打开。</li>
                     </ol>
 
                     <div class="form-group" style="margin-top: 14px;">
@@ -4293,32 +4293,31 @@ ${defaultBody}
                             redirectLines.push(`/${slug}  ${item.target}  302!`);
                         }
                     }
-                    // 保证 /public/Donttouchmyshit 在 Cloudflare Pages 等平台作为 Clean URL 正确响应
-                    redirectLines.unshift('/public/Donttouchmyshit/*  /Donttouchmyshit/:splat  200');
-                    redirectLines.unshift('/public/Donttouchmyshit  /public/Donttouchmyshit/  301!');
+                    // /dtms/ 为真实目录入口，无需额外的 Clean URL 重写规则
                     const newRedirects = redirectLines.join('\n') + '\n';
 
                     // 4.1 复用统一模板 (js/shortlink-templates.js) 合成短链跳板页与 404 兜底页
-                    //     —— 这是「CMS 新增链接后短链 404」的根因修复：
-                    //     线上静态托管按 Clean URL 规则把 /[slug] 解析为仓库根目录的 /[slug].html，
-                    //     而旧版在线 CMS 只提交 public/_redirects，从未生成这些跳板页。
+                    //     —— 所有静态跳板统一收纳到 go/ 目录，
+                    //     由仓库根 _redirects 将 /[slug] 重写为 /go/[slug].html 保持短链可用。
                     const shortlinkTemplates = await import(`/js/shortlink-templates.js?v=${Date.now()}`);
                     const finalIndexHtml = shortlinkTemplates.injectShortlinkRouter(newIndexHtml, sortedMap);
                     const fallback404Html = shortlinkTemplates.render404Html(sortedMap);
                     const shortlinkFiles = [];
+                    const rootRedirectLines = ['# Root clean-URL rewrites for /go jump pages'];
                     for (const [slug, item] of shortlinkTemplates.collectFallbackEntries(sortedMap)) {
                         const fallbackHtml = shortlinkTemplates.renderRedirectHtml(item.title, item.target, slug);
-                        // 仓库根目录：线上真实生效的短链入口 (/[slug] -> /[slug].html)
-                        shortlinkFiles.push({ path: `${slug}.html`, content: fallbackHtml });
+                        // go/ 目录：线上 /[slug] 经根 _redirects 重写到 /go/[slug].html
+                        shortlinkFiles.push({ path: `go/${slug}.html`, content: fallbackHtml });
+                        rootRedirectLines.push(`/${slug}  /go/${slug}.html  200`);
                         // public/ 镜像：供 vite build / dist 产物使用
                         shortlinkFiles.push({ path: `public/${slug}.html`, content: fallbackHtml });
                         shortlinkFiles.push({ path: `public/${slug}/index.html`, content: fallbackHtml });
                     }
-                    // 已从导航中移除的短链：同步删除其跳板页
+                    // 已从导航中移除的短链：同步删除其跳板页（含旧版根目录残留）
                     const deletePaths = [];
                     for (const slug of Object.keys(mapJsonBase)) {
                         if (sortedMap[slug]) continue;
-                        deletePaths.push(`${slug}.html`, `public/${slug}.html`, `public/${slug}/index.html`);
+                        deletePaths.push(`go/${slug}.html`, `${slug}.html`, `public/${slug}.html`, `public/${slug}/index.html`);
                     }
 
                     // 5. 客户端递增 sw.js 版本
@@ -4333,6 +4332,7 @@ ${defaultBody}
                     const filesToCommit = [
                         { path: 'index.html', content: finalIndexHtml },
                         { path: 'links-map.json', content: newLinksMapJson },
+                        { path: '_redirects', content: rootRedirectLines.join('\n') + '\n' },
                         { path: 'public/_redirects', content: newRedirects },
                         { path: '404.html', content: fallback404Html },
                         { path: 'public/404.html', content: fallback404Html },

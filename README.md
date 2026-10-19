@@ -85,8 +85,8 @@
 - **极简高性能架构**：基于 [LittleLink](https://github.com/sethcottle/littlelink) 原生轻量 CSS 打造，拒绝臃肿的前端框架，页面瞬时加载，Google PageSpeed 达到满分表现。
 - **动态短链系统**：每个卡片映射固定 Slug 短链，由 `links-map.json` 作为唯一真相源，源站更换域名时短链保持不变。
 - **三层跳转保障体系**：
-  1. **Cloudflare Pages Edge 302**：通过 `_redirects` 在边缘网络完成毫秒级跳转；
-  2. **静态 HTML 跳板**：每个短链生成独立的 `public/[slug]/index.html`，通过 `meta refresh` 和 JavaScript 双重兜底；
+  1. **Cloudflare Pages 边缘路由**：根 `_redirects` 将 `/[slug]` 重写至 `/go/[slug].html`，构建产物另用 `public/_redirects` 完成 302 跳转；
+  2. **静态 HTML 跳板**：所有根目录跳板页统一收纳在 `go/[slug].html`（`public/[slug]/index.html` 作为构建镜像），通过 `meta refresh` 和 JavaScript 双重兜底；
   3. **客户端 404 智能路由**：SPA 回退时由 `404.html` 自动匹配短链并即刻重定向。
 - **内置轻量 CMS 服务**：原生 Node.js 实现的内容管理后台，支持卡片排序、新增、编辑、图标管理、链接健康检查与一键快照备份回滚。
 
@@ -109,7 +109,7 @@ npm run dev
 npm run cms
 ```
 - 前台网站访问：`http://localhost:404/`
-- 后台管理访问：`http://localhost:404/Donttouchmyshit`
+- 后台管理访问：`http://localhost:404/dtms/`
 
 ### 4. 同步更新短链与跳板构建
 ```bash

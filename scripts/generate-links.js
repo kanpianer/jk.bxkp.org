@@ -6,9 +6,9 @@
  * 1. 扫描 index.html 中的推荐卡片，维护 links-map.json 单一真相源；
  * 2. 将每个网站卡片绑定至指定的固定自定义短链接（如 rancho -> /rancho，RESIP -> /resip）；
  * 3. 源链接在 index.html 或 links-map.json 中发生任何更新变动时，短链保持固定不变并自动重定向至最新网址；
- * 4. 自动生成仓库根目录 [slug].html 静态跳板（线上静态托管的 clean URL 入口 /[slug] -> /[slug].html）；
+ * 4. 自动生成 go/[slug].html 静态跳板，并生成根 _redirects 将 /[slug] 重写至 /go/[slug].html；
  * 5. 自动生成各个 public/[slug]/index.html 及 public/[slug].html 静态跳板（供 vite/dist 产物使用）；
- * 6. 自动生成 public/_redirects（Cloudflare Pages 边缘 302 规则）；
+ * 6. 自动生成 public/_redirects（Cloudflare Pages 边缘 302 规则）与仓库根 _redirects；
  * 7. 自动生成 404.html 客户端智能路由兜底页（根目录提供最终兜底）；
  * 8. 将 __SHORTLINK_MAP__ 注入到 index.html <head>，确保即使被 SPA 机制回退到 index.html 也能瞬间执行跳转；
  * 9. 支持 --no-sync-html 参数跳过 index.html 卡片 href 的短链回写。
@@ -37,13 +37,14 @@ const BASE_URL = SHORTLINK_BASE_URL;
 const MAP_FILE = path.resolve(ROOT_DIR, 'links-map.json');
 const INDEX_HTML_FILE = path.resolve(ROOT_DIR, 'index.html');
 const PUBLIC_DIR = path.resolve(ROOT_DIR, 'public');
+const GO_DIR = path.resolve(ROOT_DIR, 'go');
 const DIST_DIR = path.resolve(ROOT_DIR, 'dist');
 const ROOT_404_FILE = path.resolve(ROOT_DIR, '404.html');
 const README_FILE = path.resolve(ROOT_DIR, 'README.md');
 
 // 排除可能与网站系统路由或核心静态资源冲突的保留词
 const RESERVED_SLUGS = new Set([
-  'guide', 'admin', 'donttouchmyshit', 'asset', 'image', 'fonts', 'media', 'about',
+  'guide', 'admin', 'dtms', 'go', 'donttouchmyshit', 'asset', 'image', 'fonts', 'media', 'about',
   'index', 'login', 'share', 'terms', 'links', 'nodes', 'stats',
   'reset', 'style', 'tests', 'debug', 'error', 'setup', 'pages',
   'posts', 'files', 'cloud', 'robot', 'swjs0', 'cname'
@@ -391,28 +392,36 @@ export async function main() {
     }
   }
 
-  // 7.1 清理已从 links-map.json 下线的根目录短链跳板（只删上一版登记过的短链，绝不误删人工文件）
+  // 7.1 清理已从 links-map.json 下线的短链跳板（只删上一版登记过的短链，绝不误删人工文件）
   for (const slug of previousSlugs) {
     if (sortedMap[slug] || RESERVED_SLUGS.has(slug)) continue;
-    const staleRootFallback = path.resolve(ROOT_DIR, `${slug}.html`);
-    if (fs.existsSync(staleRootFallback)) {
-      fs.unlinkSync(staleRootFallback);
-      console.log(`[Clean] 已移除下线的根目录短链跳板: /${slug}.html`);
+    for (const staleFile of [
+      path.resolve(GO_DIR, `${slug}.html`),
+      // 兼容清理旧版本遗留在仓库根目录的跳板文件
+      path.resolve(ROOT_DIR, `${slug}.html`)
+    ]) {
+      if (fs.existsSync(staleFile)) {
+        fs.unlinkSync(staleFile);
+        console.log(`[Clean] 已移除下线的短链跳板: ${path.relative(ROOT_DIR, staleFile)}`);
+      }
     }
   }
 
-  // 8. 生成仓库根目录 / public / dist 下的静态跳板目录、.html 及 index.html
-  if (!fs.existsSync(PUBLIC_DIR)) {
-    fs.mkdirSync(PUBLIC_DIR, { recursive: true });
+  // 8. 生成 go/ / public / dist 下的静态跳板目录、.html 及 index.html
+  for (const dir of [GO_DIR, PUBLIC_DIR]) {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
   }
 
   const redirectLines = ['# Cloudflare Pages 302 Redirects'];
+  const rootRedirectLines = ['# Root clean-URL rewrites for /go jump pages'];
 
   for (const [slug, item] of collectFallbackEntries(sortedMap, BASE_URL)) {
     const htmlContent = renderRedirectHtml(item.title, item.target, slug);
 
-    // 根目录 Clean URL 型跳板：线上静态托管会把 /[slug] 解析到 /[slug].html
-    fs.writeFileSync(path.resolve(ROOT_DIR, `${slug}.html`), htmlContent, 'utf8');
+    // 根目录统一收纳：go/[slug].html，由仓库根 _redirects 将 /[slug] 重写到此
+    fs.writeFileSync(path.resolve(GO_DIR, `${slug}.html`), htmlContent, 'utf8');
 
     // 目录型跳板：public/[slug]/index.html
     const slugDir = path.resolve(PUBLIC_DIR, slug);
@@ -435,26 +444,26 @@ export async function main() {
     }
 
     redirectLines.push(`/${slug}  ${item.target}  302!`);
+    rootRedirectLines.push(`/${slug}  /go/${slug}.html  200`);
   }
 
-  // 确保 /public/Donttouchmyshit 在 Cloudflare Pages 等平台作为 Clean URL 正确响应
-  redirectLines.unshift('/public/Donttouchmyshit/*  /Donttouchmyshit/:splat  200');
-  redirectLines.unshift('/public/Donttouchmyshit  /public/Donttouchmyshit/  301!');
+  // /dtms/ 为真实目录入口，无需额外的 Clean URL 重写规则
 
-  // 9. 写入 public/_redirects
+  // 9. 写入 public/_redirects 与仓库根 _redirects（根目录部署时保持 /[slug] 可用）
   const redirectsContent = redirectLines.join('\n') + '\n';
   fs.writeFileSync(path.resolve(PUBLIC_DIR, '_redirects'), redirectsContent, 'utf8');
+  fs.writeFileSync(path.resolve(ROOT_DIR, '_redirects'), rootRedirectLines.join('\n') + '\n', 'utf8');
   if (fs.existsSync(DIST_DIR)) {
     fs.writeFileSync(path.resolve(DIST_DIR, '_redirects'), redirectsContent, 'utf8');
 
-    // 保证 dist 生产打包包含 public/Donttouchmyshit 路径
-    const distPublicDont = path.resolve(DIST_DIR, 'public/Donttouchmyshit');
-    if (!fs.existsSync(distPublicDont)) {
-      fs.mkdirSync(distPublicDont, { recursive: true });
+    // 保证 dist 生产打包包含 /dtms/ CMS 入口
+    const distCmsDir = path.resolve(DIST_DIR, 'dtms');
+    if (!fs.existsSync(distCmsDir)) {
+      fs.mkdirSync(distCmsDir, { recursive: true });
     }
-    const adminHtml = path.resolve(PUBLIC_DIR, 'Donttouchmyshit/index.html');
+    const adminHtml = path.resolve(ROOT_DIR, 'dtms/index.html');
     if (fs.existsSync(adminHtml)) {
-      fs.copyFileSync(adminHtml, path.resolve(distPublicDont, 'index.html'));
+      fs.copyFileSync(adminHtml, path.resolve(distCmsDir, 'index.html'));
     }
   }
 

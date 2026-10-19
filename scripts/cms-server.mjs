@@ -9,7 +9,7 @@
  *
  * 统一访问方式：
  *   - 前端网站: http://localhost:404/
- *   - 后端 CMS: http://localhost:404/Donttouchmyshit
+ *   - 后端 CMS: http://localhost:404/dtms/
  *
  * 特性：
  * 1. 端口统一为 404，单服务同时承载前台展示、后台内容管理与短链路由；
@@ -46,7 +46,7 @@ const __dirname = path.dirname(__filename);
 
 const PRIMARY_PORT = 404;
 const FALLBACK_PORT = 4040;
-const ADMIN_HTML_FILE = path.resolve(ROOT_DIR, 'public/Donttouchmyshit/index.html');
+const ADMIN_HTML_FILE = path.resolve(ROOT_DIR, 'dtms/index.html');
 const ROOT_404_FILE = path.resolve(ROOT_DIR, '404.html');
 
 /**
@@ -244,9 +244,13 @@ async function handleRequest(req, res) {
     }
   }
 
-  // 2. 封禁旧 /admin 路径，彻底防扫描嗅探 (直接返回 404)
+  // 2. 封禁旧 /admin 与旧后台路径，彻底防扫描嗅探 (直接返回 404)
   const lowerPath = pathname.toLowerCase();
-  if (lowerPath === '/admin' || lowerPath.startsWith('/admin/')) {
+  if (
+    lowerPath === '/admin' || lowerPath.startsWith('/admin/') ||
+    lowerPath === '/donttouchmyshit' || lowerPath.startsWith('/donttouchmyshit/') ||
+    lowerPath === '/public/donttouchmyshit' || lowerPath.startsWith('/public/donttouchmyshit/')
+  ) {
     if (fs.existsSync(ROOT_404_FILE)) {
       res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
       fs.createReadStream(ROOT_404_FILE).pipe(res);
@@ -257,14 +261,14 @@ async function handleRequest(req, res) {
     return;
   }
 
-  // 3. 后端 CMS 访问: /Donttouchmyshit 与 /public/Donttouchmyshit/ (支持大小写自适应，防扫描)
+  // 3. 后端 CMS 访问: /dtms/ (支持大小写自适应，防扫描)
   if (
-    lowerPath === '/donttouchmyshit' ||
-    lowerPath === '/donttouchmyshit/' ||
-    lowerPath === '/donttouchmyshit/index.html'
+    lowerPath === '/dtms' ||
+    lowerPath === '/dtms/' ||
+    lowerPath === '/dtms/index.html'
   ) {
-    if (pathname !== '/Donttouchmyshit/') {
-      res.writeHead(301, { Location: '/Donttouchmyshit/' });
+    if (pathname !== '/dtms/') {
+      res.writeHead(301, { Location: '/dtms/' });
       res.end();
       return;
     }
@@ -272,26 +276,7 @@ async function handleRequest(req, res) {
       return serveStaticFile(res, ADMIN_HTML_FILE);
     } else {
       res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end('CMS 前端文件未就绪，请确保 public/Donttouchmyshit/index.html 存在');
-      return;
-    }
-  }
-
-  if (
-    lowerPath === '/public/donttouchmyshit' ||
-    lowerPath === '/public/donttouchmyshit/' ||
-    lowerPath === '/public/donttouchmyshit/index.html'
-  ) {
-    if (pathname !== '/public/Donttouchmyshit/') {
-      res.writeHead(301, { Location: '/public/Donttouchmyshit/' });
-      res.end();
-      return;
-    }
-    if (fs.existsSync(ADMIN_HTML_FILE)) {
-      return serveStaticFile(res, ADMIN_HTML_FILE);
-    } else {
-      res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end('CMS 前端文件未就绪，请确保 public/Donttouchmyshit/index.html 存在');
+      res.end('CMS 前端文件未就绪，请确保 dtms/index.html 存在');
       return;
     }
   }
@@ -380,7 +365,7 @@ function startServer(port = PRIMARY_PORT) {
     console.log('\n======================================================');
     console.log(`🎉 家宽导航本地统一服务已成功启动！ (统一端口: ${port})`);
     console.log(`🌐 前端站点访问: \x1b[32mhttp://localhost:${port}/\x1b[0m`);
-    console.log(`🛠️ 后端 CMS 访问: \x1b[36mhttp://localhost:${port}/Donttouchmyshit\x1b[0m`);
+    console.log(`🛠️ 后端 CMS 访问: \x1b[36mhttp://localhost:${port}/dtms/\x1b[0m`);
     if (!isPrimary) {
       console.log(`\nℹ️  提示: 当前由于系统权限限制暂回退至端口 ${port}。`);
       console.log(`   执行 sudo npm run cms 即可直接启用 404 端口！`);
@@ -389,7 +374,7 @@ function startServer(port = PRIMARY_PORT) {
 
     // 支持 --open 参数自动打开浏览器
     if (process.argv.includes('--open')) {
-      const openUrl = `http://localhost:${port}/Donttouchmyshit`;
+      const openUrl = `http://localhost:${port}/dtms/`;
       const openCmd = process.platform === 'win32' ? `start ${openUrl}` : (process.platform === 'darwin' ? `open ${openUrl}` : `xdg-open ${openUrl}`);
       exec(openCmd, () => {});
     }

@@ -63,14 +63,18 @@ function cmsApiPlugin() {
           return;
         }
 
-        // 处理 /Donttouchmyshit 与 /public/Donttouchmyshit 访问规范化重定向
-        if (lowerPath === '/donttouchmyshit') {
-          res.writeHead(301, { Location: '/Donttouchmyshit/' });
-          res.end();
+        // CMS 入口统一为 /dtms/；旧后台路径直接 404，避免被扫描嗅探
+        if (
+          lowerPath === '/donttouchmyshit' || lowerPath.startsWith('/donttouchmyshit/') ||
+          lowerPath === '/public/donttouchmyshit' || lowerPath.startsWith('/public/donttouchmyshit/')
+        ) {
+          res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+          res.end('404 Not Found');
           return;
         }
-        if (lowerPath === '/public/donttouchmyshit') {
-          res.writeHead(301, { Location: '/public/Donttouchmyshit/' });
+        // 规范化 /dtms 与 /dtms/index.html 到目录入口
+        if (lowerPath === '/dtms' || lowerPath === '/dtms/index.html') {
+          res.writeHead(301, { Location: '/dtms/' });
           res.end();
           return;
         }
@@ -203,13 +207,13 @@ function syncJsPlugin() {
     },
     closeBundle() {
       try {
-        const distPublicDont = resolve(__dirname, 'dist/public/Donttouchmyshit');
-        if (!fs.existsSync(distPublicDont)) {
-          fs.mkdirSync(distPublicDont, { recursive: true });
+        const distCmsDir = resolve(__dirname, 'dist/dtms');
+        if (!fs.existsSync(distCmsDir)) {
+          fs.mkdirSync(distCmsDir, { recursive: true });
         }
-        const adminHtml = resolve(__dirname, 'public/Donttouchmyshit/index.html');
+        const adminHtml = resolve(__dirname, 'dtms/index.html');
         if (fs.existsSync(adminHtml)) {
-          fs.copyFileSync(adminHtml, resolve(distPublicDont, 'index.html'));
+          fs.copyFileSync(adminHtml, resolve(distCmsDir, 'index.html'));
         }
       } catch (e) {}
     }
@@ -228,7 +232,7 @@ export default defineConfig(async ({ command }) => {
       console.log('\x1b[36m💡 若需直接启用 404 端口，请执行一次以下授权命令（推荐）：\x1b[0m');
       console.log('   \x1b[32msudo setcap \'cap_net_bind_service=+ep\' $(which node)\x1b[0m');
       console.log('   或使用管理员身份运行: \x1b[32msudo npm run dev\x1b[0m');
-      console.log(`\x1b[35m🔄 正在自动回退至端口 ${port}（前端: http://localhost:${port} ，CMS: http://localhost:${port}/Donttouchmyshit）\x1b[0m\n`);
+      console.log(`\x1b[35m🔄 正在自动回退至端口 ${port}（前端: http://localhost:${port} ，CMS: http://localhost:${port}/dtms/）\x1b[0m\n`);
     }
   }
 

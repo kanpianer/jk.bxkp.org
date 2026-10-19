@@ -1237,9 +1237,9 @@
                     }
                 } catch (_) {}
 
-                // 在新标签页打开后台内容管理页面：域名/public/Donttouchmyshit/
+                // 在新标签页打开后台内容管理页面：域名/dtms/
                 const origin = window.location.origin || `${window.location.protocol}//${window.location.host}`;
-                const targetUrl = `${origin}/public/Donttouchmyshit/`;
+                const targetUrl = `${origin}/dtms/`;
 
                 const newWindow = window.open(targetUrl, '_blank');
 

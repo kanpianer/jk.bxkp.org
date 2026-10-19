@@ -5,7 +5,7 @@
  *
  * 为什么要单独抽出来：
  * 本项目的短链产物既会被 Node 构建脚本 (scripts/generate-links.js) 生成，
- * 也会被浏览器端在线 CMS (public/Donttouchmyshit/index.html) 直接合成并提交到 GitHub。
+ * 也会被浏览器端在线 CMS (dtms/index.html) 直接合成并提交到 GitHub。
  * 两边若各写一份模板，就会长期漂移（历史上正因为如此，新增短链没有生成跳板页而 404）。
  * 因此这里提供一份纯 ES 模块，不依赖 DOM / Node API，两端共用，保证产物逐字节一致。
  */
