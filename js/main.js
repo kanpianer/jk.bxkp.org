@@ -1188,21 +1188,36 @@
         }
     }
 
-    // 9. 网页空白处连续点击5次直达内容管理后台 (CMS) 彩蛋
+    // 9. 网页空白处快速连续点击5次直达内容管理后台 (CMS) 彩蛋
     let isSecretEntranceInitialized = false;
 
     function initCmsSecretEntrance() {
         if (isSecretEntranceInitialized) return;
         isSecretEntranceInitialized = true;
 
-        let blankClickCount = 0;
+        let clickTimestamps = [];
         let resetTimer = null;
         const TARGET_CLICKS = 5;
-        const MAX_INTERVAL = 1000; // 连续点击的最大时间间隔 (毫秒)
+        const MAX_CLICK_INTERVAL = 450; // 单次连击最大允许间隔 (毫秒)
+        const MAX_TOTAL_DURATION = 1600; // 5次连击最大总耗时 (毫秒)
+
+        function resetClicks() {
+            clickTimestamps = [];
+            if (resetTimer) {
+                clearTimeout(resetTimer);
+                resetTimer = null;
+            }
+        }
 
         document.addEventListener('click', (e) => {
             // 仅响应鼠标主键（左键）或触控点击
             if (e.button !== 0) return;
+
+            // 若弹窗打开或点击了可交互元素，立即重置计数
+            if (document.body.classList.contains('guide-modal-open')) {
+                resetClicks();
+                return;
+            }
 
             // 判断点击目标是否属于可交互元素或组件
             const interactiveElement = e.target.closest(
@@ -1211,53 +1226,61 @@
 
             // 若点击了可交互元素，立即重置计数
             if (interactiveElement) {
-                blankClickCount = 0;
-                if (resetTimer) {
-                    clearTimeout(resetTimer);
-                    resetTimer = null;
-                }
+                resetClicks();
                 return;
             }
 
-            // 属于网页空白区域点击
+            const now = Date.now();
+
+            // 若距离上次点击超过最大允许单次间隔，则重置连击计数
+            if (clickTimestamps.length > 0) {
+                const lastClick = clickTimestamps[clickTimestamps.length - 1];
+                if (now - lastClick > MAX_CLICK_INTERVAL) {
+                    resetClicks();
+                }
+            }
+
             if (resetTimer) {
                 clearTimeout(resetTimer);
             }
 
-            blankClickCount++;
+            clickTimestamps.push(now);
 
-            if (blankClickCount >= TARGET_CLICKS) {
-                blankClickCount = 0;
-                resetTimer = null;
+            // 设置超时自动重置定时器
+            resetTimer = setTimeout(resetClicks, MAX_CLICK_INTERVAL);
 
-                // 清除多次连击可能产生的文本选中高亮
-                try {
-                    if (window.getSelection) {
-                        window.getSelection().removeAllRanges();
+            // 判断是否达到目标连击次数（必须快速连续点击5次）
+            if (clickTimestamps.length >= TARGET_CLICKS) {
+                const firstClick = clickTimestamps[0];
+                const totalDuration = now - firstClick;
+                resetClicks();
+
+                // 严格校验总跨度时间，必须是快速连续点击
+                if (totalDuration <= MAX_TOTAL_DURATION) {
+                    // 清除多次连击可能产生的文本选中高亮
+                    try {
+                        if (window.getSelection) {
+                            window.getSelection().removeAllRanges();
+                        }
+                    } catch (_) {}
+
+                    // 在新标签页打开后台内容管理页面：域名/dtms/
+                    const origin = window.location.origin || `${window.location.protocol}//${window.location.host}`;
+                    const targetUrl = `${origin}/dtms/`;
+
+                    const newWindow = window.open(targetUrl, '_blank');
+
+                    // 针对部分浏览器拦截 window.open 的兜底容灾处理
+                    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                        const fallbackLink = document.createElement('a');
+                        fallbackLink.href = targetUrl;
+                        fallbackLink.target = '_blank';
+                        fallbackLink.rel = 'noopener noreferrer';
+                        document.body.appendChild(fallbackLink);
+                        fallbackLink.click();
+                        document.body.removeChild(fallbackLink);
                     }
-                } catch (_) {}
-
-                // 在新标签页打开后台内容管理页面：域名/dtms/
-                const origin = window.location.origin || `${window.location.protocol}//${window.location.host}`;
-                const targetUrl = `${origin}/dtms/`;
-
-                const newWindow = window.open(targetUrl, '_blank');
-
-                // 针对部分浏览器拦截 window.open 的兜底容灾处理
-                if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-                    const fallbackLink = document.createElement('a');
-                    fallbackLink.href = targetUrl;
-                    fallbackLink.target = '_blank';
-                    fallbackLink.rel = 'noopener noreferrer';
-                    document.body.appendChild(fallbackLink);
-                    fallbackLink.click();
-                    document.body.removeChild(fallbackLink);
                 }
-            } else {
-                resetTimer = setTimeout(() => {
-                    blankClickCount = 0;
-                    resetTimer = null;
-                }, MAX_INTERVAL);
             }
         }, true);
     }
