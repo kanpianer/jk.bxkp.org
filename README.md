@@ -25,12 +25,12 @@
 
 | 站点名称 | 推荐级别 | 特性标签 | 价格 / 规格起步 | 快速访问短链 | 官方直达链接 |
 | :--- | :---: | :--- | :--- | :--- | :--- |
-| **E-IX** | ⭐ 重点推荐 | `专线` `非家宽` `新疆优化` | ¥25/月 150GB 起 | [jiakuan.link/eix](https://jiakuan.link/eix) | [直达官网](https://ap.cdn.e-ix.com/#/register?code=w56accjm) |
-| **MESL** | ⭐ 重点推荐 | `专线` `新疆优化` | ¥50/月 500GB 起 | [jiakuan.link/mesl](https://jiakuan.link/mesl) | [直达官网](https://dash.makemesl.com/#/register?code=tMEAQMp0) |
+| **SS-ID** | ⭐ 重点推荐 | `专线` `非家宽` | ¥20/月 100GB 起 | [jiakuan.link/ssid](https://jiakuan.link/ssid) | [直达官网](https://qe.newssid.com/#/register?code=fdRMww9M) |
 | **SNTP** | ⭐ 重点推荐 | `专线` `非家宽` `Emby` | ¥18/月 100GB 起 | [jiakuan.link/sntp](https://jiakuan.link/sntp) | [直达官网](https://ncdn1.sntp.uk/auth/register?code=zsyVQ1fa) |
-| **rancho** | 精选 | `专线` `Emby` | 68元/月 512GB 起 | [jiakuan.link/rancho](https://jiakuan.link/rancho) | [直达官网](https://mccloud.gay/#/register?code=jMKFtNbr) |
-| **TAG** | 精选 | `专线` `卫星网络` | ¥114/月 500GB 起 | [jiakuan.link/tag](https://jiakuan.link/tag) | [直达官网](https://tagss.pro/#/auth/lCnWmez3) |
-| **SS-ID** | 精选 | `专线` `非家宽` | ¥20/月 100GB 起 | [jiakuan.link/ssid](https://jiakuan.link/ssid) | [直达官网](https://qe.newssid.com/#/register?code=fdRMww9M) |
+| **rancho** | ⭐ 重点推荐 | `专线` `Emby` | 68元/月 512GB 起 | [jiakuan.link/rancho](https://jiakuan.link/rancho) | [直达官网](https://mccloud.gay/#/register?code=jMKFtNbr) |
+| **BiuBiu** | 精选 | `精品线路` `非家宽` | ¥26/月 50GB 起 | [jiakuan.link/biu](https://jiakuan.link/biu) | [直达官网](https://biubiu.one/#/register?code=9zhyjLWY) |
+| **Bitz Net** | 精选 | `专线` `非家宽` | ¥ 69.99/季 80GB/月 起 | [jiakuan.link/bitz](https://jiakuan.link/bitz) | [直达官网](https://red.bnaffred.com/#/register?code=Qc3PL2kS) |
+| **SSRDOG** | 精选 | `专线` `非家宽` | ¥105/季 150GB/季 起 | [jiakuan.link/dog](https://jiakuan.link/dog) | [直达官网](https://st2.hosbb.com/#/register?code=iqLoMSct) |
 
 ### 机场推荐 (Airport)
 
