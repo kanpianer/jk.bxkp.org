@@ -7,7 +7,7 @@
     "dev": "vite --host --open",
     "prebuild": "node scripts/generate-links.js",
     "build": "vite build",
-    "preview": "vite preview",
+    "preview": "vite preview --host",
     "update-links": "node scripts/generate-links.js",
     "cms": "node --watch scripts/cms-server.mjs"
   },

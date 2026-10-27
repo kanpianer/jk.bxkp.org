@@ -21,6 +21,7 @@
 import http from 'http';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { fileURLToPath } from 'url';
 import { exec } from 'child_process';
 import {
@@ -362,10 +363,26 @@ function startServer(port = PRIMARY_PORT) {
 
   server.listen(port, '0.0.0.0', () => {
     const isPrimary = (port === PRIMARY_PORT);
+    const interfaces = os.networkInterfaces();
+    const lanIps = [];
+    for (const name of Object.keys(interfaces)) {
+      for (const net of interfaces[name] || []) {
+        if (net.family === 'IPv4' && !net.internal) {
+          lanIps.push(net.address);
+        }
+      }
+    }
+
     console.log('\n======================================================');
     console.log(`🎉 家宽导航本地统一服务已成功启动！ (统一端口: ${port})`);
-    console.log(`🌐 前端站点访问: \x1b[32mhttp://localhost:${port}/\x1b[0m`);
-    console.log(`🛠️ 后端 CMS 访问: \x1b[36mhttp://localhost:${port}/dtms/\x1b[0m`);
+    console.log(`🏠 本地前端站点: \x1b[32mhttp://localhost:${port}/\x1b[0m`);
+    lanIps.forEach(ip => {
+      console.log(`📱 局域网前端:   \x1b[32mhttp://${ip}:${port}/\x1b[0m`);
+    });
+    console.log(`🛠️ 本地 CMS 管理: \x1b[36mhttp://localhost:${port}/dtms/\x1b[0m`);
+    lanIps.forEach(ip => {
+      console.log(`📱 局域网 CMS:   \x1b[36mhttp://${ip}:${port}/dtms/\x1b[0m`);
+    });
     if (!isPrimary) {
       console.log(`\nℹ️  提示: 当前由于系统权限限制暂回退至端口 ${port}。`);
       console.log(`   执行 sudo npm run cms 即可直接启用 404 端口！`);

@@ -1603,12 +1603,27 @@
         <!-- 2. 指南弹窗管理面板 -->
         <section id="tab-modal" class="tab-panel">
             <div style="max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                     <div>
                         <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0;">指南弹窗内容维护</h2>
-                        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 4px 0 0;">对应首页左上角“指南”按钮展开的模态弹窗内避坑提示与推荐工具列表</p>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 4px 0 0;">对应首页左上角“指南”按钮展开的模态弹窗，针对“老站”、“机场(家宽)”、“VPS”不同分类定制独立指南与条目增删改</p>
                     </div>
-                    <button id="btn-add-modal-item" class="btn btn-success btn-sm">➕ 添加指引条目</button>
+                </div>
+
+                <!-- 分类选择器 -->
+                <div class="filter-group" id="guide-category-filter">
+                    <button type="button" class="filter-btn active" data-guide-category="noble" onclick="switchGuideCategory('noble')">老站指南 (<span id="count-guide-noble">0</span>)</button>
+                    <button type="button" class="filter-btn" data-guide-category="airport" onclick="switchGuideCategory('airport')">家宽指南 (<span id="count-guide-airport">0</span>)</button>
+                    <button type="button" class="filter-btn" data-guide-category="vps" onclick="switchGuideCategory('vps')">VPS指南 (<span id="count-guide-vps">0</span>)</button>
+                </div>
+
+                <!-- 当前分类指南标题与新增操作栏 -->
+                <div class="card-table-wrap" style="padding: 16px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 280px;">
+                        <label style="font-weight: 600; font-size: 0.9rem; margin: 0; white-space: nowrap;">指南名称 / 按钮标题：</label>
+                        <input type="text" id="guide-active-title-input" class="form-control" style="max-width: 280px;" placeholder="例如：家宽指南" oninput="updateActiveGuideTitle(this.value)">
+                    </div>
+                    <button id="btn-add-modal-item" class="btn btn-success btn-sm" type="button" onclick="addNewGuideItem()">➕ 添加指引条目</button>
                 </div>
 
                 <div id="modal-items-container" style="display: flex; flex-direction: column; gap: 14px;">
@@ -1964,6 +1979,7 @@
             // 全局状态管理
             let cmsData = {
                 cards: [],
+                categoryGuides: null,
                 modalItems: [],
                 faqItems: [],
                 guideArticles: [],
@@ -2110,6 +2126,10 @@
             }
 
             function clientParseModalItems(html) {
+                const categoryGuides = clientParseCategoryGuides(html);
+                if (categoryGuides && categoryGuides.airport && Array.isArray(categoryGuides.airport.items)) {
+                    return categoryGuides.airport.items;
+                }
                 const modalBodyRegex = /<div class=["']guide-modal-body["']>([\s\S]*?)<\/div>\s*<\/div>\s*<\/dialog>/i;
                 const match = html.match(modalBodyRegex);
                 if (!match) return [];
@@ -2121,6 +2141,90 @@
                         content: textMatch ? textMatch[1].trim() : ''
                     };
                 });
+            }
+
+            function clientParseCategoryGuides(html) {
+                const defaultGuides = {
+                    noble: {
+                        title: '老站指南',
+                        items: [
+                            { index: 1, content: '这里收集的都是开业年限较久，口碑较好的机场，当然，也意味着价格普遍更贵。这里面的机场相对更省心。' },
+                            { index: 2, content: '谨忌：机场跑路，投诉无门，优先月付。' }
+                        ]
+                    },
+                    airport: {
+                        title: '家宽指南',
+                        items: [
+                            { index: 1, content: '这里收集的都是包含家宽节点的机场，卡片上不同颜色的标签代表机场提供的不同服务和节点的不同属性。' },
+                            { index: 2, content: '如果目前手头不宽裕，<a href="https://fan.jiakuan.link/" target="_blank" rel="noopener">不想翻墙</a> 里收集了十几款免费的翻墙工具，也可以作为备用梯子。' },
+                            { index: 3, content: '家宽节点并不一定就比机房节点“干净”，做敏感业务前，最好先检测IP质量，或用小号测试。<br><span class="guide-sub-link">IP质量检测网站：<a href="https://ipsuper.com/" target="_blank" rel="noopener">IPSuper</a>、<a href="https://ip.cx" target="_blank" rel="noopener">IP.cx</a>、<a href="https://ipok.io/" target="_blank" rel="noopener">IPOK</a></span>' }
+                        ]
+                    },
+                    vps: {
+                        title: 'VPS指南',
+                        items: [
+                            { index: 1, content: '这里收集的都是VPS服务器，包括NAT：也就是多人共享的VPS，价格会便宜很多。' },
+                            { index: 2, content: '小白购买VPS后可到开源搭建工具 <a href="https://1click.qstz.ccwu.cc/" target="_blank" rel="noopener">一贱建节点</a> 根据提示搭建节点，不需要任何技术，简单地复制粘贴即可完成搭建。强烈建议自行搜索教程搭建。' }
+                        ]
+                    }
+                };
+
+                const bodyRegex = /<div class=["']guide-modal-body["']([^>]*)>([\s\S]*?<\/ol>\s*)<\/div>/gi;
+                const matches = [...html.matchAll(bodyRegex)];
+
+                if (!matches || matches.length === 0) {
+                    const singleRegex = /<div class=["']guide-modal-body["']>([\s\S]*?)<\/div>\s*<\/div>\s*<\/dialog>/i;
+                    const singleMatch = html.match(singleRegex);
+                    if (singleMatch) {
+                        const listItems = [...singleMatch[1].matchAll(/<li class=["']guide-item["']>([\s\S]*?)<\/li>/gi)];
+                        const items = listItems.map((m, idx) => {
+                            const textMatch = m[1].match(/<div class=["']guide-item-text["']>([\s\S]*?)<\/div>/i);
+                            return { index: idx + 1, content: textMatch ? textMatch[1].trim() : '' };
+                        });
+                        return {
+                            ...defaultGuides,
+                            airport: { title: '家宽指南', items }
+                        };
+                    }
+                    return defaultGuides;
+                }
+
+                const guides = {};
+                for (const match of matches) {
+                    const attrs = match[1];
+                    const bodyContent = match[2];
+
+                    const catMatch = attrs.match(/data-category=["']([^"']+)["']/i);
+                    const titleMatch = attrs.match(/data-title=["']([^"']+)["']/i);
+
+                    const category = catMatch ? catMatch[1] : 'airport';
+                    let fallbackTitle = '家宽指南';
+                    if (category === 'noble') fallbackTitle = '老站指南';
+                    else if (category === 'vps') fallbackTitle = 'VPS指南';
+                    const title = titleMatch ? titleMatch[1] : fallbackTitle;
+
+                    const listItems = [...bodyContent.matchAll(/<li class=["']guide-item["']>([\s\S]*?)<\/li>/gi)];
+                    const items = listItems.map((m, idx) => {
+                        const textMatch = m[1].match(/<div class=["']guide-item-text["']>([\s\S]*?)<\/div>/i);
+                        return {
+                            index: idx + 1,
+                            content: textMatch ? textMatch[1].trim() : ''
+                        };
+                    });
+
+                    guides[category] = {
+                        title,
+                        items
+                    };
+                }
+
+                for (const cat of ['noble', 'airport', 'vps']) {
+                    if (!guides[cat]) {
+                        guides[cat] = defaultGuides[cat];
+                    }
+                }
+
+                return guides;
             }
 
             function clientParseFaqItems(html) {
@@ -2207,6 +2311,44 @@
                 return `            <div class="button-stack" role="navigation">\n\n${sections.join('\n\n\n')}\n\n            </div>`;
             }
 
+            function clientRenderCategoryGuidesHtml(categoryGuides) {
+                const categories = Object.keys(categoryGuides);
+                const order = ['noble', 'airport', 'vps'];
+                categories.sort((a, b) => {
+                    const ia = order.indexOf(a);
+                    const ib = order.indexOf(b);
+                    if (ia !== -1 && ib !== -1) return ia - ib;
+                    if (ia !== -1) return -1;
+                    if (ib !== -1) return 1;
+                    return a.localeCompare(b);
+                });
+
+                const sections = [];
+                for (const cat of categories) {
+                    const guide = categoryGuides[cat];
+                    const isAirport = (cat === 'airport');
+                    const displayStyle = isAirport ? '' : ' style="display: none;"';
+                    const title = guide.title || (cat === 'noble' ? '老站指南' : (cat === 'vps' ? 'VPS指南' : '家宽指南'));
+                    const items = guide.items || [];
+
+                    const itemsHtml = items.map((it, idx) => `                    <li class="guide-item">
+                        <span class="guide-item-badge">${idx + 1}</span>
+                        <div class="guide-item-text">
+                            ${it.content}
+                        </div>
+                    </li>`).join('\n');
+
+                    sections.push(`            <!-- 指南内容：${title} -->
+            <div class="guide-modal-body" data-category="${cat}" data-title="${title}"${displayStyle}>
+                <ol class="guide-list">
+${itemsHtml}
+                </ol>
+            </div>`);
+                }
+
+                return sections.join('\n');
+            }
+
             function clientRenderGuideModalBodyHtml(items) {
                 const itemsHtml = items.map((it, idx) => `                    <li class="guide-item">
                         <span class="guide-item-badge">${idx + 1}</span>
@@ -2233,7 +2375,7 @@ ${itemsHtml}
                 return `                    <div class="faq-accordion">\n${faqsHtml}\n                    </div>`;
             }
 
-            function clientReconstructIndexHtml(originalHtml, cards, modalItems, faqItems) {
+            function clientReconstructIndexHtml(originalHtml, cards, categoryGuidesOrItems, faqItems) {
                 let html = originalHtml;
 
                 if (Array.isArray(cards)) {
@@ -2249,10 +2391,25 @@ ${itemsHtml}
                     }
                 }
 
-                if (Array.isArray(modalItems)) {
+                if (categoryGuidesOrItems && typeof categoryGuidesOrItems === 'object' && !Array.isArray(categoryGuidesOrItems)) {
+                    const modalBodiesRegionRegex = /(<button id=["']guide-modal-close["'][\s\S]*?<\/button>\s*<\/div>)([\s\S]*?)(<\/div>\s*<\/dialog>)/i;
+                    const match = html.match(modalBodiesRegionRegex);
+                    if (match) {
+                        const newBodiesHtml = clientRenderCategoryGuidesHtml(categoryGuidesOrItems);
+                        html = html.replace(modalBodiesRegionRegex, `$1\n${newBodiesHtml}\n        $3`);
+                    }
+                    if (categoryGuidesOrItems.airport && categoryGuidesOrItems.airport.title) {
+                        const airportTitle = categoryGuidesOrItems.airport.title;
+                        html = html.replace(/<span id=["']guide-toggle-text["']>[\s\S]*?<\/span>/i, `<span id="guide-toggle-text">${airportTitle}</span>`);
+                        html = html.replace(/<button id=["']guide-toggle["'][^>]*>/i, (m) => {
+                            return m.replace(/aria-label=["'][^"']*["']/i, `aria-label="${airportTitle}"`).replace(/title=["'][^"']*["']/i, `title="${airportTitle}"`);
+                        });
+                        html = html.replace(/<h2 id=["']guide-modal-title["'][^>]*>[\s\S]*?<\/h2>/i, `<h2 id="guide-modal-title" class="guide-modal-title">${airportTitle}</h2>`);
+                    }
+                } else if (Array.isArray(categoryGuidesOrItems)) {
                     const modalBodyRegex = /<div class=["']guide-modal-body["']>([\s\S]*?)<\/div>\s*<\/div>\s*<\/dialog>/i;
                     if (html.match(modalBodyRegex)) {
-                        const newModalBody = clientRenderGuideModalBodyHtml(modalItems);
+                        const newModalBody = clientRenderGuideModalBodyHtml(categoryGuidesOrItems);
                         html = html.replace(modalBodyRegex, `${newModalBody}\n        </div>\n    </dialog>`);
                     }
                 }
@@ -2678,7 +2835,8 @@ ${defaultBody}
                     ]);
 
                     const cards = clientParseCards(htmlText, mapJson);
-                    const modalItems = clientParseModalItems(htmlText);
+                    const categoryGuides = clientParseCategoryGuides(htmlText);
+                    const modalItems = categoryGuides.airport ? categoryGuides.airport.items : clientParseModalItems(htmlText);
                     const faqItems = clientParseFaqItems(htmlText);
                     const swVersion = clientParseSwVersion(swText);
 
@@ -2692,6 +2850,7 @@ ${defaultBody}
 
                     cmsData = {
                         cards,
+                        categoryGuides,
                         modalItems,
                         faqItems,
                         guideArticles,
@@ -3298,41 +3457,126 @@ ${defaultBody}
                 reader.readAsDataURL(file);
             });
 
-            // 3. 指南弹窗内容管理
+            // 3. 指南弹窗内容管理 (老站指南 / 家宽指南 / VPS指南 多分类独立维护)
+            let currentGuideCategory = 'noble';
+
+            window.switchGuideCategory = function(cat) {
+                currentGuideCategory = cat;
+                const filterBtns = document.querySelectorAll('#guide-category-filter .filter-btn');
+                filterBtns.forEach(b => {
+                    b.classList.toggle('active', b.dataset.guideCategory === cat);
+                });
+                renderModalItems();
+            };
+
+            window.updateActiveGuideTitle = function(val) {
+                if (!cmsData.categoryGuides) cmsData.categoryGuides = {};
+                if (!cmsData.categoryGuides[currentGuideCategory]) {
+                    cmsData.categoryGuides[currentGuideCategory] = { title: '', items: [] };
+                }
+                cmsData.categoryGuides[currentGuideCategory].title = val.trim();
+            };
+
+            window.updateModalItem = function(idx, val) {
+                if (cmsData.categoryGuides && cmsData.categoryGuides[currentGuideCategory]) {
+                    cmsData.categoryGuides[currentGuideCategory].items[idx].content = val.trim();
+                    const preview = document.getElementById(`guide-preview-${idx}`);
+                    if (preview) preview.innerHTML = val.trim();
+                }
+            };
+
+            window.deleteModalItem = function(idx) {
+                if (!confirm(`确定要删除条目 ${idx + 1} 吗？`)) return;
+                if (cmsData.categoryGuides && cmsData.categoryGuides[currentGuideCategory]) {
+                    cmsData.categoryGuides[currentGuideCategory].items.splice(idx, 1);
+                    renderModalItems();
+                }
+            };
+
+            window.moveModalItem = function(idx, offset) {
+                if (!cmsData.categoryGuides || !cmsData.categoryGuides[currentGuideCategory]) return;
+                const items = cmsData.categoryGuides[currentGuideCategory].items;
+                const targetIdx = idx + offset;
+                if (targetIdx < 0 || targetIdx >= items.length) return;
+                const temp = items[idx];
+                items[idx] = items[targetIdx];
+                items[targetIdx] = temp;
+                renderModalItems();
+            };
+
+            window.addNewGuideItem = function() {
+                if (!cmsData.categoryGuides) cmsData.categoryGuides = {};
+                if (!cmsData.categoryGuides[currentGuideCategory]) {
+                    cmsData.categoryGuides[currentGuideCategory] = { title: '', items: [] };
+                }
+                const items = cmsData.categoryGuides[currentGuideCategory].items;
+                items.push({
+                    index: items.length + 1,
+                    content: '新增指南内容描述。<br><span class="guide-sub-link">相关链接：<a href="https://..." target="_blank" rel="noopener">链接标题</a></span>'
+                });
+                renderModalItems();
+            };
+
             function renderModalItems() {
                 const container = document.getElementById('modal-items-container');
+                if (!container) return;
                 container.innerHTML = '';
-                (cmsData.modalItems || []).forEach((item, idx) => {
+
+                // 兼容兜底并初始化结构
+                if (!cmsData.categoryGuides) {
+                    cmsData.categoryGuides = {
+                        noble: { title: '老站指南', items: [] },
+                        airport: { title: '家宽指南', items: (cmsData.modalItems || []) },
+                        vps: { title: 'VPS指南', items: [] }
+                    };
+                }
+
+                // 更新分类数量徽章
+                const countNoble = document.getElementById('count-guide-noble');
+                const countAirport = document.getElementById('count-guide-airport');
+                const countVps = document.getElementById('count-guide-vps');
+                if (countNoble) countNoble.textContent = (cmsData.categoryGuides.noble?.items || []).length;
+                if (countAirport) countAirport.textContent = (cmsData.categoryGuides.airport?.items || []).length;
+                if (countVps) countVps.textContent = (cmsData.categoryGuides.vps?.items || []).length;
+
+                const guideObj = cmsData.categoryGuides[currentGuideCategory] || { title: '', items: [] };
+                const titleInput = document.getElementById('guide-active-title-input');
+                if (titleInput) {
+                    titleInput.value = guideObj.title || (currentGuideCategory === 'noble' ? '老站指南' : (currentGuideCategory === 'vps' ? 'VPS指南' : '家宽指南'));
+                }
+
+                const items = guideObj.items || [];
+                if (items.length === 0) {
+                    container.innerHTML = `
+                        <div class="card-table-wrap" style="padding: 32px; text-align: center; color: var(--text-muted);">
+                            当前指南暂无条目，请点击上方“➕ 添加指引条目”添加新内容。
+                        </div>
+                    `;
+                    return;
+                }
+
+                items.forEach((item, idx) => {
                     const box = document.createElement('div');
                     box.className = 'card-table-wrap';
                     box.style.padding = '16px';
                     box.innerHTML = `
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <span style="font-weight: 700; color: var(--primary);">条目 ${idx + 1}</span>
-                            <button class="btn btn-sm btn-danger" onclick="deleteModalItem(${idx})">🗑️ 删除条目</button>
+                            <div style="display: flex; gap: 6px;">
+                                <button type="button" class="btn btn-sm" onclick="moveModalItem(${idx}, -1)" ${idx === 0 ? 'disabled' : ''} title="上移">🔼 上移</button>
+                                <button type="button" class="btn btn-sm" onclick="moveModalItem(${idx}, 1)" ${idx === items.length - 1 ? 'disabled' : ''} title="下移">🔽 下移</button>
+                                <button type="button" class="btn btn-sm btn-danger" onclick="deleteModalItem(${idx})">🗑️ 删除条目</button>
+                            </div>
                         </div>
-                        <textarea class="form-control" style="min-height: 70px;" onchange="updateModalItem(${idx}, this.value)">${item.content || ''}</textarea>
+                        <textarea class="form-control" style="min-height: 80px; font-family: monospace; font-size: 0.9rem;" oninput="updateModalItem(${idx}, this.value)">${item.content || ''}</textarea>
+                        <div style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);">
+                            <strong>前台实时预览效果：</strong>
+                            <div id="guide-preview-${idx}" style="margin-top: 4px; padding: 10px 12px; background: rgba(15, 23, 42, 0.7); color: #ffffff; border-radius: 6px; font-size: 0.9rem; line-height: 1.5;">${item.content || ''}</div>
+                        </div>
                     `;
                     container.appendChild(box);
                 });
             }
-
-            window.updateModalItem = function(idx, val) {
-                cmsData.modalItems[idx].content = val.trim();
-            };
-
-            window.deleteModalItem = function(idx) {
-                cmsData.modalItems.splice(idx, 1);
-                renderModalItems();
-            };
-
-            document.getElementById('btn-add-modal-item').addEventListener('click', () => {
-                cmsData.modalItems.push({
-                    index: cmsData.modalItems.length + 1,
-                    content: '新增指南内容描述。<br><span class="guide-sub-link">相关链接：<a href="https://..." target="_blank" rel="noopener">链接标题</a></span>'
-                });
-                renderModalItems();
-            });
 
             // 4. FAQ 问答库管理
             function renderFaqItems() {
@@ -4206,7 +4450,8 @@ ${defaultBody}
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                                 cards: cmsData.cards,
-                                modalItems: cmsData.modalItems,
+                                categoryGuides: cmsData.categoryGuides,
+                                modalItems: (cmsData.categoryGuides && cmsData.categoryGuides.airport) ? cmsData.categoryGuides.airport.items : cmsData.modalItems,
                                 faqItems: cmsData.faqItems,
                                 guideArticles: cmsData.guideArticles,
                                 bumpSw
@@ -4265,7 +4510,7 @@ ${defaultBody}
                     ]);
 
                     // 2. 客户端合成更新后的 index.html
-                    const newIndexHtml = clientReconstructIndexHtml(indexHtmlBase, cmsData.cards, cmsData.modalItems, cmsData.faqItems);
+                    const newIndexHtml = clientReconstructIndexHtml(indexHtmlBase, cmsData.cards, cmsData.categoryGuides || cmsData.modalItems, cmsData.faqItems);
 
                     // 3. 客户端合成 links-map.json
                     const today = new Date().toISOString().split('T')[0];

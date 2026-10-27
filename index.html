@@ -209,12 +209,12 @@
     </script>
 
     <!-- 极简左上角指南按钮（全局常驻层，无背景、透明、极简图标+文字） -->
-    <button id="guide-toggle" class="guide-toggle-btn" type="button" aria-label="指南" title="指南">
+    <button id="guide-toggle" class="guide-toggle-btn" type="button" aria-label="家宽指南" title="家宽指南">
         <svg class="guide-icon" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
             <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
         </svg>
-        <span>指南</span>
+        <span id="guide-toggle-text">家宽指南</span>
     </button>
 
     <!-- 极简悬浮返回按钮（全局常驻层，在深度指南文章视图时显示） -->
@@ -260,7 +260,7 @@
                         <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
                         <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
                     </svg>
-                    <h2 id="guide-modal-title" class="guide-modal-title">指南</h2>
+                    <h2 id="guide-modal-title" class="guide-modal-title">家宽指南</h2>
                 </div>
                 <button id="guide-modal-close" class="guide-modal-close" type="button" aria-label="关闭" title="关闭">
                     <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" aria-hidden="true">
@@ -269,32 +269,60 @@
                     </svg>
                 </button>
             </div>
-                                                                                                                                                                                                                                                                                                                                                                                                            <div class="guide-modal-body">
+            <!-- 指南内容：老站指南 -->
+            <div class="guide-modal-body" data-category="noble" data-title="老站指南" style="display: none;">
                 <ol class="guide-list">
                     <li class="guide-item">
                         <span class="guide-item-badge">1</span>
                         <div class="guide-item-text">
-                            本站收录所有机场和VPS均包含家宽节点，除特殊声明。
+                            这里收集的都是开业年限较久，口碑较好的机场，当然，也意味着价格普遍更贵。这里面的机场相对更省心。
                         </div>
                     </li>
                     <li class="guide-item">
                         <span class="guide-item-badge">2</span>
                         <div class="guide-item-text">
-                            家宽节点并不一定就比机房节点“干净”，做敏感业务前，最好先检测IP质量。<br>
-                            <span class="guide-sub-link">IP检测网站：<a href="https://ipsuper.com/" target="_blank" rel="noopener">IPSuper</a></span>
+                            谨忌：机场跑路，投诉无门，优先月付。
+                        </div>
+                    </li>
+                </ol>
+            </div>
+            <!-- 指南内容：家宽指南 -->
+            <div class="guide-modal-body" data-category="airport" data-title="家宽指南">
+                <ol class="guide-list">
+                    <li class="guide-item">
+                        <span class="guide-item-badge">1</span>
+                        <div class="guide-item-text">
+                            这里收集的都是包含家宽节点的机场，卡片上不同颜色的标签代表机场提供的不同服务和节点的不同属性。
+                        </div>
+                    </li>
+                    <li class="guide-item">
+                        <span class="guide-item-badge">2</span>
+                        <div class="guide-item-text">
+                            如果目前手头不宽裕，<a href="https://fan.jiakuan.link/" target="_blank" rel="noopener">不想翻墙</a> 里收集了十几款免费的翻墙工具，也可以作为备用梯子。
                         </div>
                     </li>
                     <li class="guide-item">
                         <span class="guide-item-badge">3</span>
                         <div class="guide-item-text">
-                            始终推荐自己搭建节点，NAT机器的IP也比多数机场共用的人少。<br>
-                            <span class="guide-sub-link">开源搭建工具：<a href="https://1click.qstz.ccwu.cc/" target="_blank" rel="noopener">一贱建节点</a></span>
+                            家宽节点并不一定就比机房节点“干净”，做敏感业务前，最好先检测IP质量，或用小号测试。<br>
+                            <span class="guide-sub-link">IP质量检测网站：<a href="https://ipsuper.com/" target="_blank" rel="noopener">IPSuper</a>、<a href="https://ip.cx" target="_blank" rel="noopener">IP.cx</a>、<a href="https://ipok.io/" target="_blank" rel="noopener">IPOK</a></span>
+                        </div>
+                    </li>
+                </ol>
+            </div>
+            <!-- 指南内容：VPS指南 -->
+            <div class="guide-modal-body" data-category="vps" data-title="VPS指南" style="display: none;">
+                <ol class="guide-list">
+                    <li class="guide-item">
+                        <span class="guide-item-badge">1</span>
+                        <div class="guide-item-text">
+                            这里收集的都是VPS服务器，包括NAT：也就是多人共享的VPS，价格会便宜很多。
                         </div>
                     </li>
                     <li class="guide-item">
-                        <span class="guide-item-badge">4</span>
+                        <span class="guide-item-badge">2</span>
                         <div class="guide-item-text">
-                            如果目前手头不宽裕，<a href="https://fan.jiakuan.link/" target="_blank" rel="noopener">不想翻墙</a> 里收集了十几款免费的翻墙工具，也可以作为备用梯子。
+                            小白购买VPS后可到开源搭建工具 <a href="https://1click.qstz.ccwu.cc/" target="_blank" rel="noopener">一贱建节点</a> 根据提示搭建节点，不需要任何技术，简单地复制粘贴即可完成搭建。强烈建议自行搜索教程搭建。
                         </div>
                     </li>
                 </ol>

@@ -1817,6 +1817,85 @@ body.cards-falling .qr-popup {
 	}
 }
 
+/* ==========================================================================
+   首次访问黄色引导箭头：初始对准指南按钮 + 丝滑无停顿直飞 + 就位呼吸动效
+   ========================================================================== */
+.guide-arrow-hint {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 0;
+	height: 0;
+	z-index: 10001;
+	pointer-events: none;
+	overflow: visible;
+}
+
+.guide-arrow-stage {
+	position: absolute;
+	left: var(--start-x, 50vw);
+	top: var(--start-y, 50vh);
+	width: 36px;
+	height: 36px;
+	margin-left: -18px;
+	margin-top: -18px;
+	pointer-events: auto;
+	cursor: pointer;
+	user-select: none;
+	transform-origin: center center;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	will-change: transform, opacity;
+	animation: guideArrowFlight 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.guide-arrow-stage.is-arrived {
+	animation: guideArrowBreathe 1.8s ease-in-out infinite !important;
+}
+
+.guide-arrow-stage.is-dismissing {
+	transition: opacity 0.25s ease, transform 0.25s ease !important;
+	opacity: 0 !important;
+	transform: translate3d(var(--delta-x, 0), var(--delta-y, 0), 0) rotate(var(--arrow-angle, 0deg)) scale(0.5) translateY(-8px) !important;
+}
+
+.guide-arrow-svg {
+	width: 36px;
+	height: 36px;
+	fill: #fbbf24;
+	display: block;
+	filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 6px rgba(251, 191, 36, 0.85));
+}
+
+/* 核心飞行动画：起始点到终点一气呵成，平滑连续减速，全程零中途停顿 */
+@keyframes guideArrowFlight {
+	0% {
+		transform: translate3d(0, 0, 0) rotate(var(--arrow-angle, 0deg)) scale(0.7);
+		opacity: 0;
+	}
+	8% {
+		opacity: 1;
+		transform: translate3d(calc(var(--delta-x, 0) * 0.08), calc(var(--delta-y, 0) * 0.08), 0) rotate(var(--arrow-angle, 0deg)) scale(1);
+	}
+	100% {
+		transform: translate3d(var(--delta-x, 0), var(--delta-y, 0), 0) rotate(var(--arrow-angle, 0deg)) scale(1);
+		opacity: 1;
+	}
+}
+
+/* 终点停顿后沿对准角度的呼吸状动画（微移 + 微缩放 + 金黄色辉光） */
+@keyframes guideArrowBreathe {
+	0%, 100% {
+		transform: translate3d(var(--delta-x, 0), var(--delta-y, 0), 0) rotate(var(--arrow-angle, 0deg)) scale(1) translateY(0);
+		filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35)) drop-shadow(0 0 6px rgba(245, 158, 11, 0.7));
+	}
+	50% {
+		transform: translate3d(var(--delta-x, 0), var(--delta-y, 0), 0) rotate(var(--arrow-angle, 0deg)) scale(1.14) translateY(-6px);
+		filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.45)) drop-shadow(0 0 14px rgba(251, 191, 36, 0.95));
+	}
+}
+
 /* Guide Modal Dialog */
 .guide-modal {
 	position: fixed;

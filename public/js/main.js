@@ -152,6 +152,9 @@
 
         if (toggleBtn) {
             toggleBtn.addEventListener('click', () => {
+                if (typeof window.__dismissGuideArrow === 'function') {
+                    window.__dismissGuideArrow();
+                }
                 modal.showModal();
                 lockScroll();
             });
@@ -181,6 +184,185 @@
             }
         });
     }
+
+    // 2.5. 指南分类与标题联动
+    function updateGuideCategory(category) {
+        const guideToggle = document.getElementById('guide-toggle');
+        const guideToggleText = document.getElementById('guide-toggle-text') || (guideToggle ? guideToggle.querySelector('span') : null);
+        const modalTitle = document.getElementById('guide-modal-title');
+        const modalBodies = document.querySelectorAll('.guide-modal-body');
+
+        let activeBody = null;
+        modalBodies.forEach(body => {
+            const bodyCat = body.dataset.category;
+            if (bodyCat === category) {
+                body.style.display = 'block';
+                activeBody = body;
+            } else {
+                body.style.display = 'none';
+            }
+        });
+
+        const defaultTitle = (category === 'noble') ? '老站指南' : (category === 'vps' ? 'VPS指南' : '家宽指南');
+        const title = (activeBody && activeBody.dataset.title) ? activeBody.dataset.title : defaultTitle;
+
+        if (guideToggleText) {
+            guideToggleText.textContent = title;
+        }
+        if (guideToggle) {
+            guideToggle.setAttribute('aria-label', title);
+            guideToggle.setAttribute('title', title);
+        }
+        if (modalTitle) {
+            modalTitle.textContent = title;
+        }
+    }
+    window.__updateGuideCategory = updateGuideCategory;
+
+    // 2.6. 用户首次打开网站时，用黄色箭头图标飞向并指向指南按钮（带极速拖影残影与呼吸状动画）
+    function initGuideArrowPrompt() {
+        const STORAGE_KEY = 'jk_guide_arrow_seen';
+        try {
+            if (localStorage.getItem(STORAGE_KEY) === '1') {
+                return;
+            }
+        } catch (e) {}
+
+        const toggleBtn = document.getElementById('guide-toggle');
+        if (!toggleBtn) return;
+
+        // 计算目标位置与指向角度
+        function computeTarget() {
+            const rect = toggleBtn.getBoundingClientRect();
+            const btnCenterX = rect.left + rect.width / 2;
+            const btnCenterY = rect.top + rect.height / 2;
+
+            const startX = window.innerWidth / 2;
+            const startY = window.innerHeight / 2;
+
+            const dx = btnCenterX - startX;
+            const dy = btnCenterY - startY;
+            const dist = Math.hypot(dx, dy) || 1;
+            const ux = dx / dist;
+            const uy = dy / dist;
+
+            // 初始瞄准角度：由于基础 SVG 箭头默认垂直向上（-90deg），旋转角度 = atan2(dy, dx) * 180 / PI + 90
+            const angleRad = Math.atan2(dy, dx);
+            const rotDeg = angleRad * (180 / Math.PI) + 90;
+
+            // 停靠距离计算：沿直线反向回退，保证尖端与按钮边缘距离约 16px，绝对不发生触碰
+            const halfW = rect.width / 2;
+            const halfH = rect.height / 2;
+            const edgeDist = Math.hypot(halfW * Math.abs(ux), halfH * Math.abs(uy));
+            const stopDist = edgeDist + 16 + 18; // 16px间距 + 18px箭头中心至尖端半高
+
+            const targetX = btnCenterX - ux * stopDist;
+            const targetY = btnCenterY - uy * stopDist;
+
+            const deltaX = targetX - startX;
+            const deltaY = targetY - startY;
+
+            return {
+                startX: Math.round(startX),
+                startY: Math.round(startY),
+                targetX: Math.round(targetX),
+                targetY: Math.round(targetY),
+                deltaX: Math.round(deltaX),
+                deltaY: Math.round(deltaY),
+                rotDeg: Number(rotDeg.toFixed(2))
+            };
+        }
+
+        let container = document.getElementById('guide-arrow-hint');
+        if (container) container.remove();
+
+        container = document.createElement('div');
+        container.id = 'guide-arrow-hint';
+        container.className = 'guide-arrow-hint';
+        container.setAttribute('aria-hidden', 'true');
+
+        const params = computeTarget();
+
+        const stage = document.createElement('div');
+        stage.className = 'guide-arrow-stage';
+        stage.style.setProperty('--start-x', `${params.startX}px`);
+        stage.style.setProperty('--start-y', `${params.startY}px`);
+        stage.style.setProperty('--delta-x', `${params.deltaX}px`);
+        stage.style.setProperty('--delta-y', `${params.deltaY}px`);
+        stage.style.setProperty('--arrow-angle', `${params.rotDeg}deg`);
+
+        const arrowSvg = `
+            <svg class="guide-arrow-svg" viewBox="0 0 32 32" aria-hidden="true">
+                <path d="M16 2 L4 14 h7 v15 a1 1 0 0 0 1 1 h8 a1 1 0 0 0 1 -1 V 14 h7 Z"/>
+            </svg>
+        `;
+
+        stage.innerHTML = arrowSvg;
+
+        container.appendChild(stage);
+
+        function dismissArrow() {
+            if (!stage || stage.classList.contains('is-dismissing')) return;
+            stage.classList.add('is-dismissing');
+            try {
+                localStorage.setItem(STORAGE_KEY, '1');
+            } catch (e) {}
+            setTimeout(() => {
+                if (container && container.parentNode) {
+                    container.parentNode.removeChild(container);
+                }
+            }, 300);
+        }
+
+        window.__dismissGuideArrow = dismissArrow;
+
+        stage.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleBtn.click();
+        });
+
+        // 飞行动画结束时，瞬间切换至呼吸动效，起点到终点全程连续无停顿
+        stage.addEventListener('animationend', (e) => {
+            if (e.animationName === 'guideArrowFlight') {
+                if (!stage || stage.classList.contains('is-dismissing')) return;
+                stage.classList.add('is-arrived');
+            }
+        });
+
+        // 窗口尺寸变化动态微调
+        window.addEventListener('resize', () => {
+            if (stage && stage.classList.contains('is-arrived') && !stage.classList.contains('is-dismissing')) {
+                const p = computeTarget();
+                stage.style.setProperty('--start-x', `${p.startX}px`);
+                stage.style.setProperty('--start-y', `${p.startY}px`);
+                stage.style.setProperty('--delta-x', `${p.deltaX}px`);
+                stage.style.setProperty('--delta-y', `${p.deltaY}px`);
+                stage.style.setProperty('--arrow-angle', `${p.rotDeg}deg`);
+            }
+        });
+
+        // 延迟 300ms 挂载进入屏幕并触发飞行动画
+        setTimeout(() => {
+            document.body.appendChild(container);
+
+            // 兜底定时器（以防个别极端环境未触发 animationend 事件）
+            setTimeout(() => {
+                if (!stage || stage.classList.contains('is-dismissing')) return;
+                if (!stage.classList.contains('is-arrived')) {
+                    stage.classList.add('is-arrived');
+                }
+            }, 680);
+        }, 300);
+    }
+
+    window.__showGuideArrow = function(force = true) {
+        if (force) {
+            try { localStorage.removeItem('jk_guide_arrow_seen'); } catch (e) {}
+        }
+        const old = document.getElementById('guide-arrow-hint');
+        if (old) old.remove();
+        initGuideArrowPrompt();
+    };
 
     // 3. 自动解析卡片分类与高亮，并确保高亮（带 #）卡片自动排在对应分类最前面，隐藏卡片（带 !）排在对应分类末尾
     // 分类顺序：老站 (noble) -> 机场 (airport) -> VPS (vps)
@@ -543,6 +725,7 @@
             });
 
             updateCardVisibility(true);
+            updateGuideCategory(activeCategory);
 
             // 触发分类切换极速拖影动效（老站：“省心”，VPS：“不难”，机场：“家宽”）
             if (prevCategory !== activeCategory) {
@@ -588,6 +771,7 @@
         });
 
         updateCardVisibility(false);
+        updateGuideCategory(activeCategory);
     }
 
     // 5. 初始化展开/收起隐藏卡片按钮
@@ -1288,6 +1472,7 @@
     // 全局初始化入口（供 SPA 路由返回主页时唤醒交互）
     window.__initHomePageInteractive = function () {
         initGuideModal();
+        initGuideArrowPrompt();
         initAndSortButtons();
         initCategoryFilter();
         initExpandButton();

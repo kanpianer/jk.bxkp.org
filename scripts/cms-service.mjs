@@ -247,9 +247,13 @@ export function parseCardsFromHtml(html, linksMap = {}) {
 }
 
 /**
- * 解析指南弹窗中的条目
+ * 解析指南弹窗中的条目（向后兼容单列表）
  */
 export function parseGuideModalItems(html) {
+  const categoryGuides = parseCategoryGuides(html);
+  if (categoryGuides && categoryGuides.airport && Array.isArray(categoryGuides.airport.items)) {
+    return categoryGuides.airport.items;
+  }
   const modalBodyRegex = /<div class=["']guide-modal-body["']>([\s\S]*?)<\/div>\s*<\/div>\s*<\/dialog>/i;
   const match = html.match(modalBodyRegex);
   if (!match) return [];
@@ -262,6 +266,93 @@ export function parseGuideModalItems(html) {
       content: textMatch ? textMatch[1].trim() : ''
     };
   });
+}
+
+/**
+ * 解析按分类划分的指南弹窗数据 (老站 / 机场 / VPS)
+ */
+export function parseCategoryGuides(html) {
+  const defaultGuides = {
+    noble: {
+      title: '老站指南',
+      items: [
+        { index: 1, content: '这里收集的都是开业年限较久，口碑较好的机场，当然，也意味着价格普遍更贵。这里面的机场相对更省心。' },
+        { index: 2, content: '谨忌：机场跑路，投诉无门，优先月付。' }
+      ]
+    },
+    airport: {
+      title: '家宽指南',
+      items: [
+        { index: 1, content: '这里收集的都是包含家宽节点的机场，卡片上不同颜色的标签代表机场提供的不同服务和节点的不同属性。' },
+        { index: 2, content: '如果目前手头不宽裕，<a href="https://fan.jiakuan.link/" target="_blank" rel="noopener">不想翻墙</a> 里收集了十几款免费的翻墙工具，也可以作为备用梯子。' },
+        { index: 3, content: '家宽节点并不一定就比机房节点“干净”，做敏感业务前，最好先检测IP质量，或用小号测试。<br><span class="guide-sub-link">IP质量检测网站：<a href="https://ipsuper.com/" target="_blank" rel="noopener">IPSuper</a>、<a href="https://ip.cx" target="_blank" rel="noopener">IP.cx</a>、<a href="https://ipok.io/" target="_blank" rel="noopener">IPOK</a></span>' }
+      ]
+    },
+    vps: {
+      title: 'VPS指南',
+      items: [
+        { index: 1, content: '这里收集的都是VPS服务器，包括NAT：也就是多人共享的VPS，价格会便宜很多。' },
+        { index: 2, content: '小白购买VPS后可到开源搭建工具 <a href="https://1click.qstz.ccwu.cc/" target="_blank" rel="noopener">一贱建节点</a> 根据提示搭建节点，不需要任何技术，简单地复制粘贴即可完成搭建。强烈建议自行搜索教程搭建。' }
+      ]
+    }
+  };
+
+  const bodyRegex = /<div class=["']guide-modal-body["']([^>]*)>([\s\S]*?<\/ol>\s*)<\/div>/gi;
+  const matches = [...html.matchAll(bodyRegex)];
+
+  if (!matches || matches.length === 0) {
+    const singleRegex = /<div class=["']guide-modal-body["']>([\s\S]*?)<\/div>\s*<\/div>\s*<\/dialog>/i;
+    const singleMatch = html.match(singleRegex);
+    if (singleMatch) {
+      const listItems = [...singleMatch[1].matchAll(/<li class=["']guide-item["']>([\s\S]*?)<\/li>/gi)];
+      const items = listItems.map((m, idx) => {
+        const textMatch = m[1].match(/<div class=["']guide-item-text["']>([\s\S]*?)<\/div>/i);
+        return { index: idx + 1, content: textMatch ? textMatch[1].trim() : '' };
+      });
+      return {
+        ...defaultGuides,
+        airport: { title: '家宽指南', items }
+      };
+    }
+    return defaultGuides;
+  }
+
+  const guides = {};
+  for (const match of matches) {
+    const attrs = match[1];
+    const bodyContent = match[2];
+
+    const catMatch = attrs.match(/data-category=["']([^"']+)["']/i);
+    const titleMatch = attrs.match(/data-title=["']([^"']+)["']/i);
+
+    const category = catMatch ? catMatch[1] : 'airport';
+    let fallbackTitle = '家宽指南';
+    if (category === 'noble') fallbackTitle = '老站指南';
+    else if (category === 'vps') fallbackTitle = 'VPS指南';
+    const title = titleMatch ? titleMatch[1] : fallbackTitle;
+
+    const listItems = [...bodyContent.matchAll(/<li class=["']guide-item["']>([\s\S]*?)<\/li>/gi)];
+    const items = listItems.map((m, idx) => {
+      const textMatch = m[1].match(/<div class=["']guide-item-text["']>([\s\S]*?)<\/div>/i);
+      return {
+        index: idx + 1,
+        content: textMatch ? textMatch[1].trim() : ''
+      };
+    });
+
+    guides[category] = {
+      title,
+      items
+    };
+  }
+
+  for (const cat of ['noble', 'airport', 'vps']) {
+    if (!guides[cat]) {
+      guides[cat] = defaultGuides[cat];
+    }
+  }
+
+  return guides;
 }
 
 /**
@@ -381,6 +472,47 @@ export function renderButtonStackHtml(cards) {
 }
 
 /**
+ * 将多分类指南渲染为标准 HTML
+ */
+export function renderCategoryGuidesHtml(categoryGuides) {
+  const categories = Object.keys(categoryGuides);
+  const order = ['noble', 'airport', 'vps'];
+  categories.sort((a, b) => {
+    const ia = order.indexOf(a);
+    const ib = order.indexOf(b);
+    if (ia !== -1 && ib !== -1) return ia - ib;
+    if (ia !== -1) return -1;
+    if (ib !== -1) return 1;
+    return a.localeCompare(b);
+  });
+
+  const sections = [];
+  for (const cat of categories) {
+    const guide = categoryGuides[cat];
+    const isAirport = (cat === 'airport');
+    const displayStyle = isAirport ? '' : ' style="display: none;"';
+    const title = guide.title || (cat === 'noble' ? '老站指南' : (cat === 'vps' ? 'VPS指南' : '家宽指南'));
+    const items = guide.items || [];
+
+    const itemsHtml = items.map((it, idx) => `                    <li class="guide-item">
+                        <span class="guide-item-badge">${idx + 1}</span>
+                        <div class="guide-item-text">
+                            ${it.content}
+                        </div>
+                    </li>`).join('\n');
+
+    sections.push(`            <!-- 指南内容：${title} -->
+            <div class="guide-modal-body" data-category="${cat}" data-title="${title}"${displayStyle}>
+                <ol class="guide-list">
+${itemsHtml}
+                </ol>
+            </div>`);
+  }
+
+  return sections.join('\n');
+}
+
+/**
  * 生成指南弹窗 HTML 块
  */
 export function renderGuideModalBodyHtml(items) {
@@ -429,7 +561,8 @@ export function readAllData() {
   }
 
   const cards = parseCardsFromHtml(indexHtml, linksMap);
-  const modalItems = parseGuideModalItems(indexHtml);
+  const categoryGuides = parseCategoryGuides(indexHtml);
+  const modalItems = categoryGuides.airport ? categoryGuides.airport.items : parseGuideModalItems(indexHtml);
   const faqItems = parseFaqItems(indexHtml);
   const guideArticles = parseGuideArticles();
   const availableIcons = getAvailableIcons();
@@ -437,6 +570,7 @@ export function readAllData() {
 
   return {
     cards,
+    categoryGuides,
     modalItems,
     faqItems,
     guideArticles,
@@ -463,7 +597,7 @@ export function runGenerateLinks() {
 /**
  * 保存全量 CMS 数据
  */
-export async function saveAllData({ cards, modalItems, faqItems, guideArticles, bumpSw = true }) {
+export async function saveAllData({ cards, categoryGuides, modalItems, faqItems, guideArticles, bumpSw = true }) {
   // 1. 创建备份
   createBackup('before_cms_save');
 
@@ -485,7 +619,23 @@ export async function saveAllData({ cards, modalItems, faqItems, guideArticles, 
   }
 
   // 3. 替换指南弹窗区域
-  if (Array.isArray(modalItems)) {
+  if (categoryGuides && typeof categoryGuides === 'object' && Object.keys(categoryGuides).length > 0) {
+    const modalBodiesRegionRegex = /(<button id=["']guide-modal-close["'][\s\S]*?<\/button>\s*<\/div>)([\s\S]*?)(<\/div>\s*<\/dialog>)/i;
+    const match = html.match(modalBodiesRegionRegex);
+    if (match) {
+      const newBodiesHtml = renderCategoryGuidesHtml(categoryGuides);
+      html = html.replace(modalBodiesRegionRegex, `$1\n${newBodiesHtml}\n        $3`);
+    }
+
+    if (categoryGuides.airport && categoryGuides.airport.title) {
+      const airportTitle = categoryGuides.airport.title;
+      html = html.replace(/<span id=["']guide-toggle-text["']>[\s\S]*?<\/span>/i, `<span id="guide-toggle-text">${airportTitle}</span>`);
+      html = html.replace(/<button id=["']guide-toggle["'][^>]*>/i, (m) => {
+        return m.replace(/aria-label=["'][^"']*["']/i, `aria-label="${airportTitle}"`).replace(/title=["'][^"']*["']/i, `title="${airportTitle}"`);
+      });
+      html = html.replace(/<h2 id=["']guide-modal-title["'][^>]*>[\s\S]*?<\/h2>/i, `<h2 id="guide-modal-title" class="guide-modal-title">${airportTitle}</h2>`);
+    }
+  } else if (Array.isArray(modalItems)) {
     const modalBodyRegex = /<div class=["']guide-modal-body["']>([\s\S]*?)<\/div>\s*<\/div>\s*<\/dialog>/i;
     const match = html.match(modalBodyRegex);
     if (match) {

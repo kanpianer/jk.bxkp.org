@@ -240,7 +240,13 @@ export default defineConfig(async ({ command }) => {
     plugins: [cmsApiPlugin(), shortlinkPlugin(), syncJsPlugin()],
     server: {
       port,
-      host: true
+      host: true,
+      allowedHosts: true
+    },
+    preview: {
+      port,
+      host: true,
+      allowedHosts: true
     },
     build: {
       assetsInlineLimit: 0,
