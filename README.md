@@ -25,9 +25,9 @@
 
 | 站点名称 | 推荐级别 | 特性标签 | 价格 / 规格起步 | 快速访问短链 | 官方直达链接 |
 | :--- | :---: | :--- | :--- | :--- | :--- |
-| **SNTP** | ⭐ 重点推荐 | `专线` `非家宽` `Emby` | ¥18/月 100GB 起 | [jiakuan.link/sntp](https://jiakuan.link/sntp) | [直达官网](https://ncdn1.sntp.uk/auth/register?code=zsyVQ1fa) |
-| **MESL** | ⭐ 重点推荐 | `专线` `新疆优化` | ¥50/月 500GB 起 | [jiakuan.link/mesl](https://jiakuan.link/mesl) | [直达官网](https://dash.makemesl.com/#/register?code=tMEAQMp0) |
 | **E-IX** | ⭐ 重点推荐 | `专线` `非家宽` `新疆优化` | ¥25/月 150GB 起 | [jiakuan.link/eix](https://jiakuan.link/eix) | [直达官网](https://ap.cdn.e-ix.com/#/register?code=w56accjm) |
+| **MESL** | ⭐ 重点推荐 | `专线` `新疆优化` | ¥50/月 500GB 起 | [jiakuan.link/mesl](https://jiakuan.link/mesl) | [直达官网](https://dash.makemesl.com/#/register?code=tMEAQMp0) |
+| **SNTP** | ⭐ 重点推荐 | `专线` `非家宽` `Emby` | ¥18/月 100GB 起 | [jiakuan.link/sntp](https://jiakuan.link/sntp) | [直达官网](https://ncdn1.sntp.uk/auth/register?code=zsyVQ1fa) |
 | **rancho** | 精选 | `专线` `Emby` | 68元/月 512GB 起 | [jiakuan.link/rancho](https://jiakuan.link/rancho) | [直达官网](https://mccloud.gay/#/register?code=jMKFtNbr) |
 | **TAG** | 精选 | `专线` `卫星网络` | ¥114/月 500GB 起 | [jiakuan.link/tag](https://jiakuan.link/tag) | [直达官网](https://tagss.pro/#/auth/lCnWmez3) |
 | **SS-ID** | 精选 | `专线` `非家宽` | ¥20/月 100GB 起 | [jiakuan.link/ssid](https://jiakuan.link/ssid) | [直达官网](https://qe.newssid.com/#/register?code=fdRMww9M) |
@@ -41,7 +41,7 @@
 | **RESIP** | ⭐ 重点推荐 | `精品线路` `全家宽` | $3.9/月 50GB 起 | [jiakuan.link/resip](https://jiakuan.link/resip) | [直达官网](https://resip.net/?r=EJT9ZQ) |
 | **网际快车** | ⭐ 重点推荐 | `不限时` | ¥6.8/月 20GB 起 | [jiakuan.link/wjkc](https://jiakuan.link/wjkc) | [直达官网](https://QRBAPA.快车.com) |
 | **精靈學院** | ⭐ 重点推荐 | `精品线路` `Emby` `不限时` | ¥8/月 30GB 起 | [jiakuan.link/jlxy](https://jiakuan.link/jlxy) | [直达官网](https://ok.riolu.work/register?aff=EPW4XXSz) |
-| **EqualDCDN** | 精选 | `精品线路` `全家宽节点` | ¥76.80/月 120GB 起 | [jiakuan.link/equal](https://jiakuan.link/equal) | [直达官网](https://www.ipequal.com/?ref=3922b04b36) |
+| **EqualDCDN** | 精选 | `精品线路` `全家宽` | ¥76.80/月 120GB 起 | [jiakuan.link/equal](https://jiakuan.link/equal) | [直达官网](https://www.ipequal.com/?ref=3922b04b36) |
 | **云帆** | 精选 | `含精品线路` `不限时` | ¥9.9/月 100GB 起 | [jiakuan.link/yf](https://jiakuan.link/yf) | [直达官网](https://fan.yunfan.app/#/register?code=c9LpBOig) |
 | **仙路湾** | 精选 | `不限时` `含专线` | ¥10/月 50GB 起 | [jiakuan.link/xlw](https://jiakuan.link/xlw) | [直达官网](https://jsq.xlw.app/#/register?code=orbNNe3J) |
 
@@ -51,12 +51,12 @@
 
 | 站点名称 | 推荐级别 | 特性标签 | 价格 / 规格起步 | 快速访问短链 | 官方直达链接 |
 | :--- | :---: | :--- | :--- | :--- | :--- |
-| **Shlii** | ⭐ 重点推荐 | `NAT` `含精品线路` | ¥4.95/月 200GB 起 | [jiakuan.link/shlii](https://jiakuan.link/shlii) | [直达官网](https://shlii.io/instances/create?promoCode=AFF-7087-QG7QXSLX) |
-| **ZoroCloud** | ⭐ 重点推荐 | `含精品线路` | ¥39/月 500GB 起 | [jiakuan.link/zoro](https://jiakuan.link/zoro) | [直达官网](https://my.zorocloud.com/aff.php?aff=1371) |
+| **干杯CLOUD** | ⭐ 重点推荐 | - | ¥138 不限流量 起 | [jiakuan.link/ganbei](https://jiakuan.link/ganbei) | [直达官网](https://usvps24.com/r/YMJLG4LH) |
 | **ATTVPS** | ⭐ 重点推荐 | - | $28.88/月 起 不限流量 | [jiakuan.link/attvps](https://jiakuan.link/attvps) | [直达官网](https://attvps.com/aff.php?aff=106) |
-| **学长网络** | 精选 | `NAT` | ¥15起 | [jiakuan.link/xzwl](https://jiakuan.link/xzwl) | [直达官网](https://xuezhangvps.shop/aff.php?aff=130) |
-| **干杯CLOUD** | 精选 | - | ¥138 不限流量 起 | [jiakuan.link/ganbei](https://jiakuan.link/ganbei) | [直达官网](https://usvps24.com/r/YMJLG4LH) |
-| **Lamhosting LLC** | 精选 | `NAT` | ￥8.80/月 512GB[单向] 起 | [jiakuan.link/lam](https://jiakuan.link/lam) | [直达官网](https://lamhosting.com/aff.php?aff=368) |
+| **Shlii** | ⭐ 重点推荐 | `NAT` `含精品线路` `有便宜节点卖` | ¥4.95/月 200GB 起 | [jiakuan.link/shlii](https://jiakuan.link/shlii) | [直达官网](https://shlii.io/instances/create?promoCode=AFF-7087-QG7QXSLX) |
+| **AkileCloud** | 精选 | `含精品线路` | ¥15.99/月 2000G 起 | [jiakuan.link/akile](https://jiakuan.link/akile) | [直达官网](https://akile.ai/register?aff_code=0c0d0c15-1f7b-4079-a9ba-967393ab2421) |
+| **学长网络** | 精选 | `NAT` `含精品线路` | ¥15起 | [jiakuan.link/xzwl](https://jiakuan.link/xzwl) | [直达官网](https://xuezhangvps.shop/aff.php?aff=130) |
+| **ZoroCloud** | 精选 | `含精品线路` | ¥39/月 500GB 起 | [jiakuan.link/zoro](https://jiakuan.link/zoro) | [直达官网](https://my.zorocloud.com/aff.php?aff=1371) |
 <!-- SITE_DIRECTORY_END -->
 
 ---

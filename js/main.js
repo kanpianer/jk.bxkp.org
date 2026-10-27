@@ -602,6 +602,7 @@
             const pathSlug = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase().split('/')[0];
             const hash = (window.location.hash || '').toLowerCase();
 
+            // 1. 优先满足老站与VPS的专用链接（/old, /vps 以及对应的 Hash 锚点），不受随机规则约束
             if (pathSlug === 'old' || hash === '#noble' || hash === '#lz' || hash === '#old' || hash === '#gz') {
                 return 'noble';
             } else if (pathSlug === 'vps' || hash === '#vps') {
@@ -609,20 +610,47 @@
             } else if (hash === '#airport' || hash === '#young') {
                 return 'airport';
             }
+
+            // 2. 检查由 <head> 脚本预先解析并设定的初始目标分类（避免重复随机）
+            if (window.__INITIAL_CATEGORY__) {
+                const initCat = window.__INITIAL_CATEGORY__;
+                window.__INITIAL_CATEGORY__ = null; // 消费后清除，避免干扰后续历史导航
+                return initCat;
+            }
+
+            // 3. 兜底保护：若未执行过首屏解析（如外部直访根路径），按 15% 老站 / 15% VPS / 70% 机场概率分流
+            if (!window.__INITIAL_CATEGORY_RESOLVED__ && (pathSlug === '' || pathSlug === 'index.html')) {
+                window.__INITIAL_CATEGORY_RESOLVED__ = true;
+                const r = Math.random();
+                if (r < 0.15) {
+                    return 'noble';
+                } else if (r < 0.30) {
+                    return 'vps';
+                }
+                return 'airport';
+            }
+
             return 'airport';
         }
 
         let activeCategory = getCategoryFromLocation();
 
-        // 若初始 URL 为 Hash 访问，规范化清洗为对应路径 /old, /, /vps
+        // 若初始 URL 为 Hash 访问或发生分流跳转，规范化清洗为对应路径 /old, /, /vps (保持 search 参数)
         try {
             const initialHash = (window.location.hash || '').toLowerCase();
-            if (initialHash === '#old' || initialHash === '#noble' || initialHash === '#lz' || initialHash === '#gz') {
-                history.replaceState({ category: 'noble', type: 'category' }, '', '/old');
-            } else if (initialHash === '#young' || initialHash === '#airport') {
-                history.replaceState({ category: 'airport', type: 'category' }, '', '/');
-            } else if (initialHash === '#vps') {
-                history.replaceState({ category: 'vps', type: 'category' }, '', '/vps');
+            const search = window.location.search || '';
+            if (initialHash === '#old' || initialHash === '#noble' || initialHash === '#lz' || initialHash === '#gz' || activeCategory === 'noble') {
+                if (window.location.pathname !== '/old') {
+                    history.replaceState({ category: 'noble', type: 'category' }, '', '/old' + search);
+                }
+            } else if (initialHash === '#young' || initialHash === '#airport' || activeCategory === 'airport') {
+                if (initialHash && window.location.pathname !== '/') {
+                    history.replaceState({ category: 'airport', type: 'category' }, '', '/' + search);
+                }
+            } else if (initialHash === '#vps' || activeCategory === 'vps') {
+                if (window.location.pathname !== '/vps') {
+                    history.replaceState({ category: 'vps', type: 'category' }, '', '/vps' + search);
+                }
             }
         } catch (e) {}
 
