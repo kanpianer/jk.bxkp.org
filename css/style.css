@@ -171,40 +171,51 @@ body {
     -webkit-overflow-scrolling: touch;
 }
 
-/* Airplane Animation */
+/* Emoji Flight Animation Container */
 .airplane-wrapper {
     position: fixed;
-    top: 25%; 
+    top: 0; 
     left: 0;
-    width: 96px;
+    width: 48px;
+    height: 48px;
     z-index: 2;
-    animation: flyAirplane 35s linear infinite;
     pointer-events: none;
     will-change: transform;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.airplane-wrapper.flight-active {
+    opacity: 1;
 }
 
 .airplane {
     width: 100%;
-    display: block;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     pointer-events: auto;
-    opacity: 0.9;
+    opacity: 0.95;
     cursor: pointer;
     user-select: none;
     -webkit-user-drag: none;
     z-index: 2;
     position: relative;
+    font-size: 36px;
+    line-height: 1;
+    text-align: center;
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Segoe UI Symbol", "Android Emoji", sans-serif;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.28));
+    transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@keyframes flyAirplane {
-    0% {
-        transform: translate(-150px, 0px) rotate(2deg);
-    }
-    50% {
-        transform: translate(calc(50vw - 150px), -20px) rotate(0deg);
-    }
-    100% {
-        transform: translate(calc(100vw + 150px), 10px) rotate(1deg);
-    }
+.airplane:hover {
+    transform: scale(1.15);
+}
+
+.airplane:active {
+    transform: scale(0.95);
 }
 
 /* Typography
@@ -432,6 +443,7 @@ a:hover {
 	gap: 1rem;
 	justify-content: center;
 	justify-items: center;
+	align-items: start;
 	max-width: 60rem;
 	margin: 0 auto;
 }
@@ -441,6 +453,7 @@ a:hover {
 	display:inline-flex;
 	align-items:center;
 	justify-content:flex-start;
+	align-self:start;
 	width:100%;
 	max-width: 18.75rem;
 	min-height:4.125rem;
@@ -536,6 +549,19 @@ a:hover {
 }
 
 /* Specific Tag Colors */
+.tag-home,
+.tag-all-home {
+	background: rgba(34, 197, 94, 0.25);
+	color: #86efac;
+	border: 1px solid rgba(34, 197, 94, 0.6);
+}
+
+.tag-default {
+	background: rgba(255, 255, 255, 0.18);
+	color: #e2e8f0;
+	border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
 .tag-dedicated,
 .tag-has-dedicated {
 	background: rgba(254, 240, 138, 0.25);
@@ -618,6 +644,64 @@ a:hover {
 	vertical-align: middle;
 }
 
+.card-desc {
+	width: 100%;
+	flex-basis: 100%;
+	font-size: 0.75rem;
+	font-weight: 400;
+	color: rgba(255, 255, 255, 0.82);
+	line-height: 1.4;
+	margin-top: 0.4rem;
+	text-align: left;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	word-break: break-word;
+	letter-spacing: -0.01em;
+	transition: color 0.25s ease;
+}
+
+/* 当描述置于 .card-info 内部时的向左靠齐兼容规则 */
+.card-info > .card-desc {
+	margin-left: calc(-1.875rem - 0.65rem);
+	width: calc(100% + 1.875rem + 0.65rem + 1.85rem);
+}
+
+/* Card Layout with Description (Multi-Line Info) */
+.button.has-desc,
+.button:has(.card-desc) {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	align-content: flex-start;
+	min-height: 6.5rem;
+	padding: 0.75rem 0.875rem;
+}
+
+.button.has-desc .icon,
+.button:has(.card-desc) .icon {
+	margin-top: 0.125rem;
+}
+
+.button.has-desc .card-info,
+.button:has(.card-desc) .card-info {
+	justify-content: flex-start;
+	padding-right: 1.85rem;
+}
+
+.button.has-desc .qr-trigger,
+.button:has(.card-desc) .qr-trigger {
+	top: 0.65rem !important;
+	transform: none !important;
+}
+
+.button-stack.is-expanded .button.card-hidden.has-desc,
+.button-stack.is-expanded .button.card-hidden:has(.card-desc) {
+	display: flex;
+}
+
 @media (hover: hover) and (pointer: fine) {
 	.button:hover .card-title {
 		color: #1a1a1a;
@@ -627,6 +711,19 @@ a:hover {
 		background: rgba(0, 0, 0, 0.08);
 		color: #334155;
 		border-color: rgba(0, 0, 0, 0.15);
+	}
+
+	.button:hover .tag-home,
+	.button:hover .tag-all-home {
+		background: rgba(22, 163, 74, 0.22);
+		color: #14532d;
+		border-color: rgba(21, 128, 61, 0.5);
+	}
+
+	.button:hover .tag-default {
+		background: rgba(0, 0, 0, 0.08);
+		color: #334155;
+		border-color: rgba(0, 0, 0, 0.18);
 	}
 
 	.button:hover .tag-dedicated,
@@ -697,6 +794,10 @@ a:hover {
 
 	.button:hover .card-meta {
 		color: rgba(26, 26, 26, 0.82);
+	}
+
+	.button:hover .card-desc {
+		color: rgba(26, 26, 26, 0.8);
 	}
 }
 
@@ -1115,6 +1216,9 @@ footer a:hover,
 :root.theme-dark .button .card-meta {
 	color: #e2e8f0 !important;
 }
+:root.theme-dark .button .card-desc {
+	color: rgba(226, 232, 240, 0.78) !important;
+}
 :root.theme-dark .card-title.highlight-title {
 	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65) !important;
 }
@@ -1150,12 +1254,28 @@ footer a:hover,
 	:root.theme-dark .button:hover .card-meta {
 		color: #e2e8f0 !important;
 	}
+	:root.theme-dark .button:hover .card-desc {
+		color: #cbd5e1 !important;
+	}
 
 	:root.theme-dark .button:hover .card-tag {
 		background: rgba(255, 255, 255, 0.12);
 		color: #f1f5f9;
 		border-color: rgba(255, 255, 255, 0.25);
 	}
+	:root.theme-dark .button:hover .tag-home,
+	:root.theme-dark .button:hover .tag-all-home {
+		background: rgba(34, 197, 94, 0.3);
+		color: #bbf7d0;
+		border-color: rgba(34, 197, 94, 0.65);
+	}
+
+	:root.theme-dark .button:hover .tag-default {
+		background: rgba(255, 255, 255, 0.25);
+		color: #f8fafc;
+		border-color: rgba(255, 255, 255, 0.45);
+	}
+
 	:root.theme-dark .button:hover .tag-dedicated,
 	:root.theme-dark .button:hover .tag-has-dedicated {
 		background: rgba(254, 240, 138, 0.25);
@@ -1273,6 +1393,10 @@ footer a:hover,
 	:root.theme-auto .button:hover .card-meta {
 		color: #e2e8f0 !important;
 	}
+	:root.theme-auto .button .card-desc,
+	:root.theme-auto .button:hover .card-desc {
+		color: rgba(226, 232, 240, 0.78) !important;
+	}
 	:root.theme-auto .card-title.highlight-title {
 		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65) !important;
 	}
@@ -1281,6 +1405,19 @@ footer a:hover,
 		color: #f1f5f9;
 		border-color: rgba(255, 255, 255, 0.25);
 	}
+	:root.theme-auto .button:hover .tag-home,
+	:root.theme-auto .button:hover .tag-all-home {
+		background: rgba(34, 197, 94, 0.3);
+		color: #bbf7d0;
+		border-color: rgba(34, 197, 94, 0.65);
+	}
+
+	:root.theme-auto .button:hover .tag-default {
+		background: rgba(255, 255, 255, 0.25);
+		color: #f8fafc;
+		border-color: rgba(255, 255, 255, 0.45);
+	}
+
 	:root.theme-auto .button:hover .tag-dedicated,
 	:root.theme-auto .button:hover .tag-has-dedicated {
 		background: rgba(254, 240, 138, 0.25);
@@ -1404,28 +1541,14 @@ footer a:hover,
 	.seo-knowledge-section {
 		margin-top: 1.55rem;
 	}
-	/* Reduce airplane size on mobile and start flight only after load */
+	/* Reduce emoji flyer size on mobile */
 	.airplane-wrapper {
-		width: 64px;
+		width: 32px;
+		height: 32px;
 		animation: none;
-		transform: translate(-90px, 0);
-		opacity: 0;
 	}
-	.airplane-wrapper.mobile-flying {
-		opacity: 1;
-		animation: flyAirplaneMobile 15s linear infinite;
-	}
-}
-
-@keyframes flyAirplaneMobile {
-	0% {
-		transform: translate(-90px, 0px) rotate(2deg);
-	}
-	50% {
-		transform: translate(calc(50vw - 32px), -16px) rotate(0deg);
-	}
-	100% {
-		transform: translate(calc(100vw + 90px), 10px) rotate(1deg);
+	.airplane {
+		font-size: 24px;
 	}
 }
 
@@ -1502,7 +1625,7 @@ html, body {
   z-index: 1010;
 }
 
-/* QR Trigger Icon inside card on the right (Default visible on all devices) */
+/* QR Trigger Icon inside card on the right (Default centered vertically for standard cards) */
 .qr-trigger {
   display: inline-flex !important;
   align-items: center;
@@ -1529,6 +1652,13 @@ html, body {
   z-index: 2;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* QR Trigger for cards with description placed at top-right */
+.button.has-desc .qr-trigger,
+.button:has(.card-desc) .qr-trigger {
+  top: 0.65rem !important;
+  transform: none !important;
 }
 
 .qr-trigger svg {

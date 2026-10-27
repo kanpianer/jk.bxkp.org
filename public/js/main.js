@@ -643,10 +643,12 @@
                 const isCardHidden = btn.classList.contains('card-hidden');
 
                 if (matchesCategory) {
+                    const isMultiLine = btn.classList.contains('has-desc') || Boolean(btn.querySelector('.card-desc'));
+                    const displayVal = isMultiLine ? 'flex' : 'inline-flex';
                     if (isCardHidden) {
                         visibleHiddenCount++;
                         if (isExpanded) {
-                            btn.style.display = 'inline-flex';
+                            btn.style.display = displayVal;
                             btn.classList.remove('category-filtered-out');
                             if (withAnimation) buttonsToAnimate.push(btn);
                         } else {
@@ -654,7 +656,7 @@
                             btn.classList.remove('category-filtered-out');
                         }
                     } else {
-                        btn.style.display = 'inline-flex';
+                        btn.style.display = displayVal;
                         btn.classList.remove('category-filtered-out');
                         if (withAnimation) buttonsToAnimate.push(btn);
                     }
@@ -967,28 +969,253 @@
         });
     }
 
-    // 7. 设备判定与移动端飞机飞行
+    // 7. 设备判定与全屏四边动态 Emoji 飞行引擎 (Unicode 全套 Emoji)
     const isMobileDevice = () => {
         return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(navigator.userAgent)
             || (navigator.maxTouchPoints > 1 && window.innerWidth <= 1024)
             || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches && window.innerWidth <= 1024);
     };
 
-    function initMobileAirplane() {
-        const airplaneWrapper = document.querySelector('.airplane-wrapper');
-        if (!airplaneWrapper) return;
+    let emojiFlightController = null;
 
-        const startFlight = () => {
-            if (isMobileDevice() || window.innerWidth <= 768) {
-                airplaneWrapper.classList.add('mobile-flying');
+    function initEmojiFlight() {
+        if (emojiFlightController) {
+            emojiFlightController.start();
+            return emojiFlightController;
+        }
+
+        const wrapper = document.querySelector('.airplane-wrapper');
+        const flyer = document.querySelector('.airplane');
+        if (!wrapper || !flyer) return null;
+
+        // 默认精选备用 Emoji 列表（如果 emoji-data.js 仍在异步加载中）
+        const fallbackEmojis = [
+            '✈️','🚀','🛸','🎈','🚁','✨','🌟','🌈','🦄','🦅','🦋','🐱','🐶','🦊','🐼',
+            '🦁','🐯','🐵','🦉','🐣','🐬','🐳','🐙','🌸','🌻','🍀','🍉','🍓','🍒','🍔',
+            '🍕','🍦','🍩','⚽','🏀','🎮','🎸','🎨','🏆','👑','💎','🔥','⚡','💫','🪐',
+            '🌙','☀️','☁️','🎉','🍿'
+        ];
+
+        function getRandomEmoji() {
+            const list = (window.__ALL_EMOJIS__ && window.__ALL_EMOJIS__.length > 0)
+                ? window.__ALL_EMOJIS__
+                : fallbackEmojis;
+            return list[Math.floor(Math.random() * list.length)];
+        }
+
+        let isRunning = false;
+        let isPaused = false;
+        let animFrameId = null;
+        let nextFlightTimer = null;
+        let isWaitingNext = false;
+
+        let startPos = { x: 0, y: 0 };
+        let targetPos = { x: 0, y: 0 };
+        let flightDistance = 1000;
+        let flightDuration = 18000;
+        let flightStartTime = 0;
+        let pauseTime = 0;
+        let unitNormal = { x: 0, y: 1 };
+        let waveDirection = 1;
+
+        // 随机选择四边起点与终点，严格避开四个角，保证 emoji 始终完整显示且可向上或跨屏飞行
+        function chooseFlightPath() {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            const isMobile = w <= 768 || isMobileDevice();
+            const size = isMobile ? 32 : 48;
+            const extraOffset = size + 15; // 确保完全离开视口边缘消失且留出微量缓冲
+
+            // 避开浏览器四个角的安全保护边距（至少为尺寸的 1.6 倍且占视口 15% 以上，防止四角被遮挡或截断）
+            const marginX = Math.max(size * 1.6, Math.min(w * 0.18, 220));
+            const marginY = Math.max(size * 1.6, Math.min(h * 0.18, 200));
+
+            const edges = ['left', 'right', 'top', 'bottom'];
+            const startEdge = edges[Math.floor(Math.random() * edges.length)];
+            const availableTargets = edges.filter(e => e !== startEdge);
+            const targetEdge = availableTargets[Math.floor(Math.random() * availableTargets.length)];
+
+            function getEdgePoint(edge) {
+                let x = 0;
+                let y = 0;
+                if (edge === 'left') {
+                    x = -extraOffset;
+                    const availH = Math.max(0, h - 2 * marginY - size);
+                    y = marginY + Math.random() * availH;
+                } else if (edge === 'right') {
+                    x = w + 15;
+                    const availH = Math.max(0, h - 2 * marginY - size);
+                    y = marginY + Math.random() * availH;
+                } else if (edge === 'top') {
+                    const availW = Math.max(0, w - 2 * marginX - size);
+                    x = marginX + Math.random() * availW;
+                    y = -extraOffset;
+                } else if (edge === 'bottom') {
+                    const availW = Math.max(0, w - 2 * marginX - size);
+                    x = marginX + Math.random() * availW;
+                    y = h + 15;
+                }
+                return { x, y };
             }
+
+            const p0 = getEdgePoint(startEdge);
+            const p1 = getEdgePoint(targetEdge);
+
+            const dx = p1.x - p0.x;
+            const dy = p1.y - p0.y;
+            const dist = Math.hypot(dx, dy) || 1;
+
+            // 飞行速度保持与原飞机动画一致（约 60-70px/s）
+            const speed = isMobile ? 45 : 65;
+            const duration = Math.max(8000, (dist / speed) * 1000);
+
+            return {
+                startPos: p0,
+                targetPos: p1,
+                dist,
+                duration,
+                unitNormal: { x: -dy / dist, y: dx / dist },
+                waveDirection: Math.random() < 0.5 ? 1 : -1,
+                size,
+                w,
+                h
+            };
+        }
+
+        function startNewFlight() {
+            if (isPaused) return;
+            isWaitingNext = false;
+            if (nextFlightTimer) {
+                clearTimeout(nextFlightTimer);
+                nextFlightTimer = null;
+            }
+
+            // 每次飞行随机选取一个 Unicode Emoji
+            const emoji = getRandomEmoji();
+            flyer.textContent = emoji;
+
+            const path = chooseFlightPath();
+            startPos = path.startPos;
+            targetPos = path.targetPos;
+            flightDistance = path.dist;
+            flightDuration = path.duration;
+            unitNormal = path.unitNormal;
+            waveDirection = path.waveDirection;
+
+            flightStartTime = performance.now();
+            pauseTime = 0;
+
+            wrapper.style.transform = `translate3d(${startPos.x}px, ${startPos.y}px, 0)`;
+            wrapper.classList.add('flight-active');
+            updateFlightFrame(performance.now());
+        }
+
+        function updateFlightFrame(now) {
+            if (isPaused) return;
+
+            const elapsed = now - flightStartTime;
+            let t = elapsed / flightDuration;
+
+            if (t >= 1) {
+                // 当前飞行中的 emoji 已经完全离开浏览器视口边缘并消失
+                if (animFrameId) {
+                    cancelAnimationFrame(animFrameId);
+                    animFrameId = null;
+                }
+                wrapper.classList.remove('flight-active');
+                wrapper.style.transform = `translate3d(${targetPos.x}px, ${targetPos.y}px, 0)`;
+
+                // 待当前 emoji 完全消失在边缘后，再出现下一个 emoji 开始飞行
+                isWaitingNext = true;
+                nextFlightTimer = setTimeout(() => {
+                    if (!isPaused) {
+                        startNewFlight();
+                    }
+                }, 600);
+                return;
+            }
+
+            // 飞行轨迹：基础线性位移 + 经典原版正弦起伏（保持与原飞机 50% 时约 20px 摆动一致）
+            const baseX = startPos.x + t * (targetPos.x - startPos.x);
+            const baseY = startPos.y + t * (targetPos.y - startPos.y);
+
+            // 正弦波在两端 t=0 与 t=1 处为 0，触碰边缘时坐标绝对精准
+            const wave = waveDirection * 20 * Math.sin(Math.PI * t);
+            let posX = baseX + wave * unitNormal.x;
+            let posY = baseY + wave * unitNormal.y;
+
+            // 微幅自然倾角晃动（±2.5度），模拟空气悬浮动作，保持直立易于辨识
+            const angleDeg = 2.5 * Math.sin(Math.PI * 4 * t);
+
+            wrapper.style.transform = `translate3d(${posX}px, ${posY}px, 0) rotate(${angleDeg}deg)`;
+
+            animFrameId = requestAnimationFrame(updateFlightFrame);
+        }
+
+        function start() {
+            if (isRunning) return;
+            isRunning = true;
+            isPaused = false;
+            startNewFlight();
+        }
+
+        function pause() {
+            if (isPaused) return;
+            isPaused = true;
+            pauseTime = performance.now();
+            if (animFrameId) {
+                cancelAnimationFrame(animFrameId);
+                animFrameId = null;
+            }
+            if (nextFlightTimer) {
+                clearTimeout(nextFlightTimer);
+                nextFlightTimer = null;
+            }
+        }
+
+        function resume() {
+            if (!isPaused) return;
+            isPaused = false;
+            if (isWaitingNext) {
+                // 暂停期间若处于前一个完全消失后的等待间隙，直接拉起下一个
+                startNewFlight();
+            } else if (pauseTime > 0) {
+                flightStartTime += (performance.now() - pauseTime);
+                pauseTime = 0;
+                animFrameId = requestAnimationFrame(updateFlightFrame);
+            } else {
+                flightStartTime = performance.now();
+                animFrameId = requestAnimationFrame(updateFlightFrame);
+            }
+        }
+
+        // 页面可见性监控：防止切换后台时产生跳帧
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (!isPaused) pause();
+            } else {
+                if (isPaused && (!window.__isPhysicsActive || !window.__isPhysicsActive())) {
+                    resume();
+                }
+            }
+        });
+
+        emojiFlightController = {
+            start,
+            pause,
+            resume,
+            startNewFlight
         };
 
+        window.__emojiFlight = emojiFlightController;
+
         if (document.readyState === 'complete') {
-            startFlight();
+            start();
         } else {
-            window.addEventListener('load', startFlight, { once: true });
+            window.addEventListener('load', start, { once: true });
         }
+
+        return emojiFlightController;
     }
 
     // 8. 桌面端物理掉落与时光倒流彩蛋（空闲惰性加载 Matter.js，不阻塞首屏）
@@ -1004,6 +1231,7 @@
         let cardsFallen = false;
         let isRewinding = false;
         let lastCrashTime = 0;
+        window.__isPhysicsActive = () => hasCrashed;
 
         let engine, world, runner;
         let ground, topWall, leftWall, rightWall;
@@ -1220,12 +1448,20 @@
             if (updateCardVisibilityGlobal) {
                 updateCardVisibilityGlobal(false);
             }
+
+            if (window.__emojiFlight) {
+                window.__emojiFlight.resume();
+            }
         }
 
         function triggerCrash(clientX, clientY) {
             if (hasCrashed) return;
             hasCrashed = true;
             lastCrashTime = Date.now();
+
+            if (window.__emojiFlight) {
+                window.__emojiFlight.pause();
+            }
 
             const wrapper = airplane.parentElement;
             if (wrapper && wrapper.classList.contains('airplane-wrapper')) {
@@ -1477,7 +1713,7 @@
         initCategoryFilter();
         initExpandButton();
         initCardQRCodes();
-        initMobileAirplane();
+        initEmojiFlight();
         if (typeof Matter !== 'undefined') {
             initDesktopPhysics();
         } else {

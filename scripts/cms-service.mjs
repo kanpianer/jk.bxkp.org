@@ -225,6 +225,10 @@ export function parseCardsFromHtml(html, linksMap = {}) {
       }
     }
 
+    // 解析 card-desc 中的简单描述
+    const descMatch = cardHtml.match(/<div class=["']card-desc["']>([\s\S]*?)<\/div>/i);
+    const desc = descMatch ? descMatch[1].trim() : '';
+
     const target = linksMap[slug]?.target || '';
 
     cards.push({
@@ -239,6 +243,7 @@ export function parseCardsFromHtml(html, linksMap = {}) {
       headerTags,
       metaText,
       metaTag,
+      desc,
       target
     });
   }
@@ -429,8 +434,12 @@ export function renderCardHtml(card) {
     metaTagHtml = ` <span class="card-tag ${card.metaTag.cls || ''}">${card.metaTag.text}</span>`;
   }
 
+  const descHtml = card.desc ? `\n                        <div class="card-desc">${card.desc}</div>` : '';
+
+  const hasDescClass = card.desc ? ' has-desc' : '';
+
   return `                <!-- ${card.cleanTitle} -->
-                <a data-slug="${card.slug}" class="button button-xzwl${cardHiddenClass}${filterClass}" href="https://jiakuan.link/${card.slug}" target="_blank"
+                <a data-slug="${card.slug}" class="button button-xzwl${cardHiddenClass}${filterClass}${hasDescClass}" href="https://jiakuan.link/${card.slug}" target="_blank"
                     rel="sponsored noopener" role="button" data-category="${card.category}"${displayStyle}>
                     <img class="icon" aria-hidden="true" src="${card.icon}" alt="${card.cleanTitle} Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
@@ -438,7 +447,7 @@ export function renderCardHtml(card) {
                             <h3 class="card-title">${displayTitle}</h3>${headerTagsHtml}
                         </div>
                         <div class="card-meta">${card.metaText || ''}${metaTagHtml}</div>
-                    </div>
+                    </div>${descHtml}
                 </a>`;
 }
 

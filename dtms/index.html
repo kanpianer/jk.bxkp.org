@@ -497,13 +497,19 @@
         }
 
         /* 标签样式同步前台 */
+        .tag-home, .tag-all-home { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.35); }
         .tag-dedicated { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .tag-has-dedicated { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
         .tag-premium { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+        .tag-has-premium { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
         .tag-emby { background: rgba(234, 88, 12, 0.2); color: #fb923c; border: 1px solid rgba(234, 88, 12, 0.3); }
         .tag-nat { background: rgba(14, 165, 233, 0.2); color: #38bdf8; border: 1px solid rgba(14, 165, 233, 0.3); }
         .tag-commercial { background: rgba(14, 165, 233, 0.2); color: #38bdf8; border: 1px solid rgba(14, 165, 233, 0.3); }
+        .tag-direct { background: rgba(186, 230, 253, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
         .tag-non-home { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
         .tag-timeless { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .tag-xinjiang { background: rgba(45, 212, 191, 0.2); color: #2dd4bf; border: 1px solid rgba(45, 212, 191, 0.3); }
+        .tag-satellite { background: rgba(192, 132, 252, 0.2); color: #c084fc; border: 1px solid rgba(192, 132, 252, 0.3); }
         .tag-default { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
 
         .card-meta-cell {
@@ -734,6 +740,30 @@
             font-weight: 600;
         }
 
+        .preset-tag-chip.preset-tag-chip-add:hover {
+            background: rgba(56, 189, 248, 0.2);
+            color: #fff;
+            border-color: #38bdf8;
+        }
+
+        .preset-tag-chip .custom-tag-del-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            margin-left: 5px;
+            opacity: 0.55;
+            transition: all 0.15s;
+        }
+
+        .preset-tag-chip .custom-tag-del-btn:hover {
+            opacity: 1;
+            color: #f87171;
+            background: rgba(239, 68, 68, 0.25);
+        }
+
         /* 图标点选器 */
         .icon-picker-box {
             display: flex;
@@ -900,8 +930,8 @@
             justify-content: flex-start;
             width: 100%;
             max-width: 18.75rem; /* 300px 前端固定宽度 */
-            min-height: 4.125rem; /* 66px 前端固定高度 */
-            padding: 0.625rem 1rem 0.625rem 0.875rem;
+            min-height: 4.125rem; /* 66px 前端固定标准高度 */
+            padding: 0.625rem 2.35rem 0.625rem 0.875rem;
             font-size: 1rem;
             font-weight: 700;
             text-decoration: none;
@@ -950,6 +980,28 @@
             flex: 1;
             width: 100%;
             line-height: 1.25;
+        }
+
+        /* 带有描述内容时自适应展开为 6.5rem 高度与多行顶部对齐 */
+        .preview-card-replica.has-desc,
+        .preview-card-replica:has(.card-desc:not(:empty)) {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            align-content: flex-start;
+            min-height: 6.5rem;
+            padding: 0.75rem 0.875rem;
+        }
+
+        .preview-card-replica.has-desc .icon,
+        .preview-card-replica:has(.card-desc:not(:empty)) .icon {
+            margin-top: 2px;
+        }
+
+        .preview-card-replica.has-desc .card-info,
+        .preview-card-replica:has(.card-desc:not(:empty)) .card-info {
+            justify-content: flex-start;
+            padding-right: 1.85rem;
         }
 
         .preview-card-replica .card-header {
@@ -1004,6 +1056,12 @@
         }
 
         /* 标签颜色完全与前端同步 */
+        .preview-card-replica .tag-home,
+        .preview-card-replica .tag-all-home {
+            background: rgba(34, 197, 94, 0.25);
+            color: #86efac;
+            border: 1px solid rgba(34, 197, 94, 0.6);
+        }
         .preview-card-replica .tag-dedicated {
             background: rgba(254, 240, 138, 0.25);
             color: #fef08a;
@@ -1060,6 +1118,12 @@
             color: #334155;
             border-color: rgba(0, 0, 0, 0.15);
         }
+        .preview-card-replica:hover .tag-home,
+        .preview-card-replica:hover .tag-all-home {
+            background: rgba(22, 163, 74, 0.22);
+            color: #14532d;
+            border-color: rgba(21, 128, 61, 0.5);
+        }
         .preview-card-replica:hover .tag-dedicated {
             background: rgba(234, 179, 8, 0.22);
             color: #854d0e;
@@ -1088,8 +1152,92 @@
             margin-left: 4px;
         }
 
+        .preview-card-replica .card-desc {
+            width: 100%;
+            flex-basis: 100%;
+            font-size: 0.75rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.82);
+            line-height: 1.4;
+            margin-top: 0.4rem;
+            text-align: left;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-break: break-word;
+            letter-spacing: -0.01em;
+            transition: color 0.25s ease;
+        }
+
         .preview-card-replica:hover .card-meta {
             color: #334155;
+        }
+
+        .preview-card-replica:hover .card-desc {
+            color: rgba(26, 26, 26, 0.8);
+        }
+
+        /* 二维码图标按钮（与前端网站 1:1 保持像素级完全一致） */
+        .preview-card-replica .qr-trigger {
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            right: 0.65rem;
+            top: 50%;
+            transform: translateY(-50%) !important;
+            width: 1.75rem;
+            height: 1.75rem;
+            border-radius: 0.375rem;
+            background: rgba(56, 189, 248, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.65);
+            color: #ffffff;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            cursor: pointer;
+            transition: background 0.2s ease,
+                        color 0.2s ease,
+                        border-color 0.2s ease,
+                        box-shadow 0.2s ease;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 2;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 带有描述内容时，二维码图标置于卡片右上角 */
+        .preview-card-replica.has-desc .qr-trigger,
+        .preview-card-replica:has(.card-desc:not(:empty)) .qr-trigger {
+            top: 0.65rem !important;
+            transform: none !important;
+        }
+
+        .preview-card-replica .qr-trigger svg {
+            width: 1.05rem;
+            height: 1.05rem;
+            display: block;
+            fill: currentColor;
+            margin: 0;
+            padding: 0;
+            transform: translateZ(0) !important;
+            backface-visibility: hidden;
+            transition: none !important;
+        }
+
+        .preview-card-replica:hover .qr-trigger {
+            background: rgba(56, 189, 248, 0.65);
+            color: #ffffff;
+        }
+
+        .preview-card-replica .qr-trigger:hover,
+        .preview-card-replica .qr-trigger:focus-visible {
+            background: rgba(224, 242, 254, 0.95) !important;
+            color: #0284c7 !important;
+            border-color: #ffffff !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
         /* 存活体检器面板 */
@@ -1819,6 +1967,10 @@
                                 </div>
                                 <div id="preview-meta-text" class="card-meta">68元/月 512GB 起</div>
                             </div>
+                            <div id="preview-desc-text" class="card-desc" style="display: none;"></div>
+                            <span class="qr-trigger" role="button" aria-label="查看手机二维码" title="手机端二维码">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 2h8v8H2V2zm2 2v4h4V4H4zm1 1h2v2H5V5zm9-3h8v8h-8V2zm2 2v4h4V4h-4zm1 1h2v2h-2V5zM2 14h8v8H2v-8zm2 2v4h4v-4H4zm1 1h2v2H5v-2zm9-2h2v2h-2v-2zm4 0h2v2h-2v-2zm-4 4h2v2h-2v-2zm4 0h2v2h-2v-2zm2-2h2v2h-2v-2zm-6 4h4v2h-4v-2zm4 0h2v2h-2v-2zm-6-6h2v2h-2v-2zm2 2h2v2h-2v-2z"/></svg>
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -1871,8 +2023,50 @@
                     </div>
 
                     <div class="form-group full-width">
-                        <label class="form-label">卡片头部标签 (Tags，点击快捷增删)：</label>
-                        <div class="preset-tags-pool">
+                        <label class="form-label">网站简述 (Description，展示在价格下方)：</label>
+                        <textarea id="card-form-desc" class="form-control" rows="2" placeholder="添加对网站的简单描述（选填，例如特色功能、节点优势等）"></textarea>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <label class="form-label" style="margin-bottom: 0;">卡片头部标签 (Tags，点击快捷增删)：</label>
+                            <button type="button" id="btn-toggle-add-custom-tag" class="btn btn-sm" style="font-size: 0.75rem; padding: 2px 10px; display: inline-flex; align-items: center; gap: 4px; background: rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.35); color: #38bdf8;">
+                                <span>➕</span> 新增标签
+                            </button>
+                        </div>
+
+                        <!-- 新增自定义标签面板 (收起/展开) -->
+                        <div id="custom-tag-create-panel" style="display: none; background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;">
+                            <div style="font-size: 0.78rem; font-weight: 600; color: #94a3b8; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+                                <span>✨ 新增卡片头部标签</span>
+                                <span style="font-size: 0.72rem; color: #64748b;">(自动选入当前卡片并同步加入快捷预设池)</span>
+                            </div>
+                            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                                <input type="text" id="custom-tag-text-input" class="form-control" style="flex: 2; min-width: 130px; font-size: 0.8rem; padding: 5px 8px;" placeholder="标签文字，如：全家宽 / 游戏专线" maxlength="20">
+                                
+                                <select id="custom-tag-color-select" class="form-control" style="flex: 1.5; min-width: 120px; font-size: 0.8rem; padding: 5px 8px;">
+                                    <option value="tag-home" selected>🟢 家宽绿 (全家宽)</option>
+                                    <option value="tag-dedicated">🟡 专线金 (黄色)</option>
+                                    <option value="tag-premium">🌱 精品薄荷 (浅绿)</option>
+                                    <option value="tag-commercial">🔵 商宽天蓝 (蓝色)</option>
+                                    <option value="tag-timeless">🟠 不限时橙 (橙色)</option>
+                                    <option value="tag-satellite">🟣 卫星罗兰 (紫色)</option>
+                                    <option value="tag-xinjiang">🩵 新疆青 (青色)</option>
+                                    <option value="tag-nat">🔷 NAT紫蓝</option>
+                                    <option value="tag-emby">🍀 Emby嫩绿</option>
+                                    <option value="tag-non-home">🔴 警示红 (非家宽)</option>
+                                    <option value="tag-default">⚪ 默认浅灰</option>
+                                </select>
+
+                                <div style="display: flex; gap: 6px;">
+                                    <button type="button" id="btn-confirm-add-custom-tag" class="btn btn-sm btn-primary" style="padding: 5px 12px; font-size: 0.8rem;">确认添加</button>
+                                    <button type="button" id="btn-cancel-add-custom-tag" class="btn btn-sm" style="padding: 5px 10px; font-size: 0.8rem;">取消</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="preset-tags-pool" class="preset-tags-pool">
+                            <span class="preset-tag-chip" data-tag-text="全家宽" data-tag-cls="tag-home">+ 全家宽</span>
                             <span class="preset-tag-chip" data-tag-text="专线" data-tag-cls="tag-dedicated">+ 专线</span>
                             <span class="preset-tag-chip" data-tag-text="含专线" data-tag-cls="tag-has-dedicated">+ 含专线</span>
                             <span class="preset-tag-chip" data-tag-text="精品线路" data-tag-cls="tag-premium">+ 精品线路</span>
@@ -2105,6 +2299,9 @@
                         }
                     }
 
+                    const descMatch = cardHtml.match(/<div class=["']card-desc["']>([\s\S]*?)<\/div>/i);
+                    const desc = descMatch ? descMatch[1].trim() : '';
+
                     const target = (linksMap[slug] && linksMap[slug].target) ? linksMap[slug].target : '';
 
                     cards.push({
@@ -2119,6 +2316,7 @@
                         headerTags,
                         metaText,
                         metaTag,
+                        desc,
                         target
                     });
                 }
@@ -2274,8 +2472,11 @@
                     metaTagHtml = ` <span class="card-tag ${card.metaTag.cls || ''}">${card.metaTag.text}</span>`;
                 }
 
+                const hasDescClass = card.desc ? ' has-desc' : '';
+                const descHtml = card.desc ? `\n                        <div class="card-desc">${card.desc}</div>` : '';
+
                 return `                <!-- ${card.cleanTitle} -->
-                <a data-slug="${card.slug}" class="button button-xzwl${cardHiddenClass}${filterClass}" href="https://jiakuan.link/${card.slug}" target="_blank"
+                <a data-slug="${card.slug}" class="button button-xzwl${cardHiddenClass}${filterClass}${hasDescClass}" href="https://jiakuan.link/${card.slug}" target="_blank"
                     rel="sponsored noopener" role="button" data-category="${card.category}"${displayStyle}>
                     <img class="icon" aria-hidden="true" src="${card.icon}" alt="${card.cleanTitle} Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
@@ -2283,7 +2484,7 @@
                             <h3 class="card-title">${displayTitle}</h3>${headerTagsHtml}
                         </div>
                         <div class="card-meta">${card.metaText || ''}${metaTagHtml}</div>
-                    </div>
+                    </div>${descHtml}
                 </a>`;
             }
 
@@ -2798,6 +2999,7 @@ ${defaultBody}
                 renderFaqItems();
                 renderGuideArticlesDropdown();
                 renderIconsLibrary();
+                renderPresetTagsPool();
                 if (isLocal) loadBackups();
                 document.getElementById('sw-version-display').textContent = `SW: ${cmsData.swVersion || 'v1.1.18'}`;
             }
@@ -3099,6 +3301,7 @@ ${defaultBody}
                 document.getElementById('card-form-meta-text').value = card ? card.metaText : '';
                 document.getElementById('card-form-meta-tag-text').value = (card && card.metaTag) ? card.metaTag.text : '';
                 document.getElementById('card-form-meta-tag-cls').value = (card && card.metaTag) ? card.metaTag.cls : '';
+                document.getElementById('card-form-desc').value = card ? (card.desc || '') : '';
                 document.getElementById('card-form-icon-path').value = card ? card.icon : 'images/icons/rancho.png';
                 document.getElementById('card-form-icon-preview').src = '/' + (card ? card.icon : 'images/icons/rancho.png');
                 document.getElementById('card-form-is-highlight').checked = card ? card.isHighlight : false;
@@ -3106,14 +3309,147 @@ ${defaultBody}
 
                 currentCardHeaderTags = card ? JSON.parse(JSON.stringify(card.headerTags || [])) : [];
                 renderSelectedTagsChips();
+                renderPresetTagsPool();
                 updateLivePreview();
+                toggleAddCustomTagPanel(false);
 
                 document.getElementById('card-modal').classList.add('open');
             }
 
+            // 预设与自定义标签管理逻辑
+            const DEFAULT_PRESET_TAGS = [
+                { text: '全家宽', cls: 'tag-home' },
+                { text: '专线', cls: 'tag-dedicated' },
+                { text: '含专线', cls: 'tag-has-dedicated' },
+                { text: '精品线路', cls: 'tag-premium' },
+                { text: '含精品线路', cls: 'tag-has-premium' },
+                { text: 'Emby', cls: 'tag-emby' },
+                { text: 'NAT', cls: 'tag-nat' },
+                { text: '商宽', cls: 'tag-commercial' },
+                { text: '直连', cls: 'tag-direct' },
+                { text: '不限时', cls: 'tag-timeless' },
+                { text: '非家宽', cls: 'tag-non-home' },
+                { text: '新疆优化', cls: 'tag-xinjiang' },
+                { text: '卫星网络', cls: 'tag-satellite' }
+            ];
+
+            function getCustomPresetTags() {
+                try {
+                    const stored = localStorage.getItem('cms_custom_header_tags');
+                    return stored ? JSON.parse(stored) : [];
+                } catch (e) {
+                    return [];
+                }
+            }
+
+            function saveCustomPresetTags(tags) {
+                try {
+                    localStorage.setItem('cms_custom_header_tags', JSON.stringify(tags));
+                } catch (e) {}
+            }
+
+            function getAllPresetTags() {
+                const list = [...DEFAULT_PRESET_TAGS];
+                const customList = getCustomPresetTags();
+
+                customList.forEach(ct => {
+                    if (ct && ct.text && !list.some(t => t.text === ct.text)) {
+                        list.push(ct);
+                    }
+                });
+
+                if (cmsData && Array.isArray(cmsData.cards)) {
+                    cmsData.cards.forEach(c => {
+                        if (Array.isArray(c.headerTags)) {
+                            c.headerTags.forEach(ht => {
+                                if (ht && ht.text && !list.some(t => t.text === ht.text)) {
+                                    list.push({ text: ht.text, cls: ht.cls || 'tag-default' });
+                                }
+                            });
+                        }
+                    });
+                }
+
+                return list;
+            }
+
+            function renderPresetTagsPool() {
+                const pool = document.getElementById('preset-tags-pool');
+                if (!pool) return;
+                pool.innerHTML = '';
+
+                const allPresets = getAllPresetTags();
+                const defaultTexts = new Set(DEFAULT_PRESET_TAGS.map(t => t.text));
+
+                allPresets.forEach(tag => {
+                    const isSelected = currentCardHeaderTags.some(t => t.text === tag.text);
+                    const isCustom = !defaultTexts.has(tag.text);
+
+                    const chip = document.createElement('span');
+                    chip.className = `preset-tag-chip${isSelected ? ' selected' : ''}`;
+                    chip.dataset.tagText = tag.text;
+                    chip.dataset.tagCls = tag.cls || 'tag-default';
+                    chip.title = isSelected ? `点击取消勾选 “${tag.text}”` : `点击添加 “${tag.text}”`;
+
+                    if (isCustom) {
+                        chip.innerHTML = `${isSelected ? '✓ ' : '+ '}${tag.text} <span class="custom-tag-del-btn" title="从预设池中移除此自定义标签">✕</span>`;
+                        const delBtn = chip.querySelector('.custom-tag-del-btn');
+                        if (delBtn) {
+                            delBtn.onclick = (e) => {
+                                e.stopPropagation();
+                                if (confirm(`确定从快捷预设池中移除自定义标签 “${tag.text}” 吗？`)) {
+                                    const customList = getCustomPresetTags().filter(t => t.text !== tag.text);
+                                    saveCustomPresetTags(customList);
+                                    renderPresetTagsPool();
+                                }
+                            };
+                        }
+                    } else {
+                        chip.textContent = `${isSelected ? '✓ ' : '+ '}${tag.text}`;
+                    }
+
+                    chip.addEventListener('click', () => {
+                        toggleTag(tag.text, tag.cls || 'tag-default');
+                    });
+
+                    pool.appendChild(chip);
+                });
+
+                // 末尾附加“➕ 新增标签”虚线按钮 Chip
+                const addChip = document.createElement('span');
+                addChip.className = 'preset-tag-chip preset-tag-chip-add';
+                addChip.style.cssText = 'border-style: dashed; border-color: rgba(56, 189, 248, 0.5); color: #38bdf8; font-weight: 600;';
+                addChip.textContent = '➕ 新增标签';
+                addChip.title = '创建并添加新标签';
+                addChip.onclick = () => {
+                    toggleAddCustomTagPanel(true);
+                };
+                pool.appendChild(addChip);
+            }
+
+            function toggleTag(text, cls) {
+                const existingIdx = currentCardHeaderTags.findIndex(t => t.text === text);
+                if (existingIdx !== -1) {
+                    currentCardHeaderTags.splice(existingIdx, 1);
+                } else {
+                    currentCardHeaderTags.push({ text, cls });
+                }
+                renderSelectedTagsChips();
+                renderPresetTagsPool();
+                updateLivePreview();
+            }
+
             function renderSelectedTagsChips() {
                 const container = document.getElementById('card-selected-tags-chips');
+                if (!container) return;
                 container.innerHTML = '';
+                if (currentCardHeaderTags.length === 0) {
+                    const emptyHint = document.createElement('span');
+                    emptyHint.style.cssText = 'font-size: 0.75rem; color: #64748b; font-style: italic;';
+                    emptyHint.textContent = '暂未选择头部标签，点击上方快捷预设或点击“➕ 新增标签”添加';
+                    container.appendChild(emptyHint);
+                    return;
+                }
                 currentCardHeaderTags.forEach((t, i) => {
                     const chip = document.createElement('span');
                     chip.className = `tag-pill ${t.cls || 'tag-default'}`;
@@ -3123,23 +3459,74 @@ ${defaultBody}
                     chip.onclick = () => {
                         currentCardHeaderTags.splice(i, 1);
                         renderSelectedTagsChips();
+                        renderPresetTagsPool();
                         updateLivePreview();
                     };
                     container.appendChild(chip);
                 });
             }
 
-            // 快捷预设标签池点击
-            document.querySelectorAll('.preset-tag-chip').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const text = btn.dataset.tagText;
-                    const cls = btn.dataset.tagCls;
-                    if (!currentCardHeaderTags.some(t => t.text === text)) {
-                        currentCardHeaderTags.push({ text, cls });
-                        renderSelectedTagsChips();
-                        updateLivePreview();
+            function toggleAddCustomTagPanel(forceOpen = null) {
+                const panel = document.getElementById('custom-tag-create-panel');
+                if (!panel) return;
+                const shouldOpen = forceOpen !== null ? forceOpen : (panel.style.display === 'none');
+                panel.style.display = shouldOpen ? 'block' : 'none';
+                if (shouldOpen) {
+                    const input = document.getElementById('custom-tag-text-input');
+                    if (input) {
+                        input.value = '';
+                        input.focus();
                     }
-                });
+                }
+            }
+
+            function confirmAddNewTag() {
+                const input = document.getElementById('custom-tag-text-input');
+                const select = document.getElementById('custom-tag-color-select');
+                if (!input) return;
+                const text = input.value.trim();
+                const cls = select ? select.value : 'tag-home';
+
+                if (!text) {
+                    showToast('请输入新标签名称');
+                    input.focus();
+                    return;
+                }
+
+                // 保存至自定义预设存储
+                const customList = getCustomPresetTags();
+                if (!customList.some(t => t.text === text) && !DEFAULT_PRESET_TAGS.some(t => t.text === text)) {
+                    customList.push({ text, cls });
+                    saveCustomPresetTags(customList);
+                }
+
+                // 立即选入当前正在编辑的卡片中
+                if (!currentCardHeaderTags.some(t => t.text === text)) {
+                    currentCardHeaderTags.push({ text, cls });
+                }
+
+                renderSelectedTagsChips();
+                renderPresetTagsPool();
+                updateLivePreview();
+
+                input.value = '';
+                toggleAddCustomTagPanel(false);
+                showToast(`成功添加新标签 “${text}”`);
+            }
+
+            // 绑定“新增标签”操作按钮事件
+            document.getElementById('btn-toggle-add-custom-tag')?.addEventListener('click', () => {
+                toggleAddCustomTagPanel();
+            });
+            document.getElementById('btn-cancel-add-custom-tag')?.addEventListener('click', () => {
+                toggleAddCustomTagPanel(false);
+            });
+            document.getElementById('btn-confirm-add-custom-tag')?.addEventListener('click', confirmAddNewTag);
+            document.getElementById('custom-tag-text-input')?.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    confirmAddNewTag();
+                }
             });
 
             // 实时预览更新 (与前端网站 1:1 保持像素级完全一致)
@@ -3170,9 +3557,20 @@ ${defaultBody}
                     metaHtml += ` <span class="card-tag ${metaTagCls}">${metaTagText}</span>`;
                 }
                 document.getElementById('preview-meta-text').innerHTML = metaHtml;
+
+                const descText = document.getElementById('card-form-desc')?.value.trim() || '';
+                const previewDescEl = document.getElementById('preview-desc-text');
+                const liveCardPreview = document.getElementById('live-card-preview');
+                if (previewDescEl) {
+                    previewDescEl.textContent = descText;
+                    previewDescEl.style.display = descText ? '-webkit-box' : 'none';
+                }
+                if (liveCardPreview) {
+                    liveCardPreview.classList.toggle('has-desc', Boolean(descText));
+                }
             }
 
-            ['card-form-title', 'card-form-meta-text', 'card-form-meta-tag-text', 'card-form-meta-tag-cls', 'card-form-is-highlight', 'card-form-is-hidden'].forEach(id => {
+            ['card-form-title', 'card-form-meta-text', 'card-form-meta-tag-text', 'card-form-meta-tag-cls', 'card-form-desc', 'card-form-is-highlight', 'card-form-is-hidden'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.addEventListener('input', updateLivePreview);
@@ -3189,6 +3587,7 @@ ${defaultBody}
                 const metaText = document.getElementById('card-form-meta-text').value.trim();
                 const metaTagText = document.getElementById('card-form-meta-tag-text').value.trim();
                 const metaTagCls = document.getElementById('card-form-meta-tag-cls').value.trim();
+                const desc = document.getElementById('card-form-desc').value.trim();
                 const icon = document.getElementById('card-form-icon-path').value.trim();
                 const isHighlight = document.getElementById('card-form-is-highlight').checked;
                 const isHidden = document.getElementById('card-form-is-hidden').checked;
@@ -3214,6 +3613,7 @@ ${defaultBody}
                     headerTags: currentCardHeaderTags,
                     metaText,
                     metaTag,
+                    desc,
                     target,
                     isHighlight,
                     isHidden

@@ -1,6 +1,6 @@
 {
   "akile": {
-    "title": "AkileCloud",
+    "title": "!AkileCloud",
     "target": "https://akile.ai/register?aff_code=0c0d0c15-1f7b-4079-a9ba-967393ab2421",
     "category": "vps",
     "updatedAt": "2026-10-27"
@@ -18,7 +18,7 @@
     "updatedAt": "2026-10-27"
   },
   "biu": {
-    "title": "BiuBiu",
+    "title": "!BiuBiu",
     "target": "https://biubiu.one/#/register?code=9zhyjLWY",
     "category": "noble",
     "updatedAt": "2026-10-27"
@@ -36,13 +36,13 @@
     "updatedAt": "2026-10-27"
   },
   "dog": {
-    "title": "SSRDOG",
+    "title": "!SSRDOG",
     "target": "https://st2.hosbb.com/#/register?code=iqLoMSct",
     "category": "noble",
     "updatedAt": "2026-10-27"
   },
   "dxwl": {
-    "title": "大象网络",
+    "title": "!大象网络",
     "target": "https://dx.elphantroute.com/app#/register?code=qxu83JG7",
     "category": "airport",
     "updatedAt": "2026-10-27"
@@ -54,7 +54,7 @@
     "updatedAt": "2026-10-27"
   },
   "equal": {
-    "title": "!EqualDCDN",
+    "title": "EqualDCDN",
     "target": "https://www.ipequal.com/?ref=3922b04b36",
     "category": "airport",
     "updatedAt": "2026-10-27"
@@ -96,7 +96,7 @@
     "updatedAt": "2026-10-27"
   },
   "jms": {
-    "title": "Just My Socks",
+    "title": "!Just My Socks",
     "target": "https://justmysocks5.net/members/aff.php?aff=39292",
     "category": "noble",
     "updatedAt": "2026-10-27"
@@ -126,19 +126,19 @@
     "updatedAt": "2026-10-27"
   },
   "miao": {
-    "title": "Miaona",
+    "title": "!Miaona",
     "target": "https://miaona.app/#/register?code=7haX2t5V",
     "category": "airport",
     "updatedAt": "2026-10-27"
   },
   "niva": {
-    "title": "NIVA Network",
+    "title": "!NIVA Network",
     "target": "https://niva.lol/r/xd02",
     "category": "airport",
     "updatedAt": "2026-10-27"
   },
   "now": {
-    "title": "Now加速",
+    "title": "!Now加速",
     "target": "https://www.noww.cc/#/register?code=TFNz7IZX",
     "category": "airport",
     "updatedAt": "2026-10-27"
@@ -233,13 +233,13 @@
     "updatedAt": "2026-10-27"
   },
   "voluri": {
-    "title": "Voluri",
+    "title": "!Voluri",
     "target": "https://voluri.net/aff.php?aff=27",
     "category": "vps",
     "updatedAt": "2026-10-27"
   },
   "voyra": {
-    "title": "VoyraCloud",
+    "title": "!VoyraCloud",
     "target": "https://www.voyracloud.com/?ref_code=PYUJNEW3",
     "category": "vps",
     "updatedAt": "2026-10-27"
@@ -252,12 +252,6 @@
   "wjkc": {
     "title": "#网际快车",
     "target": "https://QRBAPA.快车.com",
-    "category": "airport",
-    "updatedAt": "2026-10-27"
-  },
-  "wty": {
-    "title": "唯兔云",
-    "target": "https://auifd.v2saat.club/#/?code=WPQsfrfo",
     "category": "airport",
     "updatedAt": "2026-10-27"
   },
@@ -274,7 +268,7 @@
     "updatedAt": "2026-10-27"
   },
   "yf": {
-    "title": "!云帆",
+    "title": "云帆",
     "target": "https://fan.yunfan.app/#/register?code=c9LpBOig",
     "category": "airport",
     "updatedAt": "2026-10-27"
