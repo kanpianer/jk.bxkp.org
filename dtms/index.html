@@ -5016,7 +5016,13 @@ ${defaultBody}
                     btn.textContent = '💾 应用';
 
                     alert(`🎉 恭喜！已通过 GitHub API 成功提交到仓库！\n提交 ID: ${result.commitSha.substring(0, 7)}\nCloudflare Pages 已自动开始部署，预计 1 分钟内全球生效！`);
-                    loadData();
+                    // 在线模式下切勿立即调用 loadData()，避免从尚未部署生效的静态 CDN 反向冲刷内存中的最新卡片数据
+                    if (bumpSw) {
+                        cmsData.swVersion = newSwVersion;
+                        const swEl = document.getElementById('stat-sw-version');
+                        if (swEl) swEl.textContent = newSwVersion;
+                    }
+                    renderCardsList();
                 } catch (err) {
                     btn.disabled = false;
                     btn.textContent = '💾 应用';

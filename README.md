@@ -51,9 +51,9 @@
 
 | 站点名称 | 推荐级别 | 特性标签 | 价格 / 规格起步 | 快速访问短链 | 官方直达链接 |
 | :--- | :---: | :--- | :--- | :--- | :--- |
+| **Shlii** | ⭐ 重点推荐 | `NAT` `含精品线路` `有便宜节点卖` | ¥4.95/月 200GB 起 | [jiakuan.link/shlii](https://jiakuan.link/shlii) | [直达官网](https://shlii.io/instances/create?promoCode=AFF-7087-QG7QXSLX) |
 | **干杯CLOUD** | ⭐ 重点推荐 | - | ¥138 不限流量 起 | [jiakuan.link/ganbei](https://jiakuan.link/ganbei) | [直达官网](https://usvps24.com/r/YMJLG4LH) |
 | **ATTVPS** | ⭐ 重点推荐 | - | $28.88/月 起 不限流量 | [jiakuan.link/attvps](https://jiakuan.link/attvps) | [直达官网](https://attvps.com/aff.php?aff=106) |
-| **Shlii** | ⭐ 重点推荐 | `NAT` `含精品线路` `有便宜节点卖` | ¥4.95/月 200GB 起 | [jiakuan.link/shlii](https://jiakuan.link/shlii) | [直达官网](https://shlii.io/instances/create?promoCode=AFF-7087-QG7QXSLX) |
 | **AkileCloud** | 精选 | `含精品线路` | ¥15.99/月 2000G 起 | [jiakuan.link/akile](https://jiakuan.link/akile) | [直达官网](https://akile.ai/register?aff_code=0c0d0c15-1f7b-4079-a9ba-967393ab2421) |
 | **学长网络** | 精选 | `NAT` `含精品线路` | ¥15起 | [jiakuan.link/xzwl](https://jiakuan.link/xzwl) | [直达官网](https://xuezhangvps.shop/aff.php?aff=130) |
 | **ZoroCloud** | 精选 | `含精品线路` | ¥39/月 500GB 起 | [jiakuan.link/zoro](https://jiakuan.link/zoro) | [直达官网](https://my.zorocloud.com/aff.php?aff=1371) |
