@@ -212,12 +212,36 @@
         if (guideToggle) {
             guideToggle.setAttribute('aria-label', title);
             guideToggle.setAttribute('title', title);
+            guideToggle.dataset.category = category;
         }
         if (modalTitle) {
             modalTitle.textContent = title;
         }
     }
     window.__updateGuideCategory = updateGuideCategory;
+
+    // 2.5.1. 指南按钮快速高亮动效（分类切换时流畅柔和高亮）
+    let guideHighlightTimer = null;
+    function highlightGuideButton() {
+        const guideToggle = document.getElementById('guide-toggle');
+        if (!guideToggle) return;
+
+        if (guideHighlightTimer) {
+            clearTimeout(guideHighlightTimer);
+            guideHighlightTimer = null;
+        }
+
+        guideToggle.classList.remove('is-switching-highlight');
+        // 强制触发布局重排，确保连续快速切换分类时每次都能从头丝滑播放
+        void guideToggle.offsetWidth;
+        guideToggle.classList.add('is-switching-highlight');
+
+        guideHighlightTimer = setTimeout(() => {
+            guideToggle.classList.remove('is-switching-highlight');
+            guideHighlightTimer = null;
+        }, 900);
+    }
+    window.__highlightGuideButton = highlightGuideButton;
 
     // 2.6. 用户首次打开网站时，用黄色箭头图标飞向并指向指南按钮（带极速拖影残影与呼吸状动画）
     function initGuideArrowPrompt() {
@@ -509,10 +533,16 @@
             document.body.appendChild(overlay);
         }
 
-        // 计算卡片第二行中心区域的物理坐标
+        // 计算卡片在视口中的定位坐标（桌面设备居中于两排卡片水平中间位置）
         const stack = document.querySelector('.button-stack');
         let targetY = window.innerHeight * 0.4;
+        let targetX = window.innerWidth / 2;
         if (stack) {
+            const stackRect = stack.getBoundingClientRect();
+            if (stackRect.width > 0) {
+                targetX = stackRect.left + stackRect.width / 2;
+            }
+
             const visibleCards = Array.from(stack.querySelectorAll('.button')).filter(card => {
                 return window.getComputedStyle(card).display !== 'none';
             });
@@ -532,11 +562,27 @@
 
                 rows.sort((a, b) => a.top - b.top);
 
-                // 目标位置始终锁定在第二行（若仅有一行则使用该行）
-                const targetRow = rows.length > 1 ? rows[1] : rows[0];
-                const sampleCard = targetRow.cards[0];
-                const cardRect = sampleCard.getBoundingClientRect();
-                targetY = cardRect.top + cardRect.height / 2;
+                const isDesktop = (typeof isMobileDevice === 'function' ? !isMobileDevice() : true) && window.innerWidth > 768;
+
+                if ((isDesktop || rows.length === 2) && rows.length >= 2) {
+                    // 桌面设备下：停留位置在两排卡片的水平中间位置（第一排与第二排之间，水平垂直双向居中）
+                    const row1Top = Math.min(...rows[0].cards.map(c => c.getBoundingClientRect().top));
+                    const row2Bottom = Math.max(...rows[1].cards.map(c => c.getBoundingClientRect().bottom));
+                    targetY = (row1Top + row2Bottom) / 2;
+
+                    const allVisibleCards = [...rows[0].cards, ...rows[1].cards];
+                    const minLeft = Math.min(...allVisibleCards.map(c => c.getBoundingClientRect().left));
+                    const maxRight = Math.max(...allVisibleCards.map(c => c.getBoundingClientRect().right));
+                    if (maxRight > minLeft) {
+                        targetX = (minLeft + maxRight) / 2;
+                    }
+                } else {
+                    // 移动端等单列布局场景：锁定在指定行卡片中心（默认第二行）
+                    const targetRow = rows.length > 1 ? rows[1] : rows[0];
+                    const sampleCard = targetRow.cards[0];
+                    const cardRect = sampleCard.getBoundingClientRect();
+                    targetY = cardRect.top + cardRect.height / 2;
+                }
             } else {
                 const rect = stack.getBoundingClientRect();
                 if (rect.height > 0) {
@@ -555,6 +601,7 @@
 
         const card = document.createElement('div');
         card.className = `speed-toast-card speed-toast-${type || 'noble'}`;
+        card.style.setProperty('--target-x', `${targetX}px`);
         card.style.setProperty('--start-y', `${startY}px`);
         card.style.setProperty('--target-y', `${targetY}px`);
         card.style.setProperty('--exit-y', `${exitY}px`);
@@ -756,6 +803,11 @@
 
             updateCardVisibility(true);
             updateGuideCategory(activeCategory);
+
+            // 切换分类时，左上角的指南按钮对应快速高亮一下（柔和流畅）
+            if (prevCategory !== activeCategory) {
+                highlightGuideButton();
+            }
 
             // 触发分类切换极速拖影动效（老站：“省心”，VPS：“不难”，机场：“家宽”）
             if (prevCategory !== activeCategory) {
@@ -998,11 +1050,11 @@
     }
 
     // 7. 设备判定与全屏四边动态 Emoji 飞行引擎 (Unicode 全套 Emoji)
-    const isMobileDevice = () => {
+    function isMobileDevice() {
         return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(navigator.userAgent)
             || (navigator.maxTouchPoints > 1 && window.innerWidth <= 1024)
             || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches && window.innerWidth <= 1024);
-    };
+    }
 
     let emojiFlightController = null;
 
@@ -1733,6 +1785,49 @@
         }, true);
     }
 
+    // 10. 初始化底部页角备用网址随机分流逻辑（https://jkdh.pages.dev/ 与 https://jkdh.sld.tw/ 打开概率各为 50%）
+    function initBackupUrl() {
+        const backupLink = document.getElementById('backup-site-link') ||
+            document.querySelector('.middle-footer a[href*="jkdh"]') ||
+            Array.from(document.querySelectorAll('.middle-footer a')).find(a => a.textContent.trim() === '备用网址');
+        if (!backupLink) return;
+
+        const BACKUP_URLS = [
+            'https://jkdh.pages.dev/',
+            'https://jkdh.sld.tw/'
+        ];
+
+        function getRandomBackupUrl() {
+            return BACKUP_URLS[Math.random() < 0.5 ? 0 : 1];
+        }
+
+        let lastActionTime = 0;
+        function updateRandomUrl() {
+            const now = Date.now();
+            if (now - lastActionTime > 200) {
+                lastActionTime = now;
+                backupLink.href = getRandomBackupUrl();
+            }
+        }
+
+        // 页面初始化或唤醒时随机选定一个初始目标
+        backupLink.href = getRandomBackupUrl();
+
+        if (backupLink.dataset.backupInitialized === 'true') return;
+        backupLink.dataset.backupInitialized = 'true';
+
+        // 鼠标按下 / 触摸开始时选定
+        backupLink.addEventListener('pointerdown', updateRandomUrl);
+        // 主点击事件（覆盖键盘回车激活与常规左键点击）
+        backupLink.addEventListener('click', updateRandomUrl);
+        // 鼠标中键（在新后台标签页打开）
+        backupLink.addEventListener('auxclick', (e) => {
+            if (e.button === 1) updateRandomUrl();
+        });
+        // 右键菜单打开前更新链接，确保复制链接地址或新标签打开准确
+        backupLink.addEventListener('contextmenu', updateRandomUrl);
+    }
+
     // 全局初始化入口（供 SPA 路由返回主页时唤醒交互）
     window.__initHomePageInteractive = function () {
         initGuideModal();
@@ -1742,6 +1837,7 @@
         initExpandButton();
         initCardQRCodes();
         initEmojiFlight();
+        initBackupUrl();
         if (typeof Matter !== 'undefined') {
             initDesktopPhysics();
         } else {

@@ -1884,21 +1884,73 @@ body.cards-falling .qr-popup {
 	color: #ffffff !important;
 	font-family: inherit;
 	font-size: 0.95rem;
-	font-weight: 500;
+	font-weight: 700;
 	line-height: 1;
 	z-index: 1000;
 	pointer-events: auto;
 	-webkit-tap-highlight-color: transparent;
 	user-select: none;
-	text-shadow: none !important;
-	filter: none !important;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.25) !important;
+	filter: none;
 	opacity: 1 !important;
 	transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.25s ease;
+	will-change: filter;
+
+	/* 分类专属柔和光晕变量（仅作用于文字与图标高亮） */
+	--guide-glow-core: rgba(255, 255, 255, 0.98);
+	--guide-glow-aura: rgba(147, 197, 253, 0.92);
+	--guide-glow-outer: rgba(56, 189, 248, 0.55);
+}
+
+.guide-toggle-btn[data-category="noble"] {
+	--guide-glow-aura: rgba(253, 230, 138, 0.95);
+	--guide-glow-outer: rgba(245, 158, 11, 0.55);
+}
+
+.guide-toggle-btn[data-category="vps"] {
+	--guide-glow-aura: rgba(196, 181, 253, 0.95);
+	--guide-glow-outer: rgba(139, 92, 246, 0.55);
+}
+
+.guide-toggle-btn[data-category="airport"] {
+	--guide-glow-aura: rgba(147, 197, 253, 0.95);
+	--guide-glow-outer: rgba(56, 189, 248, 0.55);
+}
+
+/* 分类切换时仅对指南按钮文字与图标快速高亮（流畅柔和，无多余动效） */
+.guide-toggle-btn.is-switching-highlight {
+	animation: guideSwitchHighlight 0.85s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+}
+
+@keyframes guideSwitchHighlight {
+	0% {
+		filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0));
+	}
+	28% {
+		filter: drop-shadow(0 0 6px var(--guide-glow-core, rgba(255, 255, 255, 0.98)))
+		        drop-shadow(0 0 14px var(--guide-glow-aura, rgba(147, 197, 253, 0.92)))
+		        drop-shadow(0 0 24px var(--guide-glow-outer, rgba(56, 189, 248, 0.55)));
+	}
+	60% {
+		filter: drop-shadow(0 0 4px var(--guide-glow-core, rgba(255, 255, 255, 0.65)))
+		        drop-shadow(0 0 10px var(--guide-glow-aura, rgba(147, 197, 253, 0.45)))
+		        drop-shadow(0 0 16px var(--guide-glow-outer, rgba(56, 189, 248, 0.22)));
+	}
+	100% {
+		filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0));
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.guide-toggle-btn.is-switching-highlight {
+		animation: none !important;
+	}
 }
 
 .guide-toggle-btn span {
 	color: #ffffff !important;
-	text-shadow: none !important;
+	font-weight: 700;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.25) !important;
 }
 
 .guide-toggle-btn:hover,
@@ -1924,12 +1976,12 @@ body.cards-falling .qr-popup {
 	width: 1.2rem;
 	height: 1.2rem;
 	stroke: #ffffff !important;
-	stroke-width: 1.85;
+	stroke-width: 2;
 	stroke-linecap: round;
 	stroke-linejoin: round;
 	fill: none;
 	flex-shrink: 0;
-	filter: none !important;
+	filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4)) drop-shadow(0 2px 5px rgba(0, 0, 0, 0.25)) !important;
 }
 
 @media (max-width: 34.375rem) {
@@ -2559,53 +2611,52 @@ body[data-active-category="vps"] #seo-knowledge {
 .seo-cluster-grid {
 	display: flex;
 	flex-direction: column;
-	gap: 1rem;
-	margin-top: 1rem;
+	gap: 1.15rem;
+	margin-top: 1.15rem;
 }
 
 .seo-cluster-card {
 	display: flex;
 	flex-direction: column;
 	justify-content: space-between;
-	padding: 1.25rem;
-	background: rgba(255, 255, 255, 0.35);
-	border-radius: 12px;
-	border: 1px solid rgba(255, 255, 255, 0.45);
+	padding: 1.35rem 1.45rem;
+	background: rgba(255, 255, 255, 0.4);
+	border-radius: 14px;
+	border: 1px solid rgba(255, 255, 255, 0.55);
 	text-decoration: none;
 	color: inherit;
-	transition: transform 0.2s ease, border-color 0.2s ease;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+	transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 :root.theme-dark .seo-cluster-card,
 :root.theme-auto .seo-cluster-card {
 	background: rgba(255, 255, 255, 0.04);
-	border-color: rgba(255, 255, 255, 0.08);
+	border-color: rgba(255, 255, 255, 0.09);
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
 @media (prefers-color-scheme: light) {
 	:root.theme-auto .seo-cluster-card {
-		background: rgba(255, 255, 255, 0.35);
-		border-color: rgba(255, 255, 255, 0.45);
+		background: rgba(255, 255, 255, 0.4);
+		border-color: rgba(255, 255, 255, 0.55);
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
 	}
 }
 
 .seo-cluster-card:hover {
-	transform: translateY(-2px);
+	transform: translateY(-3px);
 	border-color: #3b82f6;
+	box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);
 }
 
 .seo-cluster-card h3 {
-	font-size: 1.05rem;
+	font-size: 1.12rem;
 	font-weight: 700;
-	margin: 0 0 0.5rem 0;
-	color: inherit;
-}
-
-.seo-cluster-card h3 {
-	font-size: 1.05rem;
-	font-weight: 700;
-	margin: 0 0 0.5rem 0;
+	line-height: 1.45;
+	margin: 0 0 0.55rem 0;
 	color: #0f172a;
+	letter-spacing: -0.01em;
 }
 
 :root.theme-dark .seo-cluster-card h3,
@@ -2620,10 +2671,10 @@ body[data-active-category="vps"] #seo-knowledge {
 }
 
 .seo-cluster-card p {
-	font-size: 0.88rem;
-	line-height: 1.55;
-	margin: 0 0 0.75rem 0;
-	color: #1e293b !important;
+	font-size: 0.92rem;
+	line-height: 1.65;
+	margin: 0 0 0.85rem 0;
+	color: #334155 !important;
 	text-shadow: none !important;
 	opacity: 1 !important;
 	font-weight: 450;
@@ -2638,19 +2689,24 @@ body[data-active-category="vps"] #seo-knowledge {
 
 @media (prefers-color-scheme: light) {
 	:root.theme-auto .seo-cluster-card p {
-		color: #1e293b !important;
+		color: #334155 !important;
 		text-shadow: none !important;
 		opacity: 1 !important;
 	}
 }
 
 .seo-cluster-link-text {
-	font-size: 0.85rem;
+	font-size: 0.88rem;
 	font-weight: 600;
 	color: #2563eb;
-	display: flex;
+	display: inline-flex;
 	align-items: center;
-	gap: 0.25rem;
+	gap: 0.3rem;
+	transition: gap 0.2s ease, color 0.2s ease;
+}
+
+.seo-cluster-card:hover .seo-cluster-link-text {
+	gap: 0.55rem;
 }
 
 :root.theme-dark .seo-cluster-link-text,
@@ -2769,7 +2825,7 @@ body[data-active-category="vps"] #seo-knowledge {
 
 .speed-toast-card {
 	position: absolute;
-	left: 50%;
+	left: var(--target-x, 50%);
 	top: 0;
 	transform: translate3d(-50%, calc(var(--start-y, 110vh) - 50%), 0);
 	pointer-events: none;
@@ -2858,9 +2914,9 @@ body[data-active-category="vps"] #seo-knowledge {
 .speed-streak.line-4 { left: 85%; animation-delay: 0.01s; }
 
 /* 核心位移关键帧：
-   0% ~ 30% (0.30s): 底部进入 -> 明显平滑减速移入第二行卡片中心（比之前加0.1秒，移动过程更清晰）
-   30% ~ 70% (0.40s): 第二行卡片中心水平对齐静止停留 0.4 秒（无任何缩小动作）
-   70% ~ 100% (0.30s): 极速向上发射消失（比之前加0.1秒，冲顶过程更明显完整）
+   0% ~ 30% (0.30s): 底部进入 -> 明显平滑减速移入两排卡片水平中间位置（移动过程更清晰）
+   30% ~ 70% (0.40s): 两排卡片水平中间位置静止停留 0.4 秒（无任何缩小动作）
+   70% ~ 100% (0.30s): 极速向上发射消失（冲顶过程更明显完整）
 */
 @keyframes speedToastFlight {
 	0% {
