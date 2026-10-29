@@ -1785,47 +1785,101 @@
         }, true);
     }
 
-    // 10. 初始化底部页角备用网址随机分流逻辑（https://jkdh.pages.dev/ 与 https://jkdh.sld.tw/ 打开概率各为 50%）
-    function initBackupUrl() {
-        const backupLink = document.getElementById('backup-site-link') ||
-            document.querySelector('.middle-footer a[href*="jkdh"]') ||
-            Array.from(document.querySelectorAll('.middle-footer a')).find(a => a.textContent.trim() === '备用网址');
-        if (!backupLink) return;
+    // 10. 初始化底部页角友情链接多链接概率随机分流逻辑
+    if (!window.__pickFooterUrl) {
+        window.__pickFooterUrl = function(el) {
+            if (!el || !el.dataset || !el.dataset.urls) return;
+            try {
+                var urls = JSON.parse(el.dataset.urls);
+                if (!Array.isArray(urls) || urls.length === 0) return;
+                var total = 0;
+                for (var i = 0; i < urls.length; i++) {
+                    var w = parseFloat(urls[i].weight);
+                    if (!isNaN(w) && w > 0) total += w;
+                }
+                if (total <= 0) { el.href = urls[0].url; return; }
+                var rnd = Math.random() * total, acc = 0;
+                for (var j = 0; j < urls.length; j++) {
+                    var weight = parseFloat(urls[j].weight);
+                    if (!isNaN(weight) && weight > 0) {
+                        acc += weight;
+                        if (rnd <= acc) { el.href = urls[j].url; break; }
+                    }
+                }
+            } catch (e) {}
+        };
+    }
 
-        const BACKUP_URLS = [
-            'https://jkdh.pages.dev/',
-            'https://jkdh.sld.tw/'
-        ];
+    function initFooterLinks() {
+        const footerLinks = document.querySelectorAll('.middle-footer a');
+        if (!footerLinks || footerLinks.length === 0) return;
 
-        function getRandomBackupUrl() {
-            return BACKUP_URLS[Math.random() < 0.5 ? 0 : 1];
-        }
+        footerLinks.forEach((link) => {
+            const dataUrls = link.getAttribute('data-urls');
+            let urlsList = null;
 
-        let lastActionTime = 0;
-        function updateRandomUrl() {
-            const now = Date.now();
-            if (now - lastActionTime > 200) {
-                lastActionTime = now;
-                backupLink.href = getRandomBackupUrl();
+            if (dataUrls) {
+                try {
+                    urlsList = JSON.parse(dataUrls);
+                } catch (e) {}
+            } else if (link.id === 'backup-site-link' || link.textContent.trim() === '备用网址' || (link.href && link.href.includes('jkdh'))) {
+                // 兼容未设置 data-urls 的旧版备用网址
+                urlsList = [
+                    { url: 'https://jkdh.pages.dev/', weight: 50 },
+                    { url: 'https://jkdh.sld.tw/', weight: 50 }
+                ];
             }
-        }
 
-        // 页面初始化或唤醒时随机选定一个初始目标
-        backupLink.href = getRandomBackupUrl();
+            if (!Array.isArray(urlsList) || urlsList.length <= 1) return;
 
-        if (backupLink.dataset.backupInitialized === 'true') return;
-        backupLink.dataset.backupInitialized = 'true';
+            const total = urlsList.reduce((acc, it) => acc + (Math.max(0, parseFloat(it.weight) || 0)), 0);
+            function getRandomUrl() {
+                if (total <= 0) return urlsList[0]?.url || link.href;
+                const rand = Math.random() * total;
+                let acc = 0;
+                for (let i = 0; i < urlsList.length; i++) {
+                    const w = Math.max(0, parseFloat(urlsList[i].weight) || 0);
+                    if (w > 0) {
+                        acc += w;
+                        if (rand <= acc) return urlsList[i].url;
+                    }
+                }
+                return urlsList[0]?.url || link.href;
+            }
 
-        // 鼠标按下 / 触摸开始时选定
-        backupLink.addEventListener('pointerdown', updateRandomUrl);
-        // 主点击事件（覆盖键盘回车激活与常规左键点击）
-        backupLink.addEventListener('click', updateRandomUrl);
-        // 鼠标中键（在新后台标签页打开）
-        backupLink.addEventListener('auxclick', (e) => {
-            if (e.button === 1) updateRandomUrl();
+            let lastActionTime = 0;
+            function updateRandomUrl() {
+                const now = Date.now();
+                if (now - lastActionTime > 200) {
+                    lastActionTime = now;
+                    const nextUrl = getRandomUrl();
+                    if (nextUrl) link.href = nextUrl;
+                }
+            }
+
+            // 页面初始化或唤醒时随机选定一个初始目标
+            const initialUrl = getRandomUrl();
+            if (initialUrl) link.href = initialUrl;
+
+            if (link.dataset.footerInitialized === 'true') return;
+            link.dataset.footerInitialized = 'true';
+            link.dataset.backupInitialized = 'true';
+
+            // 鼠标按下 / 触摸开始时选定
+            link.addEventListener('pointerdown', updateRandomUrl);
+            // 主点击事件（覆盖键盘回车激活与常规左键点击）
+            link.addEventListener('click', updateRandomUrl);
+            // 鼠标中键（在新后台标签页打开）
+            link.addEventListener('auxclick', (e) => {
+                if (e.button === 1) updateRandomUrl();
+            });
+            // 右键菜单打开前更新链接，确保复制链接地址或新标签打开准确
+            link.addEventListener('contextmenu', updateRandomUrl);
         });
-        // 右键菜单打开前更新链接，确保复制链接地址或新标签打开准确
-        backupLink.addEventListener('contextmenu', updateRandomUrl);
+    }
+
+    function initBackupUrl() {
+        initFooterLinks();
     }
 
     // 全局初始化入口（供 SPA 路由返回主页时唤醒交互）
@@ -1837,7 +1891,7 @@
         initExpandButton();
         initCardQRCodes();
         initEmojiFlight();
-        initBackupUrl();
+        initFooterLinks();
         if (typeof Matter !== 'undefined') {
             initDesktopPhysics();
         } else {

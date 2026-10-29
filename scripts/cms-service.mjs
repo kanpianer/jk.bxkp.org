@@ -554,6 +554,96 @@ export function renderFaqAccordionHtml(faqs) {
 }
 
 /**
+ * 解析底部友情链接
+ */
+export function parseFooterLinks(html) {
+  const footerRegex = /<footer class=["']middle-footer["']>([\s\S]*?)<\/footer>/i;
+  const footerMatch = (html || '').match(footerRegex);
+  if (!footerMatch) return [];
+
+  const footerContent = footerMatch[1];
+  const aRegex = /<a\b([\s\S]*?)>([\s\S]*?)<\/a>/gi;
+  let match;
+  const links = [];
+
+  while ((match = aRegex.exec(footerContent)) !== null) {
+    const attrsStr = match[1];
+    const rawText = match[2].replace(/<[^>]+>/g, '').trim();
+
+    const idMatch = attrsStr.match(/\bid=["']([^"']+)["']/i);
+    const id = idMatch ? idMatch[1] : '';
+
+    const classMatch = attrsStr.match(/\bclass=["']([^"']+)["']/i);
+    const cls = classMatch ? classMatch[1] : 'highlight-title';
+
+    let urls = [];
+    const dataUrlsMatch = attrsStr.match(/\bdata-urls=(['"])([\s\S]*?)\1/i);
+    if (dataUrlsMatch) {
+      try {
+        const decoded = dataUrlsMatch[2].replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+        urls = JSON.parse(decoded);
+      } catch (e) {}
+    }
+
+    if ((!urls || urls.length === 0) && (attrsStr.includes('Math.random()') || id === 'backup-site-link')) {
+      const randomUrlsMatch = attrsStr.match(/['"](https?:\/\/[^'"]+)['"]\s*:\s*['"](https?:\/\/[^'"]+)['"]/);
+      if (randomUrlsMatch) {
+        urls = [
+          { url: randomUrlsMatch[1], weight: 50 },
+          { url: randomUrlsMatch[2], weight: 50 }
+        ];
+      }
+    }
+
+    if (!urls || urls.length === 0) {
+      const hrefMatch = attrsStr.match(/\bhref=["']([^"']+)["']/i);
+      const href = hrefMatch ? hrefMatch[1] : '';
+      urls = [{ url: href, weight: 100 }];
+    }
+
+    links.push({
+      id,
+      text: rawText,
+      cls,
+      urls
+    });
+  }
+
+  return links;
+}
+
+/**
+ * 生成 middle-footer HTML
+ */
+export function renderFooterHtml(footerLinks) {
+  if (!Array.isArray(footerLinks) || footerLinks.length === 0) {
+    return '            <footer class="middle-footer">\n            </footer>';
+  }
+
+  const linksHtml = footerLinks.map((item) => {
+    const text = (item.text || '').trim();
+    const idAttr = item.id ? ` id="${item.id}"` : '';
+    const cls = item.cls || 'highlight-title';
+    const urls = Array.isArray(item.urls) && item.urls.length > 0 ? item.urls : [{ url: '#', weight: 100 }];
+
+    if (urls.length === 1) {
+      return `<a${idAttr} href="${urls[0].url}" target="_blank" rel="noopener" class="${cls}">${text}</a>`;
+    }
+
+    const defaultUrl = urls[0].url;
+    const cleanUrls = urls.map((u) => ({
+      url: u.url,
+      weight: Math.max(0, parseFloat(u.weight) || 0)
+    }));
+    const dataUrlsJson = JSON.stringify(cleanUrls).replace(/'/g, '&#39;');
+
+    return `<a${idAttr} href="${defaultUrl}" target="_blank" rel="noopener" class="${cls}" data-urls='${dataUrlsJson}' onpointerdown="window.__pickFooterUrl&&window.__pickFooterUrl(this)" onclick="window.__pickFooterUrl&&window.__pickFooterUrl(this)">${text}</a>`;
+  }).join('、');
+
+  return `            <footer class="middle-footer">\n                ${linksHtml}\n            </footer>`;
+}
+
+/**
  * 读取全量 CMS 数据
  */
 export function readAllData() {
@@ -573,6 +663,7 @@ export function readAllData() {
   const categoryGuides = parseCategoryGuides(indexHtml);
   const modalItems = categoryGuides.airport ? categoryGuides.airport.items : parseGuideModalItems(indexHtml);
   const faqItems = parseFaqItems(indexHtml);
+  const footerLinks = parseFooterLinks(indexHtml);
   const guideArticles = parseGuideArticles();
   const availableIcons = getAvailableIcons();
   const swVersion = getSwVersion();
@@ -582,6 +673,7 @@ export function readAllData() {
     categoryGuides,
     modalItems,
     faqItems,
+    footerLinks,
     guideArticles,
     availableIcons,
     swVersion,
@@ -606,7 +698,7 @@ export function runGenerateLinks() {
 /**
  * 保存全量 CMS 数据
  */
-export async function saveAllData({ cards, categoryGuides, modalItems, faqItems, guideArticles, bumpSw = true }) {
+export async function saveAllData({ cards, categoryGuides, modalItems, faqItems, guideArticles, footerLinks, bumpSw = true }) {
   // 1. 创建备份
   createBackup('before_cms_save');
 
@@ -676,6 +768,47 @@ export async function saveAllData({ cards, categoryGuides, modalItems, faqItems,
       }));
       const newSchemaSnippet = `"@type": "FAQPage",\n          "@id": "https://jiakuan.link/#faq",\n          "mainEntity": ${JSON.stringify(mainEntities, null, 12).replace(/\n\s*}/g, '\n          }')}`;
       html = html.replace(faqSchemaRegex, newSchemaSnippet);
+    }
+  }
+
+  // 5. 替换底部友情链接区域
+  if (Array.isArray(footerLinks)) {
+    const footerRegex = /<footer class=["']middle-footer["']>([\s\S]*?)<\/footer>/i;
+    if (html.match(footerRegex)) {
+      const newFooterHtml = renderFooterHtml(footerLinks);
+      html = html.replace(footerRegex, newFooterHtml.trim());
+    }
+
+    if (!html.includes('window.__pickFooterUrl =')) {
+      const pickerScript = `    <!-- 全局友情链接多链接概率随机选择器 -->
+    <script>
+        window.__pickFooterUrl = function(el) {
+            if (!el || !el.dataset || !el.dataset.urls) return;
+            try {
+                var urls = JSON.parse(el.dataset.urls);
+                if (!Array.isArray(urls) || urls.length === 0) return;
+                var total = 0;
+                for (var i = 0; i < urls.length; i++) {
+                    var w = parseFloat(urls[i].weight);
+                    if (!isNaN(w) && w > 0) total += w;
+                }
+                if (total <= 0) { el.href = urls[0].url; return; }
+                var rnd = Math.random() * total, acc = 0;
+                for (var j = 0; j < urls.length; j++) {
+                    var weight = parseFloat(urls[j].weight);
+                    if (!isNaN(weight) && weight > 0) {
+                        acc += weight;
+                        if (rnd <= acc) { el.href = urls[j].url; break; }
+                    }
+                }
+            } catch (e) {}
+        };
+    </script>\n`;
+      if (html.includes('<body data-active-category="airport">')) {
+        html = html.replace('<body data-active-category="airport">', '<body data-active-category="airport">\n' + pickerScript);
+      } else if (html.includes('<body')) {
+        html = html.replace(/<body[^>]*>/, (m) => m + '\n' + pickerScript);
+      }
     }
   }
 

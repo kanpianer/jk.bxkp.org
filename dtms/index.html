@@ -227,6 +227,42 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* 友情链接与底部页脚样式 */
+        .middle-footer {
+            text-align: center;
+            font-size: 1rem;
+            color: #ffffff;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+            line-height: 2;
+        }
+
+        .middle-footer a {
+            color: #ffffff !important;
+            text-decoration: underline;
+            transition: opacity 0.2s ease;
+        }
+
+        .middle-footer a:hover {
+            color: #ffffff !important;
+            opacity: 0.8;
+        }
+
+        .highlight-title {
+            background: linear-gradient(to top, rgba(255, 235, 59, 0.9) 0%, rgba(255, 235, 59, 0) 100%);
+            background-repeat: no-repeat;
+            background-size: 100% 75%;
+            background-position: bottom;
+            padding: 0 4px;
+            border-radius: 2px;
+            text-decoration: none !important;
+            color: #0f172a !important;
+            font-weight: 600;
+        }
+
+        .middle-footer a.highlight-title {
+            text-decoration: none !important;
+        }
+
         /* 顶栏控制条 */
         .toolbar {
             display: flex;
@@ -1707,6 +1743,7 @@
         <div class="cms-tab-item" data-tab="tab-modal">💡 指南弹窗内容</div>
         <div class="cms-tab-item" data-tab="tab-faq">❓ 首页 SEO FAQ</div>
         <div class="cms-tab-item" data-tab="tab-guides">📚 深度指南文章 (<span id="guides-count">0</span>)</div>
+        <div class="cms-tab-item" data-tab="tab-footer">🔗 底部友情链接 (<span id="footer-links-count">0</span>)</div>
         <div class="cms-tab-item" data-tab="tab-icons">🖼️ 图标资源库</div>
         <div class="cms-tab-item" data-tab="tab-health">🩺 链接健康体检</div>
         <div class="cms-tab-item" data-tab="tab-backup">📦 历史备份与回滚</div>
@@ -1837,7 +1874,42 @@
             </div>
         </section>
 
-        <!-- 5. 图标资源库面板 -->
+        <!-- 5. 底部友情链接管理面板 -->
+        <section id="tab-footer" class="tab-panel">
+            <div style="max-width: 960px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px;">
+                <div class="card-table-wrap" style="padding: 22px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+                        <div>
+                            <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0; color: #fff;">底部友情链接维护</h2>
+                            <p style="font-size: 0.85rem; color: var(--text-muted); margin: 5px 0 0;">
+                                管理首页底部页脚友情链接（.middle-footer）。支持为同一个网站配置多个跳转链接，并设定各自的概率权重实现随机分流打开。
+                            </p>
+                        </div>
+                        <button id="btn-add-footer-link" class="btn btn-success" type="button" onclick="addNewFooterLink()">
+                            ➕ 添加友情链接
+                        </button>
+                    </div>
+
+                    <!-- 前台实时效果预览 -->
+                    <div style="margin-top: 18px; padding: 14px 18px; background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border-color); border-radius: 8px;">
+                        <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                            <span>👁️ 前台页脚实时预览（可点击测试概率跳转）：</span>
+                            <span style="font-size: 0.75rem; color: #94a3b8;">以 “、” 分隔，拖动下方卡片可调整顺序</span>
+                        </div>
+                        <div id="footer-preview-container" class="middle-footer" style="margin: 8px 0; padding: 6px 0; text-align: center;">
+                            <!-- 动态渲染前台预览 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 友链卡片列表容器（可拖拽排序） -->
+                <div id="footer-links-container" style="display: flex; flex-direction: column; gap: 16px;">
+                    <!-- 动态渲染友链卡片 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. 图标资源库面板 -->
         <section id="tab-icons" class="tab-panel">
             <div style="display: flex; flex-direction: column; gap: 18px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
@@ -2176,6 +2248,7 @@
                 categoryGuides: null,
                 modalItems: [],
                 faqItems: [],
+                footerLinks: [],
                 guideArticles: [],
                 availableIcons: [],
                 swVersion: 'v1.1.12'
@@ -2194,6 +2267,38 @@
                 modeBadge.textContent = '🌐 在线 GitHub 模式';
                 modeBadge.className = 'cms-badge badge-online';
             }
+
+            function escapeHtml(str) {
+                if (!str) return '';
+                return String(str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            }
+
+            window.__pickFooterUrl = function(el) {
+                if (!el || !el.dataset || !el.dataset.urls) return;
+                try {
+                    var urls = JSON.parse(el.dataset.urls);
+                    if (!Array.isArray(urls) || urls.length === 0) return;
+                    var total = 0;
+                    for (var i = 0; i < urls.length; i++) {
+                        var w = parseFloat(urls[i].weight);
+                        if (!isNaN(w) && w > 0) total += w;
+                    }
+                    if (total <= 0) { el.href = urls[0].url; return; }
+                    var rnd = Math.random() * total, acc = 0;
+                    for (var j = 0; j < urls.length; j++) {
+                        var weight = parseFloat(urls[j].weight);
+                        if (!isNaN(weight) && weight > 0) {
+                            acc += weight;
+                            if (rnd <= acc) { el.href = urls[j].url; break; }
+                        }
+                    }
+                } catch (e) {}
+            };
 
             // Toast 提示
             function showToast(msg, type = 'info') {
@@ -2440,6 +2545,63 @@
                 });
             }
 
+            // 解析底部友情链接
+            function clientParseFooterLinks(html) {
+                const footerRegex = /<footer class=["']middle-footer["']>([\s\S]*?)<\/footer>/i;
+                const footerMatch = (html || '').match(footerRegex);
+                if (!footerMatch) return [];
+
+                const footerContent = footerMatch[1];
+                const aRegex = /<a\b([\s\S]*?)>([\s\S]*?)<\/a>/gi;
+                let match;
+                const links = [];
+
+                while ((match = aRegex.exec(footerContent)) !== null) {
+                    const attrsStr = match[1];
+                    const rawText = match[2].replace(/<[^>]+>/g, '').trim();
+
+                    const idMatch = attrsStr.match(/\bid=["']([^"']+)["']/i);
+                    const id = idMatch ? idMatch[1] : '';
+
+                    const classMatch = attrsStr.match(/\bclass=["']([^"']+)["']/i);
+                    const cls = classMatch ? classMatch[1] : 'highlight-title';
+
+                    let urls = [];
+                    const dataUrlsMatch = attrsStr.match(/\bdata-urls=(['"])([\s\S]*?)\1/i);
+                    if (dataUrlsMatch) {
+                        try {
+                            const decoded = dataUrlsMatch[2].replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+                            urls = JSON.parse(decoded);
+                        } catch (e) {}
+                    }
+
+                    if ((!urls || urls.length === 0) && (attrsStr.includes('Math.random()') || id === 'backup-site-link')) {
+                        const randomUrlsMatch = attrsStr.match(/['"](https?:\/\/[^'"]+)['"]\s*:\s*['"](https?:\/\/[^'"]+)['"]/);
+                        if (randomUrlsMatch) {
+                            urls = [
+                                { url: randomUrlsMatch[1], weight: 50 },
+                                { url: randomUrlsMatch[2], weight: 50 }
+                            ];
+                        }
+                    }
+
+                    if (!urls || urls.length === 0) {
+                        const hrefMatch = attrsStr.match(/\bhref=["']([^"']+)["']/i);
+                        const href = hrefMatch ? hrefMatch[1] : '';
+                        urls = [{ url: href, weight: 100 }];
+                    }
+
+                    links.push({
+                        id,
+                        text: rawText,
+                        cls,
+                        urls
+                    });
+                }
+
+                return links;
+            }
+
             function clientParseSwVersion(swText) {
                 if (!swText) return 'v1.1.18';
                 const m = swText.match(/CACHE_VERSION\s*=\s*['"]([^'"]+)['"]/);
@@ -2576,7 +2738,36 @@ ${itemsHtml}
                 return `                    <div class="faq-accordion">\n${faqsHtml}\n                    </div>`;
             }
 
-            function clientReconstructIndexHtml(originalHtml, cards, categoryGuidesOrItems, faqItems) {
+            // 生成 middle-footer HTML
+            function clientRenderFooterHtml(footerLinks) {
+                if (!Array.isArray(footerLinks) || footerLinks.length === 0) {
+                    return '            <footer class="middle-footer">\n            </footer>';
+                }
+
+                const linksHtml = footerLinks.map((item) => {
+                    const text = (item.text || '').trim();
+                    const idAttr = item.id ? ` id="${item.id}"` : '';
+                    const cls = item.cls || 'highlight-title';
+                    const urls = Array.isArray(item.urls) && item.urls.length > 0 ? item.urls : [{ url: '#', weight: 100 }];
+
+                    if (urls.length === 1) {
+                        return `<a${idAttr} href="${urls[0].url}" target="_blank" rel="noopener" class="${cls}">${text}</a>`;
+                    }
+
+                    const defaultUrl = urls[0].url;
+                    const cleanUrls = urls.map(u => ({
+                        url: u.url,
+                        weight: Math.max(0, parseFloat(u.weight) || 0)
+                    }));
+                    const dataUrlsJson = JSON.stringify(cleanUrls).replace(/'/g, '&#39;');
+
+                    return `<a${idAttr} href="${defaultUrl}" target="_blank" rel="noopener" class="${cls}" data-urls='${dataUrlsJson}' onpointerdown="window.__pickFooterUrl&&window.__pickFooterUrl(this)" onclick="window.__pickFooterUrl&&window.__pickFooterUrl(this)">${text}</a>`;
+                }).join('、');
+
+                return `            <footer class="middle-footer">\n                ${linksHtml}\n            </footer>`;
+            }
+
+            function clientReconstructIndexHtml(originalHtml, cards, categoryGuidesOrItems, faqItems, footerLinks) {
                 let html = originalHtml;
 
                 if (Array.isArray(cards)) {
@@ -2634,6 +2825,46 @@ ${itemsHtml}
                         }));
                         const newSchemaSnippet = `"@type": "FAQPage",\n          "@id": "https://jiakuan.link/#faq",\n          "mainEntity": ${JSON.stringify(mainEntities, null, 12).replace(/\n\s*}/g, '\n          }')}`;
                         html = html.replace(faqSchemaRegex, newSchemaSnippet);
+                    }
+                }
+
+                if (Array.isArray(footerLinks)) {
+                    const footerRegex = /<footer class=["']middle-footer["']>([\s\S]*?)<\/footer>/i;
+                    if (html.match(footerRegex)) {
+                        const newFooterHtml = clientRenderFooterHtml(footerLinks);
+                        html = html.replace(footerRegex, newFooterHtml.trim());
+                    }
+
+                    if (!html.includes('window.__pickFooterUrl =')) {
+                        const pickerScript = `    <!-- 全局友情链接多链接概率随机选择器 -->
+    <` + `script>
+        window.__pickFooterUrl = function(el) {
+            if (!el || !el.dataset || !el.dataset.urls) return;
+            try {
+                var urls = JSON.parse(el.dataset.urls);
+                if (!Array.isArray(urls) || urls.length === 0) return;
+                var total = 0;
+                for (var i = 0; i < urls.length; i++) {
+                    var w = parseFloat(urls[i].weight);
+                    if (!isNaN(w) && w > 0) total += w;
+                }
+                if (total <= 0) { el.href = urls[0].url; return; }
+                var rnd = Math.random() * total, acc = 0;
+                for (var j = 0; j < urls.length; j++) {
+                    var weight = parseFloat(urls[j].weight);
+                    if (!isNaN(weight) && weight > 0) {
+                        acc += weight;
+                        if (rnd <= acc) { el.href = urls[j].url; break; }
+                    }
+                }
+            } catch (e) {}
+        };
+    <` + `/script>\n`;
+                        if (html.includes('<body data-active-category="airport">')) {
+                            html = html.replace('<body data-active-category="airport">', '<body data-active-category="airport">\n' + pickerScript);
+                        } else if (html.includes('<body')) {
+                            html = html.replace(/<body[^>]*>/, (m) => m + '\n' + pickerScript);
+                        }
                     }
                 }
 
@@ -2997,6 +3228,7 @@ ${defaultBody}
                 renderCardsList();
                 renderModalItems();
                 renderFaqItems();
+                renderFooterLinks();
                 renderGuideArticlesDropdown();
                 renderIconsLibrary();
                 renderPresetTagsPool();
@@ -3040,6 +3272,7 @@ ${defaultBody}
                     const categoryGuides = clientParseCategoryGuides(htmlText);
                     const modalItems = categoryGuides.airport ? categoryGuides.airport.items : clientParseModalItems(htmlText);
                     const faqItems = clientParseFaqItems(htmlText);
+                    const footerLinks = clientParseFooterLinks(htmlText);
                     const swVersion = clientParseSwVersion(swText);
 
                     // 动态加载深度指南文章
@@ -3055,6 +3288,7 @@ ${defaultBody}
                         categoryGuides,
                         modalItems,
                         faqItems,
+                        footerLinks,
                         guideArticles,
                         availableIcons,
                         swVersion,
@@ -4016,6 +4250,284 @@ ${defaultBody}
                 renderFaqItems();
             });
 
+            // 5. 底部友情链接管理
+            let sortableFooterInstance = null;
+
+            function renderFooterLinks() {
+                const countEl = document.getElementById('footer-links-count');
+                const list = cmsData.footerLinks || [];
+                if (countEl) countEl.textContent = list.length;
+
+                // 1. 渲染前台实时预览
+                renderFooterPreview();
+
+                // 2. 渲染友链卡片列表
+                const container = document.getElementById('footer-links-container');
+                if (!container) return;
+                container.innerHTML = '';
+
+                if (list.length === 0) {
+                    container.innerHTML = `<div class="card-table-wrap" style="padding: 24px; text-align: center; color: var(--text-muted);">暂无底部友情链接，点击上方“➕ 添加友情链接”创建。</div>`;
+                    return;
+                }
+
+                list.forEach((item, linkIdx) => {
+                    const card = document.createElement('div');
+                    card.className = 'card-table-wrap footer-link-item-wrap';
+                    card.dataset.linkIdx = linkIdx;
+                    card.style.padding = '18px';
+
+                    const urls = item.urls || [];
+                    const totalWeight = urls.reduce((acc, u) => acc + (Math.max(0, parseFloat(u.weight) || 0)), 0);
+
+                    // 构造各个 URL 行的 HTML
+                    const urlsHtml = urls.map((u, urlIdx) => {
+                        const w = Math.max(0, parseFloat(u.weight) || 0);
+                        const pct = totalWeight > 0 ? ((w / totalWeight) * 100).toFixed(1) : '0.0';
+                        return `
+                            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.05); padding: 8px 12px; border-radius: 6px;">
+                                <span style="font-size: 0.8rem; font-weight: 600; color: #94a3b8; width: 60px; white-space: nowrap;">
+                                    链接 #${urlIdx + 1}:
+                                </span>
+                                <div style="flex: 1; min-width: 220px;">
+                                    <input type="url" class="form-control" style="font-family: monospace; font-size: 0.85rem;" placeholder="https://..." value="${escapeHtml(u.url || '')}" oninput="updateFooterUrlField(${linkIdx}, ${urlIdx}, 'url', this.value)">
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <label style="font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; margin: 0;">权重/概率:</label>
+                                    <input type="number" min="0" max="10000" class="form-control" style="width: 76px; text-align: center; font-weight: 700; font-family: monospace;" value="${u.weight !== undefined ? u.weight : 50}" oninput="updateFooterUrlField(${linkIdx}, ${urlIdx}, 'weight', this.value)">
+                                </div>
+                                <div style="min-width: 68px; text-align: center;">
+                                    <span class="badge footer-pct-badge" data-link-idx="${linkIdx}" data-url-idx="${urlIdx}" style="background: rgba(14, 165, 233, 0.2); color: #38bdf8; font-family: monospace; font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; display: inline-block;">
+                                        ${pct}%
+                                    </span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <a href="${escapeHtml(u.url || '#')}" target="_blank" rel="noopener noreferrer" class="btn btn-sm footer-open-btn" data-link-idx="${linkIdx}" data-url-idx="${urlIdx}" title="在新标签页测试打开此链接" style="${u.url ? '' : 'pointer-events: none; opacity: 0.4;'}">
+                                        ↗ 打开
+                                    </a>
+                                    ${urls.length > 1 ? `
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="deleteFooterUrlFromLink(${linkIdx}, ${urlIdx})" title="删除此条分流链接">
+                                        ✕
+                                    </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    card.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+                            <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 260px;">
+                                <div class="drag-handle footer-drag-handle" title="按住拖拽调整排序" style="cursor: grab; font-size: 1.1rem; color: var(--text-muted); padding: 0 4px;">⋮⋮</div>
+                                <span style="font-size: 0.85rem; font-weight: 700; color: var(--warning);">#${linkIdx + 1}</span>
+                                <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                                    <label style="font-size: 0.85rem; font-weight: 600; white-space: nowrap; margin: 0; color: #cbd5e1;">网站名称：</label>
+                                    <input type="text" class="form-control" style="max-width: 220px; font-weight: 700;" value="${escapeHtml(item.text || '')}" placeholder="例如：不想看片 / 备用网址" oninput="updateFooterLinkText(${linkIdx}, this.value)">
+                                </div>
+                                ${urls.length > 1
+                                    ? `<span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.75rem; padding: 2px 8px; border-radius: 4px;">🎲 多链接分流 (${urls.length}个)</span>`
+                                    : `<span class="badge" style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); font-size: 0.75rem; padding: 2px 8px; border-radius: 4px;">单链接 (100%)</span>`
+                                }
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <button type="button" class="btn btn-sm btn-success" onclick="addFooterUrlToLink(${linkIdx})" title="为此网站添加新的分流备用链接">
+                                    ➕ 添加分流链接
+                                </button>
+                                <button type="button" class="btn btn-sm btn-danger" onclick="deleteFooterLink(${linkIdx})" title="删除此网站友链">
+                                    🗑️ 删除
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            ${urlsHtml}
+                        </div>
+
+                        ${urls.length > 1 ? `
+                        <div style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed rgba(255, 255, 255, 0.08); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                            <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+                                <span>💡 总权重: <strong>${totalWeight}</strong>，打开时按各链接权重占总权重的比例概率随机跳转。</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <button type="button" class="btn btn-sm" onclick="evenFooterUrlWeights(${linkIdx})" title="按链接数量平分概率权重">
+                                    ⚖️ 一键平分概率
+                                </button>
+                                <button type="button" class="btn btn-sm" onclick="testSimulateFooterUrl(${linkIdx})" title="模拟一次用户点击并根据设定的概率随机抽取目标链接">
+                                    🎲 模拟概率抽取
+                                </button>
+                            </div>
+                        </div>
+                        ` : ''}
+                    `;
+
+                    container.appendChild(card);
+                });
+
+                initFooterSortable();
+            }
+
+            // 实时预览前台页脚
+            function renderFooterPreview() {
+                const container = document.getElementById('footer-preview-container');
+                if (!container) return;
+                const list = cmsData.footerLinks || [];
+                if (list.length === 0) {
+                    container.innerHTML = '<span style="color: #64748b; font-size: 0.85rem;">[暂无底部友链]</span>';
+                    return;
+                }
+
+                container.innerHTML = list.map((item) => {
+                    const text = escapeHtml(item.text || '未命名');
+                    const urls = item.urls || [];
+                    const defaultUrl = urls[0]?.url || '#';
+                    const cleanUrls = urls.map(u => ({ url: u.url, weight: Math.max(0, parseFloat(u.weight) || 0) }));
+                    const dataUrlsJson = urls.length > 1 ? JSON.stringify(cleanUrls).replace(/'/g, '&#39;') : '';
+                    const dataAttr = dataUrlsJson ? ` data-urls='${dataUrlsJson}'` : '';
+                    return `<a href="${escapeHtml(defaultUrl)}"${dataAttr} target="_blank" rel="noopener" class="highlight-title" onpointerdown="window.__pickFooterUrl&&window.__pickFooterUrl(this)" onclick="window.__pickFooterUrl&&window.__pickFooterUrl(this)">${text}</a>`;
+                }).join('、');
+            }
+
+            // 拖拽排序友链
+            function initFooterSortable() {
+                const container = document.getElementById('footer-links-container');
+                if (!window.Sortable || !container) return;
+                if (sortableFooterInstance) {
+                    try { sortableFooterInstance.destroy(); } catch (e) {}
+                    sortableFooterInstance = null;
+                }
+
+                sortableFooterInstance = new Sortable(container, {
+                    handle: '.footer-drag-handle',
+                    animation: 200,
+                    ghostClass: 'sortable-ghost',
+                    chosenClass: 'sortable-chosen',
+                    onEnd: function(evt) {
+                        if (evt.oldIndex === evt.newIndex) return;
+                        const moved = cmsData.footerLinks.splice(evt.oldIndex, 1)[0];
+                        cmsData.footerLinks.splice(evt.newIndex, 0, moved);
+                        renderFooterLinks();
+                    }
+                });
+            }
+
+            // 新增友情链接
+            window.addNewFooterLink = function() {
+                if (!Array.isArray(cmsData.footerLinks)) cmsData.footerLinks = [];
+                cmsData.footerLinks.push({
+                    id: '',
+                    text: '新友情链接',
+                    cls: 'highlight-title',
+                    urls: [
+                        { url: 'https://', weight: 100 }
+                    ]
+                });
+                renderFooterLinks();
+                showToast('已添加新友情链接');
+            };
+
+            // 删除友情链接
+            window.deleteFooterLink = function(idx) {
+                const item = cmsData.footerLinks[idx];
+                if (!confirm(`确定要删除友情链接 “${item.text || '未命名'}” 吗？`)) return;
+                cmsData.footerLinks.splice(idx, 1);
+                renderFooterLinks();
+                showToast('已删除友情链接');
+            };
+
+            // 修改友情链接网站名称
+            window.updateFooterLinkText = function(idx, val) {
+                if (cmsData.footerLinks[idx]) {
+                    cmsData.footerLinks[idx].text = val.trim();
+                    renderFooterPreview();
+                }
+            };
+
+            // 为指定网站添加新的分流链接
+            window.addFooterUrlToLink = function(idx) {
+                const link = cmsData.footerLinks[idx];
+                if (!link) return;
+                if (!Array.isArray(link.urls)) link.urls = [];
+                link.urls.push({ url: 'https://', weight: 50 });
+                renderFooterLinks();
+            };
+
+            // 删除指定网站的一条分流链接
+            window.deleteFooterUrlFromLink = function(linkIdx, urlIdx) {
+                const link = cmsData.footerLinks[linkIdx];
+                if (!link || !link.urls) return;
+                link.urls.splice(urlIdx, 1);
+                renderFooterLinks();
+            };
+
+            // 修改 URL 或权重并即时更新计算概率
+            window.updateFooterUrlField = function(linkIdx, urlIdx, field, val) {
+                const link = cmsData.footerLinks[linkIdx];
+                if (!link || !link.urls || !link.urls[urlIdx]) return;
+
+                if (field === 'weight') {
+                    const num = Math.max(0, parseFloat(val) || 0);
+                    link.urls[urlIdx].weight = num;
+
+                    // 局部刷新该卡片所有 URL 的百分比 Pill，避免重建 DOM 丢失输入焦点
+                    const totalWeight = link.urls.reduce((acc, u) => acc + (Math.max(0, parseFloat(u.weight) || 0)), 0);
+                    link.urls.forEach((u, i) => {
+                        const badge = document.querySelector(`.footer-pct-badge[data-link-idx="${linkIdx}"][data-url-idx="${i}"]`);
+                        if (badge) {
+                            const w = Math.max(0, parseFloat(u.weight) || 0);
+                            const pct = totalWeight > 0 ? ((w / totalWeight) * 100).toFixed(1) : '0.0';
+                            badge.textContent = `${pct}%`;
+                        }
+                    });
+                } else {
+                    link.urls[urlIdx].url = val.trim();
+                    const openBtn = document.querySelector(`.footer-open-btn[data-link-idx="${linkIdx}"][data-url-idx="${urlIdx}"]`);
+                    if (openBtn) {
+                        openBtn.href = val.trim() || '#';
+                        openBtn.style.pointerEvents = val.trim() ? 'auto' : 'none';
+                        openBtn.style.opacity = val.trim() ? '1' : '0.4';
+                    }
+                }
+                renderFooterPreview();
+            };
+
+            // 一键平分概率
+            window.evenFooterUrlWeights = function(linkIdx) {
+                const link = cmsData.footerLinks[linkIdx];
+                if (!link || !link.urls || link.urls.length === 0) return;
+                const count = link.urls.length;
+                link.urls.forEach(u => {
+                    u.weight = 50; // 权重相同即平分
+                });
+                renderFooterLinks();
+                showToast(`已平分该网站全部 ${count} 个链接的概率权重！`);
+            };
+
+            // 模拟抽取测试
+            window.testSimulateFooterUrl = function(linkIdx) {
+                const link = cmsData.footerLinks[linkIdx];
+                if (!link || !link.urls || link.urls.length === 0) return;
+                const total = link.urls.reduce((acc, u) => acc + (Math.max(0, parseFloat(u.weight) || 0)), 0);
+                if (total <= 0) {
+                    return alert('总权重为 0，无法计算概率！请先输入大于 0 的权重。');
+                }
+                const rnd = Math.random() * total;
+                let acc = 0;
+                let winnerIdx = 0;
+                for (let i = 0; i < link.urls.length; i++) {
+                    const w = Math.max(0, parseFloat(link.urls[i].weight) || 0);
+                    if (w > 0) {
+                        acc += w;
+                        if (rnd <= acc) {
+                            winnerIdx = i;
+                            break;
+                        }
+                    }
+                }
+                const winner = link.urls[winnerIdx];
+                const pct = ((winner.weight / total) * 100).toFixed(1);
+                showToast(`🎲 随机模拟结果：命中 链接 #${winnerIdx + 1} (${winner.url}) [概率: ${pct}%]`);
+            };
+
             // 5. 深度指南文章管理
             function renderGuideArticlesDropdown() {
                 const select = document.getElementById('guide-article-select');
@@ -4854,6 +5366,7 @@ ${defaultBody}
                                 modalItems: (cmsData.categoryGuides && cmsData.categoryGuides.airport) ? cmsData.categoryGuides.airport.items : cmsData.modalItems,
                                 faqItems: cmsData.faqItems,
                                 guideArticles: cmsData.guideArticles,
+                                footerLinks: cmsData.footerLinks,
                                 bumpSw
                             })
                         });
@@ -4910,7 +5423,7 @@ ${defaultBody}
                     ]);
 
                     // 2. 客户端合成更新后的 index.html
-                    const newIndexHtml = clientReconstructIndexHtml(indexHtmlBase, cmsData.cards, cmsData.categoryGuides || cmsData.modalItems, cmsData.faqItems);
+                    const newIndexHtml = clientReconstructIndexHtml(indexHtmlBase, cmsData.cards, cmsData.categoryGuides || cmsData.modalItems, cmsData.faqItems, cmsData.footerLinks);
 
                     // 3. 客户端合成 links-map.json
                     const today = new Date().toISOString().split('T')[0];
