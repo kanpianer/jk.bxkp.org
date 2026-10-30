@@ -15,7 +15,7 @@
 
 1. 本站收录所有机场和VPS均包含家宽节点，除特殊声明。
 2. 家宽节点并不一定就比机房节点“干净”，做敏感业务前，最好先检测IP质量。IP检测网站：[IPSuper](https://ipsuper.com/)
-3. 始终推荐自己搭建节点，NAT机器的IP也比多数机场共用的人少。开源搭建工具：[一贱建节点](https://1click.qstz.ccwu.cc/)
+3. 始终推荐自己搭建节点，NAT机器的IP也比多数机场共用的人少。开源搭建工具：[不想搭梯](https://bxdt.jiakuan.link/)
 4. 如果目前手头不宽裕，[不想翻墙](https://fan.jiakuan.link/) 里收集了十几款免费的翻墙工具，也可以作为备用梯子。
 
 <!-- SITE_DIRECTORY_START -->
