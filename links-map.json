@@ -35,6 +35,12 @@
     "category": "airport",
     "updatedAt": "2026-11-02"
   },
+  "cmy": {
+    "title": "CMYNetwork",
+    "target": "https://www.cmynetwork.com/index",
+    "category": "noble",
+    "updatedAt": "2026-11-02"
+  },
   "dog": {
     "title": "SSRDOG",
     "target": "https://st2.hosbb.com/#/register?code=iqLoMSct",
@@ -44,6 +50,12 @@
   "dxwl": {
     "title": "大象网络",
     "target": "https://dx.elphantroute.com/app#/register?code=qxu83JG7",
+    "category": "airport",
+    "updatedAt": "2026-11-02"
+  },
+  "easy": {
+    "title": "!EasyInternet",
+    "target": "https://www.int52.com//#/register?code=to9xzyvW",
     "category": "airport",
     "updatedAt": "2026-11-02"
   },
@@ -101,6 +113,12 @@
     "category": "noble",
     "updatedAt": "2026-11-02"
   },
+  "kjx": {
+    "title": "#科技熊",
+    "target": "https://kjx.club/auth/register?code=0Fz4",
+    "category": "airport",
+    "updatedAt": "2026-11-02"
+  },
   "lam": {
     "title": "!Lamhosting LLC",
     "target": "https://lamhosting.com/aff.php?aff=368",
@@ -129,6 +147,12 @@
     "title": "!Miaona",
     "target": "https://miaona.app/#/register?code=7haX2t5V",
     "category": "airport",
+    "updatedAt": "2026-11-02"
+  },
+  "mie": {
+    "title": "Mielink",
+    "target": "https://www.mielnk.com/",
+    "category": "noble",
     "updatedAt": "2026-11-02"
   },
   "niva": {
@@ -167,7 +191,7 @@
     "updatedAt": "2026-11-02"
   },
   "rancho": {
-    "title": "#rancho",
+    "title": "rancho",
     "target": "https://mccloud.gay/#/register?code=jMKFtNbr",
     "category": "airport",
     "updatedAt": "2026-11-02"
@@ -215,7 +239,7 @@
     "updatedAt": "2026-11-02"
   },
   "tag": {
-    "title": "TAG",
+    "title": "!TAG",
     "target": "https://tagss.pro/#/auth/lCnWmez3",
     "category": "airport",
     "updatedAt": "2026-11-02"
