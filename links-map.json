@@ -36,7 +36,7 @@
     "updatedAt": "2026-11-02"
   },
   "cmy": {
-    "title": "CMYNetwork",
+    "title": "!CMYNetwork",
     "target": "https://www.cmynetwork.com/index",
     "category": "noble",
     "updatedAt": "2026-11-02"
@@ -59,6 +59,12 @@
     "category": "airport",
     "updatedAt": "2026-11-02"
   },
+  "edn": {
+    "title": "EdNovas云",
+    "target": "https://www.ednovas.org/#/register?code=Mn36rnSN",
+    "category": "airport",
+    "updatedAt": "2026-11-02"
+  },
   "eix": {
     "title": "E-IX",
     "target": "https://ap.cdn.e-ix.com/#/register?code=w56accjm",
@@ -72,7 +78,7 @@
     "updatedAt": "2026-11-02"
   },
   "ftq": {
-    "title": "!FTQ",
+    "title": "FTQ",
     "target": "https://wwa.ftquser.com/#/register?code=dcPOkY00",
     "category": "noble",
     "updatedAt": "2026-11-02"
@@ -84,7 +90,7 @@
     "updatedAt": "2026-11-02"
   },
   "glados": {
-    "title": "GLaDOS",
+    "title": "!GLaDOS",
     "target": "https://glados.rocks",
     "category": "noble",
     "updatedAt": "2026-11-02"
@@ -102,13 +108,13 @@
     "updatedAt": "2026-11-02"
   },
   "jlxy": {
-    "title": "精靈學院",
+    "title": "!精靈學院",
     "target": "https://ok.riolu.work/register?aff=EPW4XXSz",
     "category": "airport",
     "updatedAt": "2026-11-02"
   },
   "jms": {
-    "title": "!Just My Socks",
+    "title": "Just My Socks",
     "target": "https://justmysocks5.net/members/aff.php?aff=39292",
     "category": "noble",
     "updatedAt": "2026-11-02"
@@ -150,7 +156,7 @@
     "updatedAt": "2026-11-02"
   },
   "mie": {
-    "title": "Mielink",
+    "title": "!Mielink",
     "target": "https://www.mielnk.com/",
     "category": "noble",
     "updatedAt": "2026-11-02"
@@ -168,8 +174,8 @@
     "updatedAt": "2026-11-02"
   },
   "oix": {
-    "title": "oixCloud",
-    "target": "https://oixcloud.com/auth/register?affid=230329",
+    "title": "!oixCloud",
+    "target": "https://oixcloud.com",
     "category": "noble",
     "updatedAt": "2026-11-02"
   },
