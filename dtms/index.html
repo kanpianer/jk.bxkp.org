@@ -1918,7 +1918,7 @@
                         <p style="font-size: 0.85rem; color: var(--text-muted); margin: 4px 0 0;">共收录 <span id="icons-total-count">0</span> 个品牌图标</p>
                     </div>
                     <div style="display: flex; gap: 10px; align-items: center;">
-                        <input type="file" id="icon-file-input" accept=".png,.svg,.webp,.ico,.jpg,.jpeg" style="display: none;">
+                        <input type="file" id="icon-file-input" accept=".png,.svg,.webp,.ico,.jpg,.jpeg" multiple style="display: none;">
                         <button id="btn-upload-icon-trigger" class="btn btn-success">📤 上传新图标</button>
                         <input type="text" id="icon-filter-input" class="search-input" placeholder="🔍 搜索图标名...">
                     </div>
@@ -4006,89 +4006,178 @@ ${defaultBody}
             });
 
             document.getElementById('icon-file-input').addEventListener('change', async (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
+                const files = Array.from(e.target.files || []);
+                if (!files.length) return;
 
-                const reader = new FileReader();
-                reader.onload = async () => {
-                    const base64Data = reader.result.split(',')[1];
-                    const cleanName = file.name.toLowerCase().replace(/[^a-z0-9._-]/g, '_');
+                // 异步读取文件为 Base64
+                const readFileAsBase64 = (file) => new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result.split(',')[1]);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
 
-                    // 1. 本地模式优先尝试 Node.js 接口
-                    if (isLocal) {
+                const uploadBtn = document.getElementById('btn-upload-icon-trigger');
+                const origBtnText = uploadBtn ? uploadBtn.textContent : '';
+                if (uploadBtn) uploadBtn.disabled = true;
+
+                let useLocal = isLocal;
+                let githubToken = null;
+                const total = files.length;
+                const successList = [];
+                const failList = [];
+                const allowedExts = ['.png', '.svg', '.webp', '.ico', '.jpg', '.jpeg'];
+
+                // 在线模式提前获取 GitHub Token，避免多次循环反复弹窗
+                if (!useLocal) {
+                    githubToken = getOrPromptGitHubToken('上传图标');
+                    if (!githubToken) {
+                        e.target.value = '';
+                        if (uploadBtn) uploadBtn.disabled = false;
+                        return;
+                    }
+                }
+
+                try {
+                    for (let i = 0; i < total; i++) {
+                        const file = files[i];
+                        const cleanName = file.name.toLowerCase().replace(/[^a-z0-9._-]/g, '_');
+                        const progressPrefix = total > 1 ? `(${i + 1}/${total}) ` : '';
+
+                        if (uploadBtn) {
+                            uploadBtn.textContent = `⏳ 上传中 ${i + 1}/${total}`;
+                        }
+
+                        // 文件格式格式检查
+                        const ext = cleanName.substring(cleanName.lastIndexOf('.'));
+                        if (!allowedExts.includes(ext)) {
+                            failList.push({ name: file.name, error: '不支持的文件扩展名 (仅支持 png/svg/webp/ico/jpg/jpeg)' });
+                            continue;
+                        }
+
+                        let base64Data = '';
                         try {
-                            const resp = await fetch('/api/upload-icon', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ filename: file.name, base64Data })
-                            });
-                            if (resp.ok) {
-                                const res = await resp.json();
-                                if (res.success) {
-                                    showToast(`图标 ${res.filename} 上传成功！`);
-                                    loadData();
-                                    e.target.value = '';
-                                    return;
+                            base64Data = await readFileAsBase64(file);
+                        } catch (readErr) {
+                            console.error('读取文件失败:', file.name, readErr);
+                            failList.push({ name: file.name, error: '读取文件数据失败' });
+                            continue;
+                        }
+
+                        // 1. 本地模式优先尝试 Node.js 接口
+                        if (useLocal) {
+                            try {
+                                showToast(`正在上传图标 ${progressPrefix}${file.name}...`);
+                                const resp = await fetch('/api/upload-icon', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ filename: file.name, base64Data })
+                                });
+                                if (resp.ok) {
+                                    const res = await resp.json();
+                                    if (res.success) {
+                                        successList.push(res.filename || cleanName);
+                                        continue;
+                                    } else {
+                                        failList.push({ name: file.name, error: res.error || '未知错误' });
+                                        continue;
+                                    }
                                 } else {
-                                    alert('上传失败: ' + (res.error || '未知错误'));
-                                    e.target.value = '';
-                                    return;
+                                    const errJson = await resp.json().catch(() => ({}));
+                                    const errMsg = errJson.error || `HTTP ${resp.status}`;
+                                    const tryGitHub = confirm(`本地服务上传接口异常 (${errMsg})。\n\n💡 提示：请在终端按 Ctrl+C 并重新运行 npm run cms 重启本地服务。\n\n是否改用 GitHub 在线授权模式上传后续文件？`);
+                                    if (!tryGitHub) {
+                                        failList.push({ name: file.name, error: errMsg });
+                                        break;
+                                    }
+                                    useLocal = false;
+                                    githubToken = getOrPromptGitHubToken('上传图标');
+                                    if (!githubToken) {
+                                        failList.push({ name: file.name, error: '未提供 GitHub Token' });
+                                        break;
+                                    }
                                 }
-                            } else {
-                                const errJson = await resp.json().catch(() => ({}));
-                                const errMsg = errJson.error || `HTTP ${resp.status}`;
-                                const tryGitHub = confirm(`本地服务上传接口异常 (${errMsg})。\n\n💡 提示：请在终端按 Ctrl+C 并重新运行 npm run cms 重启本地服务。\n\n是否改用 GitHub 在线授权模式上传？`);
+                            } catch (err) {
+                                console.warn('[CMS] 本地 /api/upload-icon 失败', err);
+                                const tryGitHub = confirm(`无法连接到本地上传接口 (${err.message})。\n\n是否改用 GitHub 在线授权模式上传后续文件？`);
                                 if (!tryGitHub) {
-                                    e.target.value = '';
-                                    return;
+                                    failList.push({ name: file.name, error: err.message });
+                                    break;
+                                }
+                                useLocal = false;
+                                githubToken = getOrPromptGitHubToken('上传图标');
+                                if (!githubToken) {
+                                    failList.push({ name: file.name, error: '未提供 GitHub Token' });
+                                    break;
                                 }
                             }
-                        } catch (err) {
-                            console.warn('[CMS] 本地 /api/upload-icon 失败', err);
-                            const tryGitHub = confirm(`无法连接到本地上传接口 (${err.message})。\n\n是否改用 GitHub 在线授权模式上传？`);
-                            if (!tryGitHub) {
-                                e.target.value = '';
-                                return;
+                        }
+
+                        // 2. 在线模式：直接通过 GitHub Contents API 上传
+                        if (!useLocal) {
+                            try {
+                                if (!githubToken) {
+                                    githubToken = getOrPromptGitHubToken('上传图标');
+                                    if (!githubToken) {
+                                        failList.push({ name: file.name, error: '未提供 GitHub Token' });
+                                        break;
+                                    }
+                                }
+
+                                showToast(`正在向 GitHub 仓库上传图标 ${progressPrefix}${cleanName}...`);
+                                await uploadIconToGitHub({ token: githubToken, filename: cleanName, base64Data });
+
+                                const newIconObj = {
+                                    filename: cleanName,
+                                    path: `images/icons/${cleanName}`,
+                                    size: file.size,
+                                    updatedAt: new Date().toISOString()
+                                };
+
+                                const existingIdx = (cmsData.availableIcons || []).findIndex(icon => icon.filename === cleanName);
+                                if (existingIdx !== -1) {
+                                    cmsData.availableIcons[existingIdx] = newIconObj;
+                                } else {
+                                    cmsData.availableIcons.unshift(newIconObj);
+                                }
+                                successList.push(cleanName);
+                            } catch (err) {
+                                console.error('上传图标失败:', cleanName, err);
+                                failList.push({ name: cleanName, error: err.message });
                             }
                         }
                     }
 
-                    // 2. 在线模式：直接通过 GitHub Contents API 上传
-                    try {
-                        const token = getOrPromptGitHubToken('上传图标');
-                        if (!token) {
-                            e.target.value = '';
-                            return;
-                        }
-
-                        showToast(`正在向 GitHub 仓库上传图标 ${cleanName}...`);
-                        await uploadIconToGitHub({ token, filename: cleanName, base64Data });
-
-                        const newIconObj = {
-                            filename: cleanName,
-                            path: `images/icons/${cleanName}`,
-                            size: file.size,
-                            updatedAt: new Date().toISOString()
-                        };
-
-                        const existingIdx = (cmsData.availableIcons || []).findIndex(i => i.filename === cleanName);
-                        if (existingIdx !== -1) {
-                            cmsData.availableIcons[existingIdx] = newIconObj;
-                        } else {
-                            cmsData.availableIcons.unshift(newIconObj);
-                        }
-
+                    // 更新界面与数据呈现
+                    if (useLocal && successList.length > 0) {
+                        await loadData();
+                    } else if (successList.length > 0) {
                         renderIconsLibrary(document.getElementById('icon-filter-input').value.trim());
                         renderPickerIconsGrid();
-                        showToast(`🎉 图标 ${cleanName} 上传成功并已提交至 GitHub！Cloudflare 正在部署中。`);
-                    } catch (err) {
-                        console.error('上传图标失败:', err);
-                        alert('上传图标失败:\n' + err.message + '\n\n请确保 GitHub Token 具备 Contents 写入权限。');
-                    } finally {
-                        e.target.value = '';
                     }
-                };
-                reader.readAsDataURL(file);
+
+                    // 结果提示反馈
+                    if (failList.length === 0) {
+                        if (successList.length === 1) {
+                            showToast(`🎉 图标 ${successList[0]} 上传成功！${!useLocal ? '已提交至 GitHub，Cloudflare 正在部署中。' : ''}`);
+                        } else if (successList.length > 1) {
+                            showToast(`🎉 成功上传 ${successList.length} 个图标！${!useLocal ? '已全部提交至 GitHub，Cloudflare 正在部署中。' : ''}`);
+                        }
+                    } else {
+                        const failMsg = failList.map(f => `${f.name}: ${f.error}`).join('\n');
+                        if (successList.length > 0) {
+                            alert(`已成功上传 ${successList.length} 个图标。\n\n以下 ${failList.length} 个图标上传失败：\n${failMsg}`);
+                        } else {
+                            alert(`图标上传失败 (${failList.length} 个):\n${failMsg}\n\n请确保网络正常且 GitHub Token 具备 Contents 写入权限。`);
+                        }
+                    }
+                } finally {
+                    e.target.value = '';
+                    if (uploadBtn) {
+                        uploadBtn.disabled = false;
+                        uploadBtn.textContent = origBtnText;
+                    }
+                }
             });
 
             // 3. 指南弹窗内容管理 (老站指南 / 家宽指南 / VPS指南 多分类独立维护)

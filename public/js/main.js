@@ -741,12 +741,22 @@
                 }
             });
 
-            // 优化：仅对需要渐入的按钮统一应用动画，消除每次循环调用 offsetWidth 带来的强制同步重排 (Layout Thrashing)
+            // 优化：仅对需要渐入的按钮统一应用动画，并在动画完成后及时清理类名，防止阻塞后续 hover 等交互动效
             if (withAnimation && buttonsToAnimate.length > 0) {
-                buttonsToAnimate.forEach(b => b.classList.remove('category-fade-in'));
+                allButtons.forEach(b => b.classList.remove('category-fade-in'));
                 // 单次触发布局重排刷新状态
                 void container.offsetWidth;
-                buttonsToAnimate.forEach(b => b.classList.add('category-fade-in'));
+                const onFadeEnd = (e) => {
+                    if (e.target && e.target.classList) {
+                        e.target.classList.remove('category-fade-in');
+                    }
+                };
+                buttonsToAnimate.forEach(b => {
+                    b.classList.add('category-fade-in');
+                    b.addEventListener('animationend', onFadeEnd, { once: true });
+                });
+            } else {
+                allButtons.forEach(b => b.classList.remove('category-fade-in'));
             }
 
             // 更新展开隐藏卡片按钮的显示状态

@@ -378,7 +378,7 @@ a:hover {
 	pointer-events: auto;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (hover: hover), (any-hover: hover) {
 	.category-nav .category-btn:hover,
 	.category-btn:hover {
 		color: #ffffff !important;
@@ -403,7 +403,7 @@ a:hover {
 	transform: scale(1.05);
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (hover: hover), (any-hover: hover) {
 	.category-nav .category-btn.is-active:hover,
 	.category-btn.is-active:hover {
 		color: #1a1a1a !important;
@@ -477,9 +477,10 @@ a:hover {
 	text-shadow: none !important;
 	transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
 	pointer-events: auto;
+	will-change: transform;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (hover: hover), (any-hover: hover) {
 	.button:hover,button:not(.theme-toggle-btn):not(.category-btn):not(.guide-toggle-btn):not(.guide-modal-close):not(.back-to-top-btn):hover {
 		background-color:rgba(255, 255, 255, 0.5) !important;
 		border-color: rgba(255, 255, 255, 0.6) !important;
@@ -487,8 +488,8 @@ a:hover {
 		backdrop-filter: blur(10px);
 		-webkit-backdrop-filter: blur(10px);
 		text-shadow: none !important;
-		transform:translateY(-2px);
-		box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+		transform: translateY(-2px) !important;
+		box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15) !important;
 	}
 }
 
@@ -702,7 +703,7 @@ a:hover {
 	display: flex;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (hover: hover), (any-hover: hover) {
 	.button:hover .card-title {
 		color: #1a1a1a;
 	}
@@ -825,7 +826,7 @@ body:not([data-active-category]) .button-stack .button:not([data-category="airpo
 /* 3. 展开状态下，隐藏卡片在所属分类内淡入显示（受严格分类隔离规则绝对约束，绝不跨分类显示） */
 .button-stack.is-expanded .button.card-hidden {
 	display: inline-flex;
-	animation: cardFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	animation: cardFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* 4. 分类过滤辅助类兜底 */
@@ -846,7 +847,7 @@ body:not([data-active-category]) .button-stack .button:not([data-category="airpo
 }
 
 .button-stack .button.category-fade-in {
-	animation: cardCategoryFade 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	animation: cardCategoryFade 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes cardFadeIn {
@@ -1239,12 +1240,13 @@ footer a:hover,
 	color: #0f172a !important;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (hover: hover), (any-hover: hover) {
 	:root.theme-dark .button:hover,
 	:root.theme-dark button:not(.theme-toggle-btn):not(.category-btn):not(.guide-toggle-btn):not(.guide-modal-close):not(.back-to-top-btn):hover {
 		background-color: rgba(30, 41, 59, 0.85) !important;
 		border-color: rgba(147, 197, 253, 0.5) !important;
 		color: #ffffff !important;
+		transform: translateY(-2px) !important;
 		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 16px rgba(147, 197, 253, 0.18) !important;
 	}
 
@@ -1383,6 +1385,7 @@ footer a:hover,
 		background-color: rgba(30, 41, 59, 0.85) !important;
 		border-color: rgba(147, 197, 253, 0.5) !important;
 		color: #ffffff !important;
+		transform: translateY(-2px) !important;
 		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 16px rgba(147, 197, 253, 0.18) !important;
 	}
 	:root.theme-auto .button .card-title,
@@ -1727,7 +1730,7 @@ html, body {
 }
 
 /* Desktop hover convenience */
-@media (hover: hover) and (pointer: fine) {
+@media (hover: hover), (any-hover: hover) {
   .qr-trigger:hover ~ .qr-popup,
   .qr-popup:hover {
     opacity: 1;

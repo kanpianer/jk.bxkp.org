@@ -25,12 +25,15 @@
 
 | 站点名称 | 推荐级别 | 特性标签 | 价格 / 规格起步 | 快速访问短链 | 官方直达链接 |
 | :--- | :---: | :--- | :--- | :--- | :--- |
+| **青云梯** | ⭐ 重点推荐 | `专线` `非家宽` | ¥25/月 250GB 起 | [jiakuan.link/qyt](https://jiakuan.link/qyt) | [直达官网](https://inv02.qytaff.cc/register?aff=GaP2YyRn) |
 | **SS-ID** | ⭐ 重点推荐 | `专线` `非家宽` | ¥20/月 100GB 起 | [jiakuan.link/ssid](https://jiakuan.link/ssid) | [直达官网](https://qe.newssid.com/#/register?code=fdRMww9M) |
 | **SNTP** | ⭐ 重点推荐 | `专线` `非家宽` `Emby` | ¥18/月 100GB 起 | [jiakuan.link/sntp](https://jiakuan.link/sntp) | [直达官网](https://ncdn1.sntp.uk/auth/register?code=zsyVQ1fa) |
-| **rancho** | ⭐ 重点推荐 | `专线` `Emby` | 68元/月 512GB 起 | [jiakuan.link/rancho](https://jiakuan.link/rancho) | [直达官网](https://mccloud.gay/#/register?code=jMKFtNbr) |
+| **SSRDOG** | 精选 | `专线` `非家宽` | ¥105/季 150GB/季 起 | [jiakuan.link/dog](https://jiakuan.link/dog) | [直达官网](https://st2.hosbb.com/#/register?code=iqLoMSct) |
 | **BiuBiu** | 精选 | `精品线路` `非家宽` | ¥26/月 50GB 起 | [jiakuan.link/biu](https://jiakuan.link/biu) | [直达官网](https://biubiu.one/#/register?code=9zhyjLWY) |
 | **Bitz Net** | 精选 | `专线` `非家宽` | ¥ 69.99/季 80GB/月 起 | [jiakuan.link/bitz](https://jiakuan.link/bitz) | [直达官网](https://red.bnaffred.com/#/register?code=Qc3PL2kS) |
-| **SSRDOG** | 精选 | `专线` `非家宽` | ¥105/季 150GB/季 起 | [jiakuan.link/dog](https://jiakuan.link/dog) | [直达官网](https://st2.hosbb.com/#/register?code=iqLoMSct) |
+| **E-IX** | 精选 | `专线` `非家宽` `新疆优化` | ¥25/月 150GB 起 | [jiakuan.link/eix](https://jiakuan.link/eix) | [直达官网](https://ap.cdn.e-ix.com/#/register?code=w56accjm) |
+| **FTQ** | 精选 | `专线` `非家宽` | ¥29.99/月 128GB 起 | [jiakuan.link/ftq](https://jiakuan.link/ftq) | [直达官网](https://wwa.ftquser.com/#/register?code=dcPOkY00) |
+| **Just My Socks** | 精选 | `精品线路` `非家宽` | $5.88/月 500GB 起 | [jiakuan.link/jms](https://jiakuan.link/jms) | [直达官网](https://justmysocks5.net/members/aff.php?aff=39292) |
 
 ### 机场推荐 (Airport)
 
@@ -39,11 +42,14 @@
 | 站点名称 | 推荐级别 | 特性标签 | 价格 / 规格起步 | 快速访问短链 | 官方直达链接 |
 | :--- | :---: | :--- | :--- | :--- | :--- |
 | **RESIP** | ⭐ 重点推荐 | `精品线路` `全家宽` | $3.9/月 50GB 起 | [jiakuan.link/resip](https://jiakuan.link/resip) | [直达官网](https://resip.net/?r=EJT9ZQ) |
+| **科技熊** | ⭐ 重点推荐 | `专线` `独立家宽IP` | ¥34.99/月 70G 起 | [jiakuan.link/kjx](https://jiakuan.link/kjx) | [直达官网](https://kjx.club/auth/register?code=0Fz4) |
 | **网际快车** | ⭐ 重点推荐 | `不限时` | ¥6.8/月 20GB 起 | [jiakuan.link/wjkc](https://jiakuan.link/wjkc) | [直达官网](https://QRBAPA.快车.com) |
-| **精靈學院** | ⭐ 重点推荐 | `精品线路` `Emby` `不限时` | ¥8/月 30GB 起 | [jiakuan.link/jlxy](https://jiakuan.link/jlxy) | [直达官网](https://ok.riolu.work/register?aff=EPW4XXSz) |
+| **EdNovas云** | 精选 | `专线` `回国` `Emby 成人服` | ¥30/月 100G 起 | [jiakuan.link/edn](https://jiakuan.link/edn) | [直达官网](https://www.ednovas.org/#/register?code=Mn36rnSN) |
+| **rancho** | 精选 | `专线` `Emby` | 68元/月 512GB 起 | [jiakuan.link/rancho](https://jiakuan.link/rancho) | [直达官网](https://mccloud.gay/#/register?code=jMKFtNbr) |
 | **云帆** | 精选 | `含精品线路` `不限时` | ¥9.9/月 100GB 起 | [jiakuan.link/yf](https://jiakuan.link/yf) | [直达官网](https://fan.yunfan.app/#/register?code=c9LpBOig) |
-| **仙路湾** | 精选 | `不限时` `含专线` | ¥10/月 50GB 起 | [jiakuan.link/xlw](https://jiakuan.link/xlw) | [直达官网](https://jsq.xlw.app/#/register?code=orbNNe3J) |
+| **MESL** | 精选 | `专线` `新疆优化` | ¥50/月 500GB 起 | [jiakuan.link/mesl](https://jiakuan.link/mesl) | [直达官网](https://dash.makemesl.com/#/register?code=tMEAQMp0) |
 | **大象网络** | 精选 | `精品线路` `不限时` | ¥35/月 300GB 起 | [jiakuan.link/dxwl](https://jiakuan.link/dxwl) | [直达官网](https://dx.elphantroute.com/app#/register?code=qxu83JG7) |
+| **仙路湾** | 精选 | `不限时` `含专线` | ¥10/月 50GB 起 | [jiakuan.link/xlw](https://jiakuan.link/xlw) | [直达官网](https://jsq.xlw.app/#/register?code=orbNNe3J) |
 
 ### VPS 推荐 (Virtual Private Server)
 
