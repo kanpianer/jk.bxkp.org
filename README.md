@@ -25,7 +25,7 @@
 
 | 站点名称 | 推荐级别 | 特性标签 | 价格 / 规格起步 | 快速访问短链 | 官方直达链接 |
 | :--- | :---: | :--- | :--- | :--- | :--- |
-| **CitrusLab** | ⭐ 重点推荐 | `Emby` | ¥12.9/月 80G 起 | [jiakuan.link/cl](https://jiakuan.link/cl) | [直达官网](http://cotota.app/register?aff=cyvpFwYf) |
+| **CitrusLab** | ⭐ 重点推荐 | `Emby` `中转` | ¥12.9/月 80G 起 | [jiakuan.link/cl](https://jiakuan.link/cl) | [直达官网](http://cotota.app/register?aff=cyvpFwYf) |
 | **青云梯** | ⭐ 重点推荐 | `专线` `非家宽` | ¥25/月 250GB 起 | [jiakuan.link/qyt](https://jiakuan.link/qyt) | [直达官网](https://inv02.qytaff.cc/register?aff=GaP2YyRn) |
 | **SS-ID** | ⭐ 重点推荐 | `专线` `非家宽` | ¥20/月 100GB 起 | [jiakuan.link/ssid](https://jiakuan.link/ssid) | [直达官网](https://qe.newssid.com/#/register?code=fdRMww9M) |
 | **Bitz Net** | 精选 | `专线` `非家宽` | ¥ 69.99/季 80GB/月 起 | [jiakuan.link/bitz](https://jiakuan.link/bitz) | [直达官网](https://red.bnaffred.com/#/register?code=Qc3PL2kS) |
