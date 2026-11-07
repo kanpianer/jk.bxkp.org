@@ -15,6 +15,24 @@
     // 全局卡片显示更新函数引用
     let updateCardVisibilityGlobal = null;
 
+    // 首次访问网站状态判定（供自动弹窗、底部向上移动的大字动效等首访体验共享）
+    const FIRST_VISIT_STORAGE_KEY = 'jk_site_visited';
+    let isFirstSiteVisit = false;
+    try {
+        if (!localStorage.getItem(FIRST_VISIT_STORAGE_KEY)) {
+            // 若以前从未记录过首访（且无指南/箭头已读历史），则标记为首次访问
+            if (!localStorage.getItem('jk_guide_modal_seen') && !localStorage.getItem('jk_guide_arrow_seen')) {
+                isFirstSiteVisit = true;
+            }
+            localStorage.setItem(FIRST_VISIT_STORAGE_KEY, '1');
+        }
+    } catch (e) {
+        if (!window.__siteVisitedSessionFlag) {
+            window.__siteVisitedSessionFlag = true;
+            isFirstSiteVisit = true;
+        }
+    }
+
     // 1. 初始化明暗主题与设备自适应切换系统
     function initThemeManager() {
         const toggleBtn = document.getElementById('theme-toggle');
@@ -150,13 +168,32 @@
             window.removeEventListener('touchmove', handleTouchMove);
         }
 
+        function openGuide(category = 'airport') {
+            if (typeof updateGuideCategory === 'function') {
+                updateGuideCategory(category);
+            }
+            if (typeof window.__dismissGuideArrow === 'function') {
+                window.__dismissGuideArrow();
+            }
+            try {
+                localStorage.setItem('jk_guide_arrow_seen', '1');
+            } catch (e) {}
+
+            if (!modal.open) {
+                if (typeof modal.showModal === 'function') {
+                    modal.showModal();
+                } else {
+                    modal.setAttribute('open', '');
+                }
+                lockScroll();
+            }
+        }
+        window.__openGuideModal = openGuide;
+
         if (toggleBtn) {
             toggleBtn.addEventListener('click', () => {
-                if (typeof window.__dismissGuideArrow === 'function') {
-                    window.__dismissGuideArrow();
-                }
-                modal.showModal();
-                lockScroll();
+                const targetCat = toggleBtn.dataset.category || (document.querySelector('.category-btn.active')?.dataset.category) || 'airport';
+                openGuide(targetCat);
             });
         }
 
@@ -166,8 +203,19 @@
             });
         }
 
-        modal.addEventListener('close', unlockScroll);
-        modal.addEventListener('cancel', unlockScroll);
+        function handleModalClose() {
+            unlockScroll();
+            // 弹窗关闭后，若当前主页面不是 airport（例如通过 #old 或 #vps 访问），恢复指南按钮对应当前主页面分类
+            const activeBtn = document.querySelector('.category-btn.active');
+            if (activeBtn && activeBtn.dataset.category && activeBtn.dataset.category !== 'airport') {
+                if (typeof updateGuideCategory === 'function') {
+                    updateGuideCategory(activeBtn.dataset.category);
+                }
+            }
+        }
+
+        modal.addEventListener('close', handleModalClose);
+        modal.addEventListener('cancel', handleModalClose);
 
         // 支持点击背景遮罩层关闭弹窗
         modal.addEventListener('click', (event) => {
@@ -183,6 +231,21 @@
                 modal.close();
             }
         });
+
+        // 2.1 用户首次访问网站时，自动显示「家宽指南」弹窗
+        function checkFirstVisitGuide() {
+            if (!isFirstSiteVisit) return;
+            try {
+                localStorage.setItem('jk_guide_modal_seen', '1');
+                localStorage.setItem('jk_guide_arrow_seen', '1');
+            } catch (e) {}
+
+            setTimeout(() => {
+                openGuide('airport');
+            }, 350);
+        }
+
+        checkFirstVisitGuide();
     }
 
     // 2.5. 指南分类与标题联动
@@ -388,6 +451,18 @@
         initGuideArrowPrompt();
     };
 
+    window.__resetGuideFirstVisit = function() {
+        try {
+            localStorage.removeItem('jk_site_visited');
+            localStorage.removeItem('jk_guide_modal_seen');
+            localStorage.removeItem('jk_guide_arrow_seen');
+        } catch (e) {}
+    };
+
+    window.__showSpeedToast = function(text = '省心', type = 'noble') {
+        triggerCategorySpeedToast(text, type, true);
+    };
+
     // 3. 自动解析卡片分类与高亮，并确保高亮（带 #）卡片自动排在对应分类最前面，隐藏卡片（带 !）排在对应分类末尾
     // 分类顺序：老站 (noble) -> 机场 (airport) -> VPS (vps)
     function initAndSortButtons() {
@@ -495,8 +570,8 @@
     }
 
     // 极速拖影动效控制器（老站：“省心”，VPS：“不难”，机场：“家宽”）
-    // 每次加载网页，每一个动效字体最多出现两次，刷新页面重置
-    const speedToastMaxLimit = 2;
+    // 仅在首次访问网站时显示；每一个动效字体最多出现 1 次
+    const speedToastMaxLimit = 1;
     const speedToastCounts = {
         noble: 0,
         vps: 0,
@@ -514,11 +589,16 @@
         }
     }
 
-    function triggerCategorySpeedToast(text, type) {
+    function triggerCategorySpeedToast(text, type, force = false) {
         if (document.body.classList.contains('cards-falling')) return;
 
+        // 仅在首次访问网站时显示分类切换从网页底部向上方移动的大字动效
+        if (!isFirstSiteVisit && !force) {
+            return;
+        }
+
         const countKey = type || text;
-        if ((speedToastCounts[countKey] || 0) >= speedToastMaxLimit) {
+        if ((speedToastCounts[countKey] || 0) >= speedToastMaxLimit && !force) {
             return;
         }
         speedToastCounts[countKey] = (speedToastCounts[countKey] || 0) + 1;

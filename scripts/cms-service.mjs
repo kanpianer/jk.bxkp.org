@@ -288,7 +288,7 @@ export function parseCategoryGuides(html) {
     airport: {
       title: '家宽指南',
       items: [
-        { index: 1, content: '这里收集的都是包含家宽节点的机场，卡片上不同颜色的标签代表机场提供的不同服务和节点的不同属性。' },
+        { index: 1, content: '除标注为“非家宽”外，这里收集的都是包含家宽节点的机场，卡片上不同颜色的标签代表机场提供的不同服务和节点的不同属性。' },
         { index: 2, content: '如果目前手头不宽裕，<a href="https://fan.jiakuan.link/" target="_blank" rel="noopener">不想翻墙</a> 里收集了十几款免费的翻墙工具，也可以作为备用梯子。' },
         { index: 3, content: '家宽节点并不一定就比机房节点“干净”，做敏感业务前，最好先检测IP质量，或用小号测试。<br><span class="guide-sub-link">IP质量检测网站：<a href="https://ipsuper.com/" target="_blank" rel="noopener">IPSuper</a>、<a href="https://ip.cx" target="_blank" rel="noopener">IP.cx</a>、<a href="https://ipok.io/" target="_blank" rel="noopener">IPOK</a></span>' }
       ]
