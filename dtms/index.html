@@ -2873,8 +2873,8 @@ ${itemsHtml}
 
             // 默认深度指南文章列表 (保证离线与极速兜底)
             const DEFAULT_GUIDE_FILES = [
+                'faq.html',
                 'dual-isp-residential-ip.html',
-                'ip-fraud-check.html',
                 'cross-border-ecommerce-setup.html'
             ];
 
@@ -5540,6 +5540,9 @@ ${defaultBody}
                             redirectLines.push(`/${slug}  ${item.target}  302!`);
                         }
                     }
+                    redirectLines.push('/faq  /guides/faq.html  200');
+                    redirectLines.push('/kepu  /guides/faq.html  200');
+                    redirectLines.push('/guides/ip-fraud-check.html  /guides/dual-isp-residential-ip.html  301!');
                     // /dtms/ 为真实目录入口，无需额外的 Clean URL 重写规则
                     const newRedirects = redirectLines.join('\n') + '\n';
 
@@ -5560,6 +5563,9 @@ ${defaultBody}
                         shortlinkFiles.push({ path: `public/${slug}.html`, content: fallbackHtml });
                         shortlinkFiles.push({ path: `public/${slug}/index.html`, content: fallbackHtml });
                     }
+                    rootRedirectLines.push('/faq  /guides/faq.html  200');
+                    rootRedirectLines.push('/kepu  /guides/faq.html  200');
+                    rootRedirectLines.push('/guides/ip-fraud-check.html  /guides/dual-isp-residential-ip.html  301');
                     // 已从导航中移除的短链：同步删除其跳板页（含旧版根目录残留）
                     const deletePaths = [];
                     for (const slug of Object.keys(mapJsonBase)) {
@@ -5600,6 +5606,21 @@ ${defaultBody}
                                 art._modified = false;
                             }
                         }
+                    }
+
+                    // 6.2 如果 FAQ 问答库有改动，同步更新 guides/faq.html
+                    if (Array.isArray(cmsData.faqItems) && cmsData.faqItems.length > 0) {
+                        try {
+                            const faqBase = await fetch('/guides/faq.html?_t=' + Date.now()).then(r => r.ok ? r.text() : '').catch(() => '');
+                            if (faqBase) {
+                                const faqRegex = /<div class=["']faq-accordion["']>([\s\S]*?)<\/div>\s*<\/article>/i;
+                                if (faqBase.match(faqRegex)) {
+                                    const newFaqHtml = clientRenderFaqAccordionHtml(cmsData.faqItems);
+                                    const newFaqPageHtml = faqBase.replace(faqRegex, `${newFaqHtml}\n                </article>`);
+                                    filesToCommit.push({ path: 'guides/faq.html', content: newFaqPageHtml });
+                                }
+                            }
+                        } catch (e) {}
                     }
                     if (newSwJs) {
                         filesToCommit.push({ path: 'sw.js', content: newSwJs });

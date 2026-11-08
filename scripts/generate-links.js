@@ -47,7 +47,8 @@ const RESERVED_SLUGS = new Set([
   'guide', 'admin', 'dtms', 'go', 'donttouchmyshit', 'asset', 'image', 'fonts', 'media', 'about',
   'index', 'login', 'share', 'terms', 'links', 'nodes', 'stats',
   'reset', 'style', 'tests', 'debug', 'error', 'setup', 'pages',
-  'posts', 'files', 'cloud', 'robot', 'swjs0', 'cname'
+  'posts', 'files', 'cloud', 'robot', 'swjs0', 'cname',
+  'faq', 'kepu'
 ]);
 
 // 官方分类的自定义短链路由映射
@@ -450,6 +451,13 @@ export async function main() {
   // /dtms/ 为真实目录入口，无需额外的 Clean URL 重写规则
 
   // 9. 写入 public/_redirects 与仓库根 _redirects（根目录部署时保持 /[slug] 可用）
+  redirectLines.push('/faq  /guides/faq.html  200');
+  redirectLines.push('/kepu  /guides/faq.html  200');
+  redirectLines.push('/guides/ip-fraud-check.html  /guides/dual-isp-residential-ip.html  301!');
+  rootRedirectLines.push('/faq  /guides/faq.html  200');
+  rootRedirectLines.push('/kepu  /guides/faq.html  200');
+  rootRedirectLines.push('/guides/ip-fraud-check.html  /guides/dual-isp-residential-ip.html  301');
+
   const redirectsContent = redirectLines.join('\n') + '\n';
   fs.writeFileSync(path.resolve(PUBLIC_DIR, '_redirects'), redirectsContent, 'utf8');
   fs.writeFileSync(path.resolve(ROOT_DIR, '_redirects'), rootRedirectLines.join('\n') + '\n', 'utf8');

@@ -35,7 +35,7 @@
 
     // 1. 初始化明暗主题与设备自适应切换系统
     function initThemeManager() {
-        const toggleBtn = document.getElementById('theme-toggle');
+        const toggleBtns = document.querySelectorAll('.theme-toggle-btn');
         const mediaQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
 
         function getEffectiveTheme() {
@@ -64,11 +64,12 @@
                 meta.content = isDark ? 'dark' : 'light';
             }
 
-            if (toggleBtn) {
-                const label = isDark ? '切换至浅色模式' : '切换至暗黑模式';
-                toggleBtn.setAttribute('title', label);
-                toggleBtn.setAttribute('aria-label', label);
-            }
+            const label = isDark ? '切换至浅色模式' : '切换至暗黑模式';
+            const allBtns = document.querySelectorAll('.theme-toggle-btn');
+            allBtns.forEach(btn => {
+                btn.setAttribute('title', label);
+                btn.setAttribute('aria-label', label);
+            });
 
             if (window.__skySystem && typeof window.__skySystem.setDarkMode === 'function') {
                 window.__skySystem.setDarkMode(isDark, !isUserAction && !document.body);
@@ -77,9 +78,10 @@
             window.dispatchEvent(new CustomEvent('themechange', { detail: { theme, isDark } }));
         }
 
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', (e) => {
+        toggleBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 const current = getEffectiveTheme();
                 const next = (current === 'dark') ? 'light' : 'dark';
                 const systemPref = (mediaQuery && mediaQuery.matches) ? 'dark' : 'light';
@@ -91,7 +93,7 @@
                 }
                 applyTheme(next, true);
             });
-        }
+        });
 
         if (mediaQuery) {
             mediaQuery.addEventListener('change', (e) => {
@@ -168,16 +170,18 @@
             window.removeEventListener('touchmove', handleTouchMove);
         }
 
-        function openGuide(category = 'airport') {
+        function openGuide(category = 'airport', options = {}) {
             if (typeof updateGuideCategory === 'function') {
                 updateGuideCategory(category);
             }
-            if (typeof window.__dismissGuideArrow === 'function') {
-                window.__dismissGuideArrow();
+            if (!options || !options.isAutoFirstVisit) {
+                if (typeof window.__dismissGuideArrow === 'function') {
+                    window.__dismissGuideArrow();
+                }
+                try {
+                    localStorage.setItem('jk_guide_arrow_seen', '1');
+                } catch (e) {}
             }
-            try {
-                localStorage.setItem('jk_guide_arrow_seen', '1');
-            } catch (e) {}
 
             if (!modal.open) {
                 if (typeof modal.showModal === 'function') {
@@ -212,6 +216,12 @@
                     updateGuideCategory(activeBtn.dataset.category);
                 }
             }
+            // 用户关闭家宽指南窗口后，箭头飞向家宽指南按钮
+            if (typeof window.__flyGuideArrow === 'function') {
+                window.__flyGuideArrow();
+            } else {
+                window.__guideArrowPendingFlight = true;
+            }
         }
 
         modal.addEventListener('close', handleModalClose);
@@ -237,11 +247,10 @@
             if (!isFirstSiteVisit) return;
             try {
                 localStorage.setItem('jk_guide_modal_seen', '1');
-                localStorage.setItem('jk_guide_arrow_seen', '1');
             } catch (e) {}
 
             setTimeout(() => {
-                openGuide('airport');
+                openGuide('airport', { isAutoFirstVisit: true });
             }, 350);
         }
 
@@ -306,7 +315,7 @@
     }
     window.__highlightGuideButton = highlightGuideButton;
 
-    // 2.6. 用户首次打开网站时，用黄色箭头图标飞向并指向指南按钮（带极速拖影残影与呼吸状动画）
+    // 2.6. 用户首次打开网站时，黄色箭头默认在起始位置原地不动，关闭家宽指南窗口后飞向指南按钮
     function initGuideArrowPrompt() {
         const STORAGE_KEY = 'jk_guide_arrow_seen';
         try {
@@ -316,6 +325,7 @@
         } catch (e) {}
 
         const toggleBtn = document.getElementById('guide-toggle');
+        const modal = document.getElementById('guide-modal');
         if (!toggleBtn) return;
 
         // 计算目标位置与指向角度
@@ -388,7 +398,45 @@
 
         container.appendChild(stage);
 
+        let hasFlown = false;
+        let flightTimer = null;
+
+        function startFlight() {
+            if (hasFlown || !stage || stage.classList.contains('is-dismissing')) return;
+            hasFlown = true;
+            window.__guideArrowPendingFlight = false;
+
+            // 重新计算一次目标位置（防止用户在弹窗期间 resize 窗口）
+            const p = computeTarget();
+            stage.style.setProperty('--start-x', `${p.startX}px`);
+            stage.style.setProperty('--start-y', `${p.startY}px`);
+            stage.style.setProperty('--delta-x', `${p.deltaX}px`);
+            stage.style.setProperty('--delta-y', `${p.deltaY}px`);
+            stage.style.setProperty('--arrow-angle', `${p.rotDeg}deg`);
+
+            // 弹窗关闭后平滑留白约 240ms，让用户清晰看到起始位置的原地箭头后丝滑起飞
+            flightTimer = setTimeout(() => {
+                if (!stage || stage.classList.contains('is-dismissing')) return;
+                stage.classList.add('is-flying');
+
+                // 兜底定时器（以防个别极端环境未触发 animationend 事件）
+                setTimeout(() => {
+                    if (!stage || stage.classList.contains('is-dismissing')) return;
+                    if (!stage.classList.contains('is-arrived')) {
+                        stage.classList.remove('is-flying');
+                        stage.classList.add('is-arrived');
+                    }
+                }, 720);
+            }, 240);
+        }
+
+        window.__flyGuideArrow = startFlight;
+
         function dismissArrow() {
+            if (flightTimer) {
+                clearTimeout(flightTimer);
+                flightTimer = null;
+            }
             if (!stage || stage.classList.contains('is-dismissing')) return;
             stage.classList.add('is-dismissing');
             try {
@@ -412,13 +460,14 @@
         stage.addEventListener('animationend', (e) => {
             if (e.animationName === 'guideArrowFlight') {
                 if (!stage || stage.classList.contains('is-dismissing')) return;
+                stage.classList.remove('is-flying');
                 stage.classList.add('is-arrived');
             }
         });
 
         // 窗口尺寸变化动态微调
         window.addEventListener('resize', () => {
-            if (stage && stage.classList.contains('is-arrived') && !stage.classList.contains('is-dismissing')) {
+            if (stage && !stage.classList.contains('is-dismissing')) {
                 const p = computeTarget();
                 stage.style.setProperty('--start-x', `${p.startX}px`);
                 stage.style.setProperty('--start-y', `${p.startY}px`);
@@ -428,18 +477,21 @@
             }
         });
 
-        // 延迟 300ms 挂载进入屏幕并触发飞行动画
-        setTimeout(() => {
-            document.body.appendChild(container);
+        // 挂载进入屏幕（默认在起始位置原地不动）
+        document.body.appendChild(container);
 
-            // 兜底定时器（以防个别极端环境未触发 animationend 事件）
-            setTimeout(() => {
-                if (!stage || stage.classList.contains('is-dismissing')) return;
-                if (!stage.classList.contains('is-arrived')) {
-                    stage.classList.add('is-arrived');
-                }
-            }, 680);
-        }, 300);
+        // 如果弹窗已经关闭或未打开，或者之前有 pending 的飞行请求，则触发起飞
+        if (window.__guideArrowPendingFlight || (!modal || !modal.open)) {
+            if (!modal || !modal.open) {
+                setTimeout(() => {
+                    if (!modal || !modal.open) {
+                        startFlight();
+                    }
+                }, 400);
+            } else {
+                startFlight();
+            }
+        }
     }
 
     window.__showGuideArrow = function(force = true) {

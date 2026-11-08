@@ -51,9 +51,9 @@
         }
     }
 
-    // 判断是否为深度指南文章路径
+    // 判断是否为深度指南或防坑科普路径
     function isGuidePath(path) {
-        return /\/guides\/[^/]+\.html$/i.test(path);
+        return /\/guides\/[^/]+\.html$/i.test(path) || path === '/faq' || path === '/kepu';
     }
 
     // 判断是否为主页路径（包含官方分类路径 /old, /vps）
@@ -122,8 +122,8 @@
     // 自动预加载所有深度指南及主页
     function initPrefetch() {
         const guides = [
+            '/guides/faq.html',
             '/guides/dual-isp-residential-ip.html',
-            '/guides/ip-fraud-check.html',
             '/guides/cross-border-ecommerce-setup.html'
         ];
         const schedule = window.requestIdleCallback || ((cb) => setTimeout(cb, 800));
@@ -148,14 +148,28 @@
         }
     }
 
-    // 同步左上角导航按钮显隐状态（主页显示指南按钮，文章页显示悬浮返回按钮）
+    // 同步左上角与右上角导航按钮显隐状态（主页显示指南与防坑科普按钮，文章/科普页显示悬浮返回按钮与主题按钮）
     function updateFloatingNav(isGuide) {
+        if (isGuide) {
+            document.body.classList.add('is-viewing-guide');
+        } else {
+            document.body.classList.remove('is-viewing-guide');
+            document.body.classList.remove('guide-body');
+        }
         const guideToggle = document.getElementById('guide-toggle');
+        const faqToggle = document.getElementById('faq-toggle');
         const backBtns = document.querySelectorAll('.floating-back-btn');
+        const guideThemeToggles = document.querySelectorAll('.guide-theme-toggle-btn, #guide-theme-toggle');
         if (guideToggle) {
             guideToggle.style.display = isGuide ? 'none' : 'inline-flex';
         }
+        if (faqToggle) {
+            faqToggle.style.display = isGuide ? 'none' : 'inline-flex';
+        }
         backBtns.forEach(btn => {
+            btn.style.display = isGuide ? 'inline-flex' : 'none';
+        });
+        guideThemeToggles.forEach(btn => {
             btn.style.display = isGuide ? 'inline-flex' : 'none';
         });
     }
@@ -265,7 +279,13 @@
         const path = destUrl.pathname;
         let html = htmlCache.get(path);
         if (!html) {
-            html = await prefetch(destUrl.href);
+            const faqTpl = document.getElementById('faq-view-template');
+            if (faqTpl && (path === '/guides/faq.html' || path === '/faq' || path.endsWith('/faq.html'))) {
+                html = `<div id="guide-view">${faqTpl.innerHTML}</div>`;
+                htmlCache.set(path, html);
+            } else {
+                html = await prefetch(destUrl.href);
+            }
         }
 
         if (!html) {
@@ -382,6 +402,7 @@
         }
 
         document.body.classList.remove('is-viewing-guide');
+        document.body.classList.remove('guide-body');
         if (!document.body.dataset.activeCategory) {
             document.body.dataset.activeCategory = 'airport';
         }

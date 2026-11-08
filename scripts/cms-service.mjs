@@ -384,7 +384,7 @@ export function parseFaqItems(html) {
  */
 export function parseGuideArticles() {
   ensureDir(GUIDES_DIR);
-  const files = fs.readdirSync(GUIDES_DIR).filter((f) => f.endsWith('.html'));
+  const files = fs.readdirSync(GUIDES_DIR).filter((f) => f.endsWith('.html') && f !== 'ip-fraud-check.html');
   const articles = [];
 
   for (const filename of files) {
@@ -769,6 +769,27 @@ export async function saveAllData({ cards, categoryGuides, modalItems, faqItems,
       const newSchemaSnippet = `"@type": "FAQPage",\n          "@id": "https://jiakuan.link/#faq",\n          "mainEntity": ${JSON.stringify(mainEntities, null, 12).replace(/\n\s*}/g, '\n          }')}`;
       html = html.replace(faqSchemaRegex, newSchemaSnippet);
     }
+
+    // 同步更新 guides/faq.html
+    const faqFiles = [
+      path.resolve(GUIDES_DIR, 'faq.html'),
+      path.resolve(ROOT_DIR, 'dist/guides/faq.html')
+    ];
+    for (const fFile of faqFiles) {
+      if (fs.existsSync(fFile)) {
+        try {
+          let fHtml = fs.readFileSync(fFile, 'utf8');
+          const fMatch = fHtml.match(faqAccordionRegex);
+          if (fMatch) {
+            const newFaqHtml = renderFaqAccordionHtml(faqItems);
+            fHtml = fHtml.replace(faqAccordionRegex, `${newFaqHtml}\n                </article>`);
+            fs.writeFileSync(fFile, fHtml, 'utf8');
+          }
+        } catch (err) {
+          console.warn(`[CMS Warning] 同步更新 ${path.relative(ROOT_DIR, fFile)} 失败:`, err.message);
+        }
+      }
+    }
   }
 
   // 5. 替换底部友情链接区域
@@ -1016,8 +1037,18 @@ export function generateGuideArticleHtml({ slug, filename, headline, description
         <span>指南</span>
     </button>
 
+    <!-- 极简右上角防坑与科普按钮（主页常驻，文章页隐藏） -->
+    <a href="/guides/faq.html" id="faq-toggle" class="guide-toggle-btn faq-toggle-btn" aria-label="防坑与科普" title="防坑与科普" style="display: none;">
+        <svg class="guide-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span id="faq-toggle-text">防坑与科普</span>
+    </a>
+
     <!-- 极简右上角小太阳/主题切换按钮（全局常驻层） -->
-    <button id="theme-toggle" class="theme-toggle-btn" type="button" aria-label="切换主题" title="切换主题">
+    <button id="guide-theme-toggle" class="theme-toggle-btn guide-theme-toggle-btn" type="button" aria-label="切换主题" title="切换主题">
         <span class="theme-stage">
             <svg class="theme-icon sun-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <circle cx="12" cy="12" r="4.5"></circle>
@@ -1132,25 +1163,44 @@ export function saveGuideArticle({ filename, headline, description, contentHtml,
     } catch (e) {}
   }
 
-  // 同步更新 index.html 中的知识专题集群卡片
-  if (addToIndex && fs.existsSync(INDEX_HTML_FILE)) {
-    let indexHtml = fs.readFileSync(INDEX_HTML_FILE, 'utf8');
-    const clusterGridRegex = /(<div class=["']seo-cluster-grid["']>)([\s\S]*?)(<\/div>\s*<\/article>)/i;
-    const match = indexHtml.match(clusterGridRegex);
-    if (match) {
-      const gridContent = match[2];
-      const targetHref = `guides/${cleanFilename}`;
-      if (!gridContent.includes(targetHref)) {
-        const newCard = `                        <a href="${targetHref}" class="seo-cluster-card">
+  // 同步更新 index.html 和 guides/faq.html 中的知识专题集群卡片
+  const targetPages = [
+    INDEX_HTML_FILE,
+    path.resolve(GUIDES_DIR, 'faq.html'),
+    path.resolve(ROOT_DIR, 'dist/guides/faq.html')
+  ];
+
+  for (const pageFile of targetPages) {
+    if (fs.existsSync(pageFile)) {
+      try {
+        let pageHtml = fs.readFileSync(pageFile, 'utf8');
+        const clusterGridRegex = /(<div class=["']seo-cluster-grid["']>)([\s\S]*?)(<\/div>\s*<\/article>)/i;
+        const match = pageHtml.match(clusterGridRegex);
+        if (match) {
+          let gridContent = match[2];
+          const cardRegex = new RegExp(`(<a\\s+[^>]*href=["'](?:/)?guides/${cleanFilename}["'][\\s\\S]*?<h3>)([\\s\\S]*?)(</h3>[\\s\\S]*?<p>)([\\s\\S]*?)(</p>)`, 'i');
+          if (cardRegex.test(gridContent)) {
+            if (headline) {
+              gridContent = gridContent.replace(cardRegex, `$1${headline}$3${homeDesc || description || '$4'}$5`);
+              pageHtml = pageHtml.replace(clusterGridRegex, `$1${gridContent}$3`);
+              fs.writeFileSync(pageFile, pageHtml, 'utf8');
+            }
+          } else if (addToIndex) {
+            const targetHref = `/guides/${cleanFilename}`;
+            const newCard = `                        <a href="${targetHref}" class="seo-cluster-card">
                             <div>
                                 <h3>${headline || cleanFilename}</h3>
                                 <p>${homeDesc || description || ''}</p>
                             </div>
                             <span class="seo-cluster-link-text">阅读完整指南 →</span>
                         </a>\n`;
-        const newGridContent = gridContent.trimEnd() + '\n' + newCard + '                    ';
-        indexHtml = indexHtml.replace(clusterGridRegex, `$1\n${newGridContent}$3`);
-        fs.writeFileSync(INDEX_HTML_FILE, indexHtml, 'utf8');
+            const newGridContent = gridContent.trimEnd() + '\n' + newCard + '                    ';
+            pageHtml = pageHtml.replace(clusterGridRegex, `$1\n${newGridContent}$3`);
+            fs.writeFileSync(pageFile, pageHtml, 'utf8');
+          }
+        }
+      } catch (err) {
+        console.warn(`[CMS Warning] 更新 ${path.relative(ROOT_DIR, pageFile)} 失败:`, err.message);
       }
     }
   }

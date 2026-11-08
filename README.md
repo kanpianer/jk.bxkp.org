@@ -71,9 +71,8 @@
 
 仓库内收录了深度专业科普文章，帮助您系统了解家宽原理与鉴别方法：
 
-- [什么是双ISP？为什么说双ISP不等于住宅IP？](guides/dual-isp-residential-ip.html)
-- [IP纯净度与欺诈分深度排查实操手册 (Scamalytics / IPQS / WHOER)](guides/ip-fraud-check.html)
-- [跨境电商与社媒运营家宽网络环境配置全指南](guides/cross-border-ecommerce-setup.html)
+- [真假家宽与住宅IP排坑鉴别全攻略：警惕“双ISP”误导与纯净度/欺诈分检测实战](guides/dual-isp-residential-ip.html)
+- [AI服务与跨境出海多账号防封全攻略：指纹隔离、独享家宽与防关联实战架构](guides/cross-border-ecommerce-setup.html)
 
 ---
 
