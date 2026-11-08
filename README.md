@@ -42,13 +42,13 @@
 | 站点名称 | 推荐级别 | 特性标签 | 价格 / 规格起步 | 快速访问短链 | 官方直达链接 |
 | :--- | :---: | :--- | :--- | :--- | :--- |
 | **RESIP** | ⭐ 重点推荐 | `精品线路` `全家宽` `独立家宽IP` | $3.9/月 50GB 起 | [jiakuan.link/resip](https://jiakuan.link/resip) | [直达官网](https://resip.net/?r=EJT9ZQ) |
-| **科技熊** | ⭐ 重点推荐 | `专线` `独立家宽IP` | ¥34.99/月 70G 起 | [jiakuan.link/kjx](https://jiakuan.link/kjx) | [直达官网](https://kjx.club/auth/register?code=0Fz4) |
 | **网际快车** | ⭐ 重点推荐 | `不限时` | ¥6.8/月 20GB 起 | [jiakuan.link/wjkc](https://jiakuan.link/wjkc) | [直达官网](https://QRBAPA.快车.com) |
-| **EdNovas云** | 精选 | `专线` `回国` `Emby 成人服` | ¥30/月 100G 起 | [jiakuan.link/edn](https://jiakuan.link/edn) | [直达官网](https://www.ednovas.org/#/register?code=Mn36rnSN) |
+| **科技熊** | ⭐ 重点推荐 | `专线` `独立家宽IP` | ¥34.99/月 70G 起 | [jiakuan.link/kjx](https://jiakuan.link/kjx) | [直达官网](https://kjx.club/auth/register?code=0Fz4) |
 | **云帆** | 精选 | `含精品线路` `不限时` | ¥9.9/月 100GB 起 | [jiakuan.link/yf](https://jiakuan.link/yf) | [直达官网](https://fan.yunfan.app/#/register?code=c9LpBOig) |
-| **rancho** | 精选 | `专线` `Emby` | 68元/月 512GB 起 | [jiakuan.link/rancho](https://jiakuan.link/rancho) | [直达官网](https://mccloud.gay/#/register?code=jMKFtNbr) |
-| **仙路湾** | 精选 | `不限时` `含专线` | ¥10/月 50GB 起 | [jiakuan.link/xlw](https://jiakuan.link/xlw) | [直达官网](https://jsq.xlw.app/#/register?code=orbNNe3J) |
+| **EdNovas云** | 精选 | `专线` `回国` `Emby 成人服` | ¥30/月 100G 起 | [jiakuan.link/edn](https://jiakuan.link/edn) | [直达官网](https://www.ednovas.org/#/register?code=Mn36rnSN) |
 | **MESL** | 精选 | `专线` `新疆优化` | ¥50/月 500GB 起 | [jiakuan.link/mesl](https://jiakuan.link/mesl) | [直达官网](https://dash.makemesl.com/#/register?code=tMEAQMp0) |
+| **仙路湾** | 精选 | `不限时` `含专线` | ¥10/月 50GB 起 | [jiakuan.link/xlw](https://jiakuan.link/xlw) | [直达官网](https://jsq.xlw.app/#/register?code=orbNNe3J) |
+| **rancho** | 精选 | `专线` `Emby` | 68元/月 512GB 起 | [jiakuan.link/rancho](https://jiakuan.link/rancho) | [直达官网](https://mccloud.gay/#/register?code=jMKFtNbr) |
 | **大象网络** | 精选 | `精品线路` `不限时` | ¥35/月 300GB 起 | [jiakuan.link/dxwl](https://jiakuan.link/dxwl) | [直达官网](https://dx.elphantroute.com/app#/register?code=qxu83JG7) |
 
 ### VPS 推荐 (Virtual Private Server)

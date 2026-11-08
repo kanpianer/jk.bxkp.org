@@ -10,7 +10,7 @@
  *    - 仅在用户离线/无网络连接时，优雅降级提供本地缓存页面进行展示。
  */
 
-const CACHE_VERSION = 'v1.1.104';
+const CACHE_VERSION = 'v1.1.110';
 const STATIC_CACHE_NAME = `jkdh-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE_NAME = `jkdh-runtime-${CACHE_VERSION}`;
 
@@ -25,8 +25,8 @@ const CORE_STATIC_ASSETS = [
     './js/page-router.js',
     './js/emoji-data.js',
     './js/main.js',
+    './js/matter.min.js',
     './images/anime_sky_bg.jpg',
-    './images/ace-bg.png',
     './images/avatar.png',
     './images/og-preview.jpg',
     'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',

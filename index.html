@@ -277,14 +277,14 @@
         <span id="guide-toggle-text">家宽指南</span>
     </button>
 
-    <!-- 极简右上角防坑与科普按钮（全局常驻层，无背景、透明、极简图标+文字） -->
-    <a href="/guides/faq.html" id="faq-toggle" class="guide-toggle-btn faq-toggle-btn" aria-label="防坑与科普" title="防坑与科普">
+    <!-- 极简右上角防坑科普按钮（全局常驻层，无背景、透明、极简图标+文字） -->
+    <a href="/guides/faq.html" id="faq-toggle" class="guide-toggle-btn faq-toggle-btn" aria-label="防坑科普" title="防坑科普">
         <svg class="guide-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
             <line x1="12" y1="8" x2="12" y2="12"></line>
             <line x1="12" y1="16" x2="12.01" y2="16"></line>
         </svg>
-        <span id="faq-toggle-text">防坑与科普</span>
+        <span id="faq-toggle-text">防坑科普</span>
     </a>
 
     <!-- 极简悬浮返回按钮（全局常驻层，在深度指南文章视图时显示） -->
@@ -421,15 +421,10 @@
 
     <div class="container">
         <div class="column">
-            <!-- Background image behind title and subtitle -->
-            <div class="title-background">
-                <img src="images/ace-bg.png" alt="">
-            </div>
-
             <!-- Top brand header -->
             <h1>
-                <span class="brand-title-wrap">
-                    <a href="/" rel="home" title="家宽导航首页">家宽导航</a>
+                <span class="brand-title-wrap brand-title-home-wrap">
+                    <a href="/" rel="home" id="brand-home-link" class="brand-title-link" title="家宽导航 - 点击切换主题">家宽导航</a>
                     <button id="theme-toggle" class="theme-toggle-btn" type="button" aria-label="切换主题" title="切换主题">
                         <span class="theme-stage">
                             <svg class="theme-icon sun-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -727,20 +722,6 @@
                         <div class="card-desc">独享IP，专为跨境电商、TikTok账号运营、Claude 等AI工具打造。稳定、长效、高纯净度。</div>
                 </a>
 
-                <!-- 科技熊 -->
-                <a data-slug="kjx" class="button button-xzwl has-desc" href="https://jiakuan.link/kjx" target="_blank"
-                    rel="sponsored noopener" role="button" data-category="airport">
-                    <img class="icon" aria-hidden="true" src="images/icons/kjx.ico" alt="科技熊 Logo" width="30" height="30" loading="lazy" decoding="async">
-                    <div class="card-info">
-                        <div class="card-header">
-                            <h3 class="card-title">#科技熊</h3>
-                            <span class="card-tag tag-dedicated">专线</span>
-                        </div>
-                        <div class="card-meta">¥34.99/月 70G 起 <span class="card-tag tag-non-home">独立家宽IP</span></div>
-                    </div>
-                        <div class="card-desc">AI解锁专线，有1元1G1天试用套餐，支持独立家宽IP，¥121/月起，跨境业务比较省心。</div>
-                </a>
-
                 <!-- 网际快车 -->
                 <a data-slug="wjkc" class="button button-xzwl has-desc" href="https://jiakuan.link/wjkc" target="_blank"
                     rel="sponsored noopener" role="button" data-category="airport">
@@ -755,19 +736,18 @@
                         <div class="card-desc">在不限时流量之外，还包括日享套餐，每日流量额度设上限，到期前每日可用。</div>
                 </a>
 
-                <!-- EdNovas云 -->
-                <a data-slug="edn" class="button button-xzwl has-desc" href="https://jiakuan.link/edn" target="_blank"
+                <!-- 科技熊 -->
+                <a data-slug="kjx" class="button button-xzwl has-desc" href="https://jiakuan.link/kjx" target="_blank"
                     rel="sponsored noopener" role="button" data-category="airport">
-                    <img class="icon" aria-hidden="true" src="images/icons/ednovas.svg" alt="EdNovas云 Logo" width="30" height="30" loading="lazy" decoding="async">
+                    <img class="icon" aria-hidden="true" src="images/icons/kjx.ico" alt="科技熊 Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
-                            <h3 class="card-title">EdNovas云</h3>
+                            <h3 class="card-title">#科技熊</h3>
                             <span class="card-tag tag-dedicated">专线</span>
-                            <span class="card-tag tag-xinjiang">回国</span>
                         </div>
-                        <div class="card-meta">¥30/月 100G 起 <span class="card-tag tag-non-home">Emby 成人服</span></div>
+                        <div class="card-meta">¥34.99/月 70G 起 <span class="card-tag tag-non-home">独立家宽IP</span></div>
                     </div>
-                        <div class="card-desc">提供的服务很全，有会员影视网站和Emby大人服，针对海外用户还提供翻回国的套餐。</div>
+                        <div class="card-desc">AI解锁专线，有1元1G1天试用套餐，支持独立家宽IP，¥121/月起，跨境业务比较省心。</div>
                 </a>
 
                 <!-- 云帆 -->
@@ -785,19 +765,34 @@
                         <div class="card-desc">套餐类别极度丰富，一站式满足不同需求。价格从每月¥9.9到¥99，不同类型线路均覆盖。</div>
                 </a>
 
-                <!-- rancho -->
-                <a data-slug="rancho" class="button button-xzwl has-desc" href="https://jiakuan.link/rancho" target="_blank"
+                <!-- EdNovas云 -->
+                <a data-slug="edn" class="button button-xzwl has-desc" href="https://jiakuan.link/edn" target="_blank"
                     rel="sponsored noopener" role="button" data-category="airport">
-                    <img class="icon" aria-hidden="true" src="images/icons/rancho.png" alt="rancho Logo" width="30" height="30" loading="lazy" decoding="async">
+                    <img class="icon" aria-hidden="true" src="images/icons/ednovas.svg" alt="EdNovas云 Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
-                            <h3 class="card-title">rancho</h3>
+                            <h3 class="card-title">EdNovas云</h3>
                             <span class="card-tag tag-dedicated">专线</span>
-                            <span class="card-tag tag-emby">Emby</span>
+                            <span class="card-tag tag-xinjiang">回国</span>
                         </div>
-                        <div class="card-meta">68元/月 512GB 起</div>
+                        <div class="card-meta">¥30/月 100G 起 <span class="card-tag tag-non-home">Emby 成人服</span></div>
                     </div>
-                        <div class="card-desc">肥羊大佬官方社群推荐，稳定运行多年不倒，提供Emby影音服务，支持套餐定制。新疆地区勿买。</div>
+                        <div class="card-desc">提供的服务很全，有会员影视网站和Emby大人服，针对海外用户还提供翻回国的套餐。</div>
+                </a>
+
+                <!-- MESL -->
+                <a data-slug="mesl" class="button button-xzwl has-desc" href="https://jiakuan.link/mesl" target="_blank"
+                    rel="sponsored noopener" role="button" data-category="airport">
+                    <img class="icon" aria-hidden="true" src="images/icons/mesl.png" alt="MESL Logo" width="30" height="30" loading="lazy" decoding="async">
+                    <div class="card-info">
+                        <div class="card-header">
+                            <h3 class="card-title">MESL</h3>
+                            <span class="card-tag tag-dedicated">专线</span>
+                            <span class="card-tag tag-xinjiang">新疆优化</span>
+                        </div>
+                        <div class="card-meta">¥50/月 500GB 起</div>
+                    </div>
+                        <div class="card-desc">中高端机场典范，自有全平台客户端，包括路由器，同时支持第三方客户端。170+ 全球优质节点。</div>
                 </a>
 
                 <!-- 仙路湾 -->
@@ -815,19 +810,19 @@
                         <div class="card-desc">套餐价格、线路和IP类型信息描述简洁，营销词几乎绝迹。工单当天回复，还算及时。</div>
                 </a>
 
-                <!-- MESL -->
-                <a data-slug="mesl" class="button button-xzwl has-desc" href="https://jiakuan.link/mesl" target="_blank"
+                <!-- rancho -->
+                <a data-slug="rancho" class="button button-xzwl has-desc" href="https://jiakuan.link/rancho" target="_blank"
                     rel="sponsored noopener" role="button" data-category="airport">
-                    <img class="icon" aria-hidden="true" src="images/icons/mesl.png" alt="MESL Logo" width="30" height="30" loading="lazy" decoding="async">
+                    <img class="icon" aria-hidden="true" src="images/icons/rancho.png" alt="rancho Logo" width="30" height="30" loading="lazy" decoding="async">
                     <div class="card-info">
                         <div class="card-header">
-                            <h3 class="card-title">MESL</h3>
+                            <h3 class="card-title">rancho</h3>
                             <span class="card-tag tag-dedicated">专线</span>
-                            <span class="card-tag tag-xinjiang">新疆优化</span>
+                            <span class="card-tag tag-emby">Emby</span>
                         </div>
-                        <div class="card-meta">¥50/月 500GB 起</div>
+                        <div class="card-meta">68元/月 512GB 起</div>
                     </div>
-                        <div class="card-desc">中高端机场典范，自有全平台客户端，包括路由器，同时支持第三方客户端。170+ 全球优质节点。</div>
+                        <div class="card-desc">肥羊大佬官方社群推荐，稳定运行多年不倒，提供Emby影音服务，支持套餐定制。新疆地区勿买。</div>
                 </a>
 
                 <!-- 大象网络 -->
@@ -1238,7 +1233,7 @@
                 <!-- 1. 常见问题解答 (FAQPage) -->
                 <article class="seo-block faq-block">
                     <h2 class="seo-block-title">❓ 常见问题解答（FAQ）</h2>
-                                                                                                                                            <div class="faq-accordion">
+                                                                                                                                                                                    <div class="faq-accordion">
                         <details class="faq-item">
                             <summary class="faq-question">什么是家宽IP？为什么很多服务商使用“双ISP”作为误导名称？</summary>
                             <div class="faq-answer">

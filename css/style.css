@@ -178,7 +178,7 @@ body {
     left: 0;
     width: 48px;
     height: 48px;
-    z-index: 2;
+    z-index: 1005;
     pointer-events: none;
     will-change: transform;
     opacity: 0;
@@ -199,8 +199,11 @@ body {
     opacity: 0.95;
     cursor: pointer;
     user-select: none;
+    -webkit-user-select: none;
     -webkit-user-drag: none;
-    z-index: 2;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    z-index: 1005;
     position: relative;
     font-size: 36px;
     line-height: 1;
@@ -208,6 +211,17 @@ body {
     font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Segoe UI Symbol", "Android Emoji", sans-serif;
     filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.28));
     transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 扩展移动端触控热区至 56px 以上，确保移动设备极易触摸点击 */
+.airplane::before {
+    content: '';
+    position: absolute;
+    top: -14px;
+    left: -14px;
+    right: -14px;
+    bottom: -14px;
+    z-index: 1;
 }
 
 .airplane:hover {
@@ -237,6 +251,15 @@ h1 {
 	align-items: center;
 	justify-content: center;
 	vertical-align: middle;
+	cursor: pointer;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.brand-title-wrap a {
+	user-select: none;
+	-webkit-user-select: none;
+	transition: filter 0.25s ease, color 0.2s ease;
 }
 
 h1 a,
@@ -301,25 +324,6 @@ a {
 }
 a:hover {
 	color:#083BDA;
-}
-
-/* Background Image behind title and subtitle
--------------------------------------------------- */
-.title-background {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: -1;
-  pointer-events: none;
-  margin-top: 2rem;
-}
-
-.title-background img {
-  width: auto;
-  height: auto;
-  max-width: 100%;
-  opacity: 0.15;
 }
 
 /* Category Navigation Filter */
@@ -991,21 +995,21 @@ footer a:hover,
 /* Home brand title header theme toggle button (positioned at top-right of "家宽导航") */
 .brand-title-wrap .theme-toggle-btn {
 	position: absolute;
-	top: -1.8rem;
-	left: calc(100% - 0.2rem);
-	width: 2.5rem;
-	height: 2.5rem;
+	top: -0.85rem;
+	left: calc(100% - 0.4rem);
+	width: 1.5rem;
+	height: 1.5rem;
 	z-index: 10;
 }
 
 .brand-title-wrap .theme-stage {
-	width: 1.75rem;
-	height: 1.75rem;
+	width: 1.05rem;
+	height: 1.05rem;
 }
 
 .brand-title-wrap .theme-stage .theme-icon {
-	width: 1.45rem;
-	height: 1.45rem;
+	width: 0.87rem;
+	height: 0.87rem;
 }
 
 /* Fixed theme toggle on standalone guide pages and SPA guide mode */
@@ -1059,13 +1063,23 @@ body.is-viewing-guide #faq-toggle {
 	transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.25s ease;
 }
 
-/* 鼠标悬停到主题切换按钮上时，不显示按钮背景，仅对图标做高亮和轻微放大效果 */
-.theme-toggle-btn:hover .theme-stage {
+/* 鼠标悬停到主题切换按钮或主页标题上时，仅对图标做高亮和轻微放大效果 */
+.theme-toggle-btn:hover .theme-stage,
+.brand-title-home-wrap:hover .theme-stage,
+.brand-title-wrap:has(.theme-toggle-btn):hover .theme-stage {
 	transform: scale(1.15);
 	filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 16px rgba(255, 255, 255, 0.6));
 }
 
-.theme-toggle-btn:active .theme-stage {
+/* 鼠标悬停到主页标题上时，文字获得与主题切换按钮一致的光晕高亮强调特效 */
+.brand-title-home-wrap:hover a,
+.brand-title-wrap:has(.theme-toggle-btn):hover a {
+	color: #ffffff !important;
+	filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 16px rgba(255, 255, 255, 0.6));
+}
+
+.theme-toggle-btn:active .theme-stage,
+.brand-title-wrap:active .theme-stage {
 	transform: scale(0.92);
 }
 
@@ -1146,18 +1160,18 @@ body.is-viewing-guide #faq-toggle {
 		height: 2.5rem;
 	}
 	.brand-title-wrap .theme-toggle-btn {
-		top: -1.45rem;
-		left: calc(100% - 0.2rem);
-		width: 2.25rem;
-		height: 2.25rem;
+		top: -0.7rem;
+		left: calc(100% - 0.35rem);
+		width: 1.35rem;
+		height: 1.35rem;
 	}
 	.brand-title-wrap .theme-stage {
-		width: 1.5rem;
-		height: 1.5rem;
+		width: 0.9rem;
+		height: 0.9rem;
 	}
 	.brand-title-wrap .theme-stage .theme-icon {
-		width: 1.25rem;
-		height: 1.25rem;
+		width: 0.75rem;
+		height: 0.75rem;
 	}
 }
 
@@ -1414,6 +1428,15 @@ body.is-viewing-guide #faq-toggle {
 	color: #bfdbfe;
 }
 
+:root.theme-dark .guide-toggle-btn,
+:root.theme-dark .guide-toggle-btn span {
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95), 0 2px 6px rgba(0, 0, 0, 0.8), 0 4px 14px rgba(0, 0, 0, 0.6) !important;
+}
+
+:root.theme-dark .guide-toggle-btn .guide-icon {
+	filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.95)) drop-shadow(0 2px 6px rgba(0, 0, 0, 0.8)) drop-shadow(0 4px 14px rgba(0, 0, 0, 0.6)) !important;
+}
+
 /* Auto theme */
 :root.theme-auto {
 	color-scheme: light dark;
@@ -1571,6 +1594,15 @@ body.is-viewing-guide #faq-toggle {
 	:root.theme-auto a:not(.button):hover {
 		color: #bfdbfe;
 	}
+
+	:root.theme-auto .guide-toggle-btn,
+	:root.theme-auto .guide-toggle-btn span {
+		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95), 0 2px 6px rgba(0, 0, 0, 0.8), 0 4px 14px rgba(0, 0, 0, 0.6) !important;
+	}
+
+	:root.theme-auto .guide-toggle-btn .guide-icon {
+		filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.95)) drop-shadow(0 2px 6px rgba(0, 0, 0, 0.8)) drop-shadow(0 4px 14px rgba(0, 0, 0, 0.6)) !important;
+	}
 }
 
 /* Responsive Button Stack - Tablet Two Columns
@@ -1601,14 +1633,15 @@ body.is-viewing-guide #faq-toggle {
 	.seo-knowledge-section {
 		margin-top: 1.55rem;
 	}
-	/* Reduce emoji flyer size on mobile */
+	/* Reduce emoji flyer size on mobile with comfortable touch area */
 	.airplane-wrapper {
-		width: 32px;
-		height: 32px;
+		width: 38px;
+		height: 38px;
 		animation: none;
+		z-index: 1005;
 	}
 	.airplane {
-		font-size: 24px;
+		font-size: 28px;
 	}
 }
 
@@ -1914,10 +1947,31 @@ html, body {
   }
 }
 
-/* Hide QR codes during physics collapse Easter egg */
-body.cards-falling .qr-trigger,
-body.cards-falling .qr-popup {
+/* Hide QR popup during physics collapse Easter egg (QR trigger icon drops with physics) */
+body.cards-falling .qr-popup,
+body.cards-elements-falling .qr-popup {
   display: none !important;
+}
+
+/* Card Background Frame Vanishes instantly when inner elements drop */
+body.cards-elements-falling .button,
+.button.card-frame-vanished {
+  opacity: 0 !important;
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  pointer-events: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Falling individual character & symbol styling */
+.falling-char-item {
+  display: inline-block;
+  will-change: transform;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  line-height: inherit;
 }
 
 /* Guide Button (Top-Left) & Modal Dialog

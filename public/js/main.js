@@ -36,6 +36,8 @@
     // 1. 初始化明暗主题与设备自适应切换系统
     function initThemeManager() {
         const toggleBtns = document.querySelectorAll('.theme-toggle-btn');
+        const brandHomeLink = document.getElementById('brand-home-link') || document.querySelector('.brand-title-wrap a[href="/"]');
+        const brandHomeWrap = document.querySelector('.brand-title-home-wrap') || (brandHomeLink ? brandHomeLink.closest('.brand-title-wrap') : null);
         const mediaQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
 
         function getEffectiveTheme() {
@@ -71,6 +73,11 @@
                 btn.setAttribute('aria-label', label);
             });
 
+            if (brandHomeLink) {
+                brandHomeLink.setAttribute('title', `家宽导航 - ${label}`);
+                brandHomeLink.setAttribute('aria-label', `家宽导航 - ${label}`);
+            }
+
             if (window.__skySystem && typeof window.__skySystem.setDarkMode === 'function') {
                 window.__skySystem.setDarkMode(isDark, !isUserAction && !document.body);
             }
@@ -78,22 +85,56 @@
             window.dispatchEvent(new CustomEvent('themechange', { detail: { theme, isDark } }));
         }
 
+        function toggleTheme() {
+            const current = getEffectiveTheme();
+            const next = (current === 'dark') ? 'light' : 'dark';
+            const systemPref = (mediaQuery && mediaQuery.matches) ? 'dark' : 'light';
+
+            if (next === systemPref) {
+                localStorage.removeItem('theme');
+            } else {
+                localStorage.setItem('theme', next);
+            }
+            applyTheme(next, true);
+        }
+
         toggleBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                const current = getEffectiveTheme();
-                const next = (current === 'dark') ? 'light' : 'dark';
-                const systemPref = (mediaQuery && mediaQuery.matches) ? 'dark' : 'light';
-
-                if (next === systemPref) {
-                    localStorage.removeItem('theme');
-                } else {
-                    localStorage.setItem('theme', next);
-                }
-                applyTheme(next, true);
+                toggleTheme();
             });
         });
+
+        // 点击主页标题“家宽导航”切换主题，效果与点击主题切换按钮一致
+        if (brandHomeWrap) {
+            brandHomeWrap.addEventListener('click', (e) => {
+                // 如果是按钮自身触发的点击，已由按钮自身独立处理，避免重复
+                if (e.target.closest('.theme-toggle-btn')) return;
+                // 仅响应鼠标左键点击，允许辅助键组合（如 Ctrl/Cmd 打开新标签页）保持原生行为
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                e.preventDefault();
+                e.stopPropagation();
+                toggleTheme();
+            });
+        } else if (brandHomeLink) {
+            brandHomeLink.addEventListener('click', (e) => {
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                e.preventDefault();
+                e.stopPropagation();
+                toggleTheme();
+            });
+        }
+
+        // 支持键盘在“家宽导航”上按 Space 键切换主题（Enter 键会触发浏览器的 click 事件走上述逻辑）
+        if (brandHomeLink) {
+            brandHomeLink.addEventListener('keydown', (e) => {
+                if (e.key === ' ' || e.key === 'Spacebar') {
+                    e.preventDefault();
+                    toggleTheme();
+                }
+            });
+        }
 
         if (mediaQuery) {
             mediaQuery.addEventListener('change', (e) => {
@@ -1440,8 +1481,9 @@
         return emojiFlightController;
     }
 
-    // 8. 桌面端物理掉落与时光倒流彩蛋（空闲惰性加载 Matter.js，不阻塞首屏）
+    // 8. 物理掉落、卡片内部元素独立掉落与时光倒流彩蛋（空闲惰性加载 Matter.js，全设备支持）
     let physicsInitialized = false;
+    let pendingCrash = null;
 
     function initDesktopPhysics() {
         if (physicsInitialized) return;
@@ -1453,6 +1495,9 @@
         let cardsFallen = false;
         let isRewinding = false;
         let lastCrashTime = 0;
+        let droppedCards = [];
+        let dropTimeouts = [];
+        let textContainersToRestore = [];
         window.__isPhysicsActive = () => hasCrashed;
 
         let engine, world, runner;
@@ -1524,6 +1569,7 @@
                 placeholder = document.createElement('div');
                 placeholder.style.width = rect.width + 'px';
                 placeholder.style.height = rect.height + 'px';
+                placeholder.className = 'physics-placeholder';
                 el.parentNode.insertBefore(placeholder, el);
             }
 
@@ -1540,17 +1586,17 @@
             el.style.transform = `translate(${rect.left}px, ${rect.top}px)`;
 
             if (el.classList.contains('airplane')) {
-                el.style.zIndex = '9999';
+                el.style.zIndex = '10005';
                 el.style.pointerEvents = 'auto';
                 el.style.cursor = 'pointer';
             } else {
-                el.style.zIndex = '10';
+                el.style.zIndex = '100';
                 el.style.pointerEvents = 'auto';
                 el.style.cursor = 'pointer';
             }
 
             const body = Matter.Bodies.rectangle(xCenter, yCenter, rect.width, rect.height, {
-                restitution: 0.4,
+                restitution: 0.35,
                 friction: 0.8,
                 frictionAir: 0.02,
                 ...options
@@ -1563,13 +1609,360 @@
                 placeholder,
                 width: rect.width,
                 height: rect.height,
-                history: [{ x: rect.left, y: rect.top, angle: 0 }]
+                history: [{ x: rect.left, y: rect.top, angle: 0 }],
+                isChar: false
             });
             return body;
         }
 
+        // 点击因触摸掉落的emoji：网站卡片背景框瞬间淡去；
+        // 掉落的内容是卡片内的名称、logo、还有其他内容文字，而其他内容文字或符号是单个独立掉落的
+        function dropCardElements() {
+            if (cardsFallen) return;
+            cardsFallen = true;
+            document.body.classList.add('cards-falling');
+            document.body.classList.add('cards-elements-falling');
+
+            // 关闭所有处于激活状态的二维码弹窗
+            document.querySelectorAll('.button.qr-active').forEach(b => b.classList.remove('qr-active'));
+
+            const visibleCards = Array.from(document.querySelectorAll('.button')).filter(card => {
+                return card.offsetParent !== null && window.getComputedStyle(card).display !== 'none';
+            });
+
+            if (visibleCards.length === 0) return;
+            droppedCards = visibleCards;
+            dropTimeouts = [];
+            textContainersToRestore = [];
+
+            // 收集所有下落任务（卡片名称、logo、标签/图标符号、以及单个文字/符号）
+            const dropTasks = [];
+
+            visibleCards.forEach((card, cardIndex) => {
+                const cardRect = card.getBoundingClientRect();
+                card.style.width = cardRect.width + 'px';
+                card.style.height = cardRect.height + 'px';
+                card.classList.add('card-frame-vanished');
+
+                const baseDelay = cardIndex * 24;
+
+                // 1. 卡片内的名称 (Title): 作为一个整体掉落
+                const title = card.querySelector('.card-title');
+                if (title) {
+                    const rect = title.getBoundingClientRect();
+                    if (rect.width > 0 && rect.height > 0) {
+                        dropTasks.push({
+                            type: 'block',
+                            el: title,
+                            rect,
+                            card,
+                            delay: baseDelay + Math.random() * 15
+                        });
+                    }
+                }
+
+                // 2. 卡片 Logo: 作为一个整体掉落
+                const logo = card.querySelector('.icon');
+                if (logo) {
+                    const rect = logo.getBoundingClientRect();
+                    if (rect.width > 0 && rect.height > 0) {
+                        dropTasks.push({
+                            type: 'block',
+                            el: logo,
+                            rect,
+                            card,
+                            delay: baseDelay + 8 + Math.random() * 15
+                        });
+                    }
+                }
+
+                // 3. 标签符号 (Tags): 作为独立符号标签掉落
+                const tags = Array.from(card.querySelectorAll('.card-tag'));
+                tags.forEach((tag, tagIndex) => {
+                    const rect = tag.getBoundingClientRect();
+                    if (rect.width > 0 && rect.height > 0) {
+                        dropTasks.push({
+                            type: 'block',
+                            el: tag,
+                            rect,
+                            card,
+                            delay: baseDelay + 14 + tagIndex * 10 + Math.random() * 12
+                        });
+                    }
+                });
+
+                // 4. 二维码图标符号 (QR Trigger): 作为独立图标符号掉落
+                const qrTrigger = card.querySelector('.qr-trigger');
+                if (qrTrigger) {
+                    const rect = qrTrigger.getBoundingClientRect();
+                    if (rect.width > 0 && rect.height > 0) {
+                        dropTasks.push({
+                            type: 'block',
+                            el: qrTrigger,
+                            rect,
+                            card,
+                            delay: baseDelay + 18 + Math.random() * 15
+                        });
+                    }
+                }
+
+                // 5. 其他内容文字与符号（价格与描述）：每个文字或符号单个独立掉落！
+                const textContainers = [
+                    card.querySelector('.card-meta'),
+                    card.querySelector('.card-desc')
+                ].filter(Boolean);
+
+                textContainers.forEach((container, cIndex) => {
+                    const rawText = container.textContent;
+                    if (!rawText || !rawText.trim()) return;
+
+                    const originalHTML = container.innerHTML;
+                    const originalStyle = container.getAttribute('style') || '';
+                    const comp = window.getComputedStyle(container);
+
+                    const snapshot = {
+                        color: comp.color,
+                        fontSize: comp.fontSize,
+                        fontWeight: comp.fontWeight,
+                        fontFamily: comp.fontFamily,
+                        lineHeight: comp.lineHeight,
+                        letterSpacing: comp.letterSpacing
+                    };
+
+                    textContainersToRestore.push({
+                        container,
+                        originalHTML,
+                        originalStyle
+                    });
+
+                    // 将文字与符号逐字包装为独立 span
+                    const fragment = document.createDocumentFragment();
+                    const charSpans = [];
+
+                    for (let i = 0; i < rawText.length; i++) {
+                        const char = rawText[i];
+                        if (/\s/.test(char)) {
+                            fragment.appendChild(document.createTextNode(char));
+                        } else {
+                            const span = document.createElement('span');
+                            span.className = 'falling-char-item';
+                            span.textContent = char;
+                            fragment.appendChild(span);
+                            charSpans.push(span);
+                        }
+                    }
+
+                    container.innerHTML = '';
+                    container.appendChild(fragment);
+
+                    // 预先精准测量每一个单个文字/符号在屏幕上的绝对矩形
+                    charSpans.forEach((span, charIndex) => {
+                        const rect = span.getBoundingClientRect();
+                        if (rect.width <= 0 || rect.height <= 0) return;
+
+                        dropTasks.push({
+                            type: 'char',
+                            el: span,
+                            rect,
+                            snapshot,
+                            card,
+                            delay: baseDelay + 22 + cIndex * 15 + charIndex * 4 + Math.random() * 10
+                        });
+                    });
+                });
+            });
+
+            // 乱序微延时执行，产生生动自然如雨滴般的单个文字与符号散落瀑布感
+            for (let i = dropTasks.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [dropTasks[i], dropTasks[j]] = [dropTasks[j], dropTasks[i]];
+            }
+
+            dropTasks.forEach((task) => {
+                const tid = setTimeout(() => {
+                    if (!cardsFallen || isRewinding) return;
+
+                    const { type, el, rect, snapshot, card } = task;
+                    const parentNode = el.parentNode;
+                    if (!parentNode) return;
+
+                    if (type === 'char') {
+                        // 单个文字或符号掉落
+                        const placeholder = document.createElement('span');
+                        placeholder.style.display = 'inline-block';
+                        placeholder.style.width = rect.width + 'px';
+                        placeholder.style.height = rect.height + 'px';
+                        placeholder.style.visibility = 'hidden';
+                        placeholder.style.pointerEvents = 'none';
+                        placeholder.className = 'physics-placeholder';
+                        parentNode.insertBefore(placeholder, el);
+
+                        document.body.appendChild(el);
+                        el.style.position = 'fixed';
+                        el.style.left = '0';
+                        el.style.top = '0';
+                        el.style.margin = '0';
+                        el.style.width = Math.ceil(rect.width) + 'px';
+                        el.style.height = Math.ceil(rect.height) + 'px';
+                        el.style.boxSizing = 'border-box';
+                        el.style.zIndex = '100';
+                        el.style.pointerEvents = 'none';
+                        el.style.transition = 'none';
+                        el.style.animation = 'none';
+                        el.style.transform = `translate(${rect.left}px, ${rect.top}px)`;
+
+                        if (snapshot) {
+                            el.style.color = snapshot.color;
+                            el.style.fontSize = snapshot.fontSize;
+                            el.style.fontWeight = snapshot.fontWeight;
+                            el.style.fontFamily = snapshot.fontFamily;
+                            el.style.lineHeight = snapshot.lineHeight;
+                        }
+
+                        const xCenter = rect.left + rect.width / 2;
+                        const yCenter = rect.top + rect.height / 2;
+                        const bodyWidth = Math.max(8, rect.width);
+                        const bodyHeight = Math.max(12, rect.height);
+
+                        const body = Matter.Bodies.rectangle(xCenter, yCenter, bodyWidth, bodyHeight, {
+                            restitution: 0.45 + Math.random() * 0.2,
+                            friction: 0.5,
+                            frictionAir: 0.02 + Math.random() * 0.015,
+                            density: 0.001
+                        });
+
+                        Matter.World.add(world, body);
+
+                        const forceMagnitude = body.mass * (0.0004 + Math.random() * 0.0009);
+                        const forceAngle = (Math.random() - 0.5) * Math.PI * 0.5 + Math.PI / 2;
+                        Matter.Body.applyForce(body, body.position, {
+                            x: forceMagnitude * Math.cos(forceAngle),
+                            y: forceMagnitude * Math.sin(forceAngle)
+                        });
+                        Matter.Body.setAngularVelocity(body, (Math.random() - 0.5) * 0.16);
+
+                        domBodies.push({
+                            body,
+                            el,
+                            placeholder,
+                            width: rect.width,
+                            height: rect.height,
+                            history: [{ x: rect.left, y: rect.top, angle: 0 }],
+                            isChar: true
+                        });
+                    } else {
+                        // 卡片名称、logo、标签符号或二维码符号
+                        const nextSibling = el.nextSibling;
+                        const originalStyle = el.getAttribute('style') || '';
+                        const originalClasses = el.className;
+                        const comp = window.getComputedStyle(el);
+
+                        const blockSnapshot = {
+                            color: comp.color,
+                            fontSize: comp.fontSize,
+                            fontWeight: comp.fontWeight,
+                            fontFamily: comp.fontFamily,
+                            lineHeight: comp.lineHeight,
+                            letterSpacing: comp.letterSpacing,
+                            backgroundColor: comp.backgroundColor,
+                            borderColor: comp.borderColor,
+                            borderWidth: comp.borderWidth,
+                            borderStyle: comp.borderStyle,
+                            borderRadius: comp.borderRadius,
+                            padding: comp.padding,
+                            boxShadow: comp.boxShadow,
+                            fill: comp.fill,
+                            stroke: comp.stroke
+                        };
+
+                        const placeholder = document.createElement('div');
+                        placeholder.className = 'physics-placeholder';
+                        placeholder.style.width = rect.width + 'px';
+                        placeholder.style.height = rect.height + 'px';
+                        placeholder.style.display = comp.display;
+                        placeholder.style.visibility = 'hidden';
+                        placeholder.style.pointerEvents = 'none';
+                        parentNode.insertBefore(placeholder, el);
+
+                        document.body.appendChild(el);
+                        el.style.position = 'fixed';
+                        el.style.left = '0';
+                        el.style.top = '0';
+                        el.style.margin = '0';
+                        el.style.width = rect.width + 'px';
+                        el.style.height = rect.height + 'px';
+                        el.style.boxSizing = 'border-box';
+                        el.style.zIndex = '100';
+                        el.style.pointerEvents = 'none';
+                        el.style.transition = 'none';
+                        el.style.animation = 'none';
+                        el.style.transform = `translate(${rect.left}px, ${rect.top}px)`;
+
+                        el.style.color = blockSnapshot.color;
+                        el.style.fontSize = blockSnapshot.fontSize;
+                        el.style.fontWeight = blockSnapshot.fontWeight;
+                        el.style.fontFamily = blockSnapshot.fontFamily;
+                        el.style.lineHeight = blockSnapshot.lineHeight;
+                        el.style.backgroundColor = blockSnapshot.backgroundColor;
+                        el.style.borderColor = blockSnapshot.borderColor;
+                        el.style.borderWidth = blockSnapshot.borderWidth;
+                        el.style.borderStyle = blockSnapshot.borderStyle;
+                        el.style.borderRadius = blockSnapshot.borderRadius;
+                        el.style.padding = blockSnapshot.padding;
+                        el.style.boxShadow = blockSnapshot.boxShadow;
+                        el.style.fill = blockSnapshot.fill;
+                        el.style.stroke = blockSnapshot.stroke;
+
+                        const xCenter = rect.left + rect.width / 2;
+                        const yCenter = rect.top + rect.height / 2;
+
+                        const body = Matter.Bodies.rectangle(xCenter, yCenter, rect.width, rect.height, {
+                            restitution: 0.35 + Math.random() * 0.2,
+                            friction: 0.6,
+                            frictionAir: 0.02 + Math.random() * 0.02,
+                            density: 0.002
+                        });
+
+                        Matter.World.add(world, body);
+
+                        const forceMagnitude = body.mass * (0.0006 + Math.random() * 0.0014);
+                        const forceAngle = (Math.random() - 0.5) * Math.PI * 0.4 + Math.PI / 2;
+                        Matter.Body.applyForce(body, body.position, {
+                            x: forceMagnitude * Math.cos(forceAngle),
+                            y: forceMagnitude * Math.sin(forceAngle)
+                        });
+                        Matter.Body.setAngularVelocity(body, (Math.random() - 0.5) * 0.12);
+
+                        domBodies.push({
+                            body,
+                            el,
+                            placeholder,
+                            parentCard: card,
+                            parentNode,
+                            nextSibling,
+                            originalStyle,
+                            originalClasses,
+                            width: rect.width,
+                            height: rect.height,
+                            history: [{ x: rect.left, y: rect.top, angle: 0 }],
+                            isChar: false
+                        });
+                    }
+                }, task.delay);
+                dropTimeouts.push(tid);
+            });
+        }
+
+        // 时光倒流：所有独立掉落的名称、logo、单个文字与符号沿轨迹逆流倒退，完整恢复原样
         function startRewind() {
             isRewinding = true;
+
+            // 清理未完成的微延时掉落定时器
+            if (dropTimeouts && dropTimeouts.length > 0) {
+                dropTimeouts.forEach(tid => clearTimeout(tid));
+                dropTimeouts = [];
+            }
+
             if (runner) Matter.Runner.stop(runner);
 
             for (let db of domBodies) {
@@ -1584,12 +1977,12 @@
                 }
             }
 
-            const rewindFrames = 120;
-            let currentFrame = 0;
+            const rewindDuration = 1800;
+            const startTime = performance.now();
 
-            function rewindTick() {
-                currentFrame++;
-                const progress = currentFrame / rewindFrames;
+            function rewindTick(now) {
+                const elapsed = (typeof now === 'number' ? now : performance.now()) - startTime;
+                const progress = Math.min(1, Math.max(0, elapsed / rewindDuration));
                 const easeProgress = progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2;
 
                 for (let db of domBodies) {
@@ -1623,7 +2016,7 @@
                     db.el.style.transform = `translate(${x}px, ${y}px) rotate(${angle}rad)`;
                 }
 
-                if (currentFrame < rewindFrames) {
+                if (progress < 1) {
                     requestAnimationFrame(rewindTick);
                 } else {
                     restoreOriginalState();
@@ -1633,26 +2026,73 @@
         }
 
         function restoreOriginalState() {
+            // 恢复所有掉落的 DOM 元素
             for (let db of domBodies) {
-                const { el, placeholder } = db;
+                const { el, placeholder, originalStyle, isChar } = db;
 
-                el.style.position = '';
-                el.style.left = '';
-                el.style.top = '';
-                el.style.margin = '';
-                el.style.width = '';
-                el.style.height = '';
-                el.style.transform = '';
-                el.style.transition = '';
-                el.style.animation = '';
-                el.style.zIndex = '';
-                el.style.cursor = '';
-                el.style.pointerEvents = '';
+                if (isChar) {
+                    // 单个字符 span 从 body 中移除
+                    if (el && el.parentNode) {
+                        el.parentNode.removeChild(el);
+                    }
+                } else {
+                    el.style.position = '';
+                    el.style.left = '';
+                    el.style.top = '';
+                    el.style.margin = '';
+                    el.style.width = '';
+                    el.style.height = '';
+                    el.style.transform = '';
+                    el.style.transition = '';
+                    el.style.animation = '';
+                    el.style.zIndex = '';
+                    el.style.cursor = '';
+                    el.style.pointerEvents = '';
+                    el.style.boxSizing = '';
 
-                if (placeholder && placeholder.parentNode) {
-                    placeholder.parentNode.replaceChild(el, placeholder);
+                    if (typeof originalStyle === 'string') {
+                        el.setAttribute('style', originalStyle);
+                    }
+
+                    if (placeholder && placeholder.parentNode) {
+                        placeholder.parentNode.replaceChild(el, placeholder);
+                    }
                 }
             }
+
+            // 恢复文字容器（.card-desc 与 .card-meta）的原生文本内容
+            if (textContainersToRestore && textContainersToRestore.length > 0) {
+                textContainersToRestore.forEach(item => {
+                    const { container, originalHTML, originalStyle } = item;
+                    if (container) {
+                        container.innerHTML = originalHTML;
+                        if (typeof originalStyle === 'string') {
+                            container.setAttribute('style', originalStyle);
+                        }
+                    }
+                });
+                textContainersToRestore = [];
+            }
+
+            // 恢复所有卡片背景框与尺寸
+            if (droppedCards && droppedCards.length > 0) {
+                droppedCards.forEach(card => {
+                    card.classList.remove('card-frame-vanished');
+                    card.style.width = '';
+                    card.style.height = '';
+                    card.style.opacity = '';
+                    card.style.pointerEvents = '';
+                });
+                droppedCards = [];
+            }
+
+            document.querySelectorAll('.button.card-frame-vanished').forEach(b => {
+                b.classList.remove('card-frame-vanished');
+                b.style.width = '';
+                b.style.height = '';
+                b.style.opacity = '';
+                b.style.pointerEvents = '';
+            });
 
             if (engine) {
                 Matter.World.clear(engine.world);
@@ -1664,6 +2104,7 @@
 
             domBodies.length = 0;
             document.body.classList.remove('cards-falling');
+            document.body.classList.remove('cards-elements-falling');
             hasCrashed = false;
             cardsFallen = false;
             isRewinding = false;
@@ -1676,6 +2117,7 @@
             }
         }
 
+        // 触摸/点击/悬停触发 emoji 掉落
         function triggerCrash(clientX, clientY) {
             if (hasCrashed) return;
             hasCrashed = true;
@@ -1696,7 +2138,7 @@
             airplane.style.transition = 'none';
             const planeBody = addDomBodyWithRect(airplane, rect, {
                 density: 0.05,
-                restitution: 0.15,
+                restitution: 0.2,
                 friction: 0.8,
                 frictionAir: 0.02
             });
@@ -1708,7 +2150,9 @@
 
         function handleAirplaneClick(e) {
             if (!hasCrashed) {
-                triggerCrash(e ? e.clientX : undefined, e ? e.clientY : undefined);
+                const clientX = e ? (e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : undefined)) : undefined;
+                const clientY = e ? (e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : undefined)) : undefined;
+                triggerCrash(clientX, clientY);
                 return;
             }
             if (Date.now() - lastCrashTime < 350) return;
@@ -1718,40 +2162,7 @@
             }
 
             if (!cardsFallen) {
-                cardsFallen = true;
-                document.body.classList.add('cards-falling');
-                const cardsArray = Array.from(document.querySelectorAll('.button')).filter(card => {
-                    return window.getComputedStyle(card).display !== 'none';
-                });
-
-                for (let i = cardsArray.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [cardsArray[i], cardsArray[j]] = [cardsArray[j], cardsArray[i]];
-                }
-
-                cardsArray.forEach((card, i) => {
-                    setTimeout(() => {
-                        const rect = card.getBoundingClientRect();
-                        const body = addDomBodyWithRect(card, rect, { density: 0.005, restitution: 0.2 });
-
-                        const offsetX = (Math.random() - 0.5) * rect.width;
-                        const offsetY = (Math.random() - 0.5) * rect.height;
-                        const forcePosition = {
-                            x: body.position.x + offsetX,
-                            y: body.position.y + offsetY
-                        };
-
-                        const forceMagnitude = body.mass * (0.001 + Math.random() * 0.002);
-                        const forceAngle = Math.PI / 4 + Math.random() * (Math.PI / 2);
-
-                        const forceVector = {
-                            x: forceMagnitude * Math.cos(forceAngle),
-                            y: forceMagnitude * Math.sin(forceAngle)
-                        };
-
-                        Matter.Body.applyForce(body, forcePosition, forceVector);
-                    }, i * 120);
-                });
+                dropCardElements();
             } else if (!isRewinding) {
                 startRewind();
             }
@@ -1766,8 +2177,6 @@
                 return;
             }
 
-            // 多域名自适应：如果当前访问的域名不是主域名 jiakuan.link（如 jkdh.pages.dev, jkdh.sld.tw, jk.bxkp.org 或本地开发）
-            // 确保在新标签页使用当前域名的短链（如 https://jkdh.pages.dev/rancho），避免依赖外部可能受阻的主域名
             if (window.location.hostname !== 'jiakuan.link') {
                 const cardEl = this || (e && e.currentTarget);
                 const href = cardEl ? cardEl.getAttribute('href') : '';
@@ -1776,7 +2185,11 @@
                     if (m) {
                         const slug = m[1].toLowerCase();
                         if (e) e.preventDefault();
-                        const isLocal = ['localhost', '127.0.0.1'].indexOf(window.location.hostname) !== -1 || window.location.protocol === 'file:';
+                        const isLocal = ['localhost', '127.0.0.1'].indexOf(window.location.hostname) !== -1 ||
+                            window.location.hostname.startsWith('192.168.') ||
+                            window.location.hostname.startsWith('10.') ||
+                            /^172.(1[6-9]|2[0-9]|3[0-1])./.test(window.location.hostname) ||
+                            window.location.protocol === 'file:';
                         if (isLocal && window.__SHORTLINK_MAP__ && window.__SHORTLINK_MAP__[slug]) {
                             window.open(window.__SHORTLINK_MAP__[slug], '_blank', 'noopener,noreferrer');
                         } else {
@@ -1788,20 +2201,41 @@
             }
         }
 
+        // 移动端和桌面端全方位事件绑定，消除触摸穿透与点击延迟
+        let lastInteractionTime = 0;
+        function onAirplaneInteraction(e) {
+            const now = Date.now();
+            if (now - lastInteractionTime < 300) return;
+            lastInteractionTime = now;
+
+            if (e.type === 'pointerdown' && e.pointerType === 'touch') {
+                if (e.cancelable) e.preventDefault();
+            }
+            handleAirplaneClick(e);
+        }
+
+        airplane.addEventListener('pointerdown', onAirplaneInteraction);
+        airplane.addEventListener('click', onAirplaneInteraction);
         airplane.addEventListener('mouseenter', (event) => {
-            triggerCrash(event.clientX, event.clientY);
+            if (event.pointerType === 'mouse' || !event.pointerType) {
+                triggerCrash(event.clientX, event.clientY);
+            }
         });
-        airplane.addEventListener('click', handleAirplaneClick);
 
         document.querySelectorAll('.button').forEach(btn => {
             btn.addEventListener('click', handleCardClick);
         });
+
+        if (pendingCrash) {
+            triggerCrash(pendingCrash.clientX, pendingCrash.clientY);
+            pendingCrash = null;
+        }
     }
 
-    // 调度 Matter.js：采用 requestIdleCallback 空闲加载，若用户悬停飞机则立即加载
+    // 调度 Matter.js：全设备（移动端 + 桌面端）无障碍异步加载，触摸或悬停立即触发
     function loadMatterJs() {
-        if (isMobileDevice() || typeof Matter !== 'undefined') {
-            if (typeof Matter !== 'undefined') initDesktopPhysics();
+        if (typeof Matter !== 'undefined') {
+            initDesktopPhysics();
             return;
         }
 
@@ -1810,7 +2244,13 @@
             if (scriptRequested || typeof Matter !== 'undefined') return;
             scriptRequested = true;
             const matterScript = document.createElement('script');
-            matterScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js';
+            matterScript.src = './js/matter.min.js';
+            matterScript.onerror = () => {
+                const cdnScript = document.createElement('script');
+                cdnScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js';
+                cdnScript.onload = () => initDesktopPhysics();
+                document.head.appendChild(cdnScript);
+            };
             matterScript.onload = () => {
                 initDesktopPhysics();
             };
@@ -1819,14 +2259,25 @@
 
         const airplane = document.querySelector('.airplane');
         if (airplane) {
-            airplane.addEventListener('mouseenter', loadScript, { once: true, passive: true });
-            airplane.addEventListener('click', loadScript, { once: true, passive: true });
+            const onPreloadTouch = (e) => {
+                if (!physicsInitialized && typeof Matter === 'undefined') {
+                    pendingCrash = {
+                        clientX: e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : window.innerWidth / 2),
+                        clientY: e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : window.innerHeight / 2)
+                    };
+                }
+                loadScript();
+            };
+            airplane.addEventListener('mouseenter', onPreloadTouch, { once: true, passive: true });
+            airplane.addEventListener('click', onPreloadTouch, { once: true, passive: true });
+            airplane.addEventListener('pointerdown', onPreloadTouch, { once: true, passive: true });
+            airplane.addEventListener('touchstart', onPreloadTouch, { once: true, passive: true });
         }
 
         if ('requestIdleCallback' in window) {
-            window.requestIdleCallback(loadScript, { timeout: 2500 });
+            window.requestIdleCallback(loadScript, { timeout: 1000 });
         } else {
-            setTimeout(loadScript, 1200);
+            setTimeout(loadScript, 300);
         }
     }
 
