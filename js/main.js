@@ -1493,8 +1493,11 @@
 
         let hasCrashed = false;
         let cardsFallen = false;
+        let isDropping = false;
         let isRewinding = false;
         let lastCrashTime = 0;
+        let lastDropStartTime = 0;
+        let lastTouchHandledTime = 0;
         let droppedCards = [];
         let dropTimeouts = [];
         let textContainersToRestore = [];
@@ -1539,7 +1542,7 @@
                     const x = mainPart.position.x - width / 2;
                     const y = mainPart.position.y - height / 2;
 
-                    el.style.transform = `translate(${x}px, ${y}px) rotate(${body.angle}rad)`;
+                    el.style.setProperty('transform', `translate(${x}px, ${y}px) rotate(${body.angle}rad)`, 'important');
                     history.push({ x, y, angle: body.angle });
                 }
             });
@@ -1578,12 +1581,14 @@
             el.style.position = 'fixed';
             el.style.left = '0';
             el.style.top = '0';
+            el.style.right = 'auto';
+            el.style.bottom = 'auto';
             el.style.margin = '0';
             el.style.width = rect.width + 'px';
             el.style.height = rect.height + 'px';
             el.style.transition = 'none';
             el.style.animation = 'none';
-            el.style.transform = `translate(${rect.left}px, ${rect.top}px)`;
+            el.style.setProperty('transform', `translate(${rect.left}px, ${rect.top}px)`, 'important');
 
             if (el.classList.contains('airplane')) {
                 el.style.zIndex = '10005';
@@ -1618,8 +1623,10 @@
         // 点击因触摸掉落的emoji：网站卡片背景框瞬间淡去；
         // 掉落的内容是卡片内的名称、logo、还有其他内容文字，而其他内容文字或符号是单个独立掉落的
         function dropCardElements() {
-            if (cardsFallen) return;
+            if (cardsFallen || isDropping || isRewinding) return;
             cardsFallen = true;
+            isDropping = true;
+            lastDropStartTime = Date.now();
             document.body.classList.add('cards-falling');
             document.body.classList.add('cards-elements-falling');
 
@@ -1801,6 +1808,8 @@
                         el.style.position = 'fixed';
                         el.style.left = '0';
                         el.style.top = '0';
+                        el.style.right = 'auto';
+                        el.style.bottom = 'auto';
                         el.style.margin = '0';
                         el.style.width = Math.ceil(rect.width) + 'px';
                         el.style.height = Math.ceil(rect.height) + 'px';
@@ -1809,7 +1818,7 @@
                         el.style.pointerEvents = 'none';
                         el.style.transition = 'none';
                         el.style.animation = 'none';
-                        el.style.transform = `translate(${rect.left}px, ${rect.top}px)`;
+                        el.style.setProperty('transform', `translate(${rect.left}px, ${rect.top}px)`, 'important');
 
                         if (snapshot) {
                             el.style.color = snapshot.color;
@@ -1888,6 +1897,8 @@
                         el.style.position = 'fixed';
                         el.style.left = '0';
                         el.style.top = '0';
+                        el.style.right = 'auto';
+                        el.style.bottom = 'auto';
                         el.style.margin = '0';
                         el.style.width = rect.width + 'px';
                         el.style.height = rect.height + 'px';
@@ -1896,7 +1907,7 @@
                         el.style.pointerEvents = 'none';
                         el.style.transition = 'none';
                         el.style.animation = 'none';
-                        el.style.transform = `translate(${rect.left}px, ${rect.top}px)`;
+                        el.style.setProperty('transform', `translate(${rect.left}px, ${rect.top}px)`, 'important');
 
                         el.style.color = blockSnapshot.color;
                         el.style.fontSize = blockSnapshot.fontSize;
@@ -1951,10 +1962,22 @@
                 }, task.delay);
                 dropTimeouts.push(tid);
             });
+
+            // 锁定下落状态，确保全部元素完整散落着陆前严禁被任何连击或误触打断
+            let maxTaskDelay = 0;
+            dropTasks.forEach((t) => {
+                if (t.delay > maxTaskDelay) maxTaskDelay = t.delay;
+            });
+            const dropLockDuration = Math.max(1600, maxTaskDelay + 600);
+            const dropLockTimer = setTimeout(() => {
+                isDropping = false;
+            }, dropLockDuration);
+            dropTimeouts.push(dropLockTimer);
         }
 
         // 时光倒流：所有独立掉落的名称、logo、单个文字与符号沿轨迹逆流倒退，完整恢复原样
         function startRewind() {
+            if (isRewinding || isDropping || !cardsFallen) return;
             isRewinding = true;
 
             // 清理未完成的微延时掉落定时器
@@ -1991,7 +2014,7 @@
 
                     if (hLen === 1) {
                         const frame = db.history[0];
-                        db.el.style.transform = `translate(${frame.x}px, ${frame.y}px) rotate(${frame.angle}rad)`;
+                        db.el.style.setProperty('transform', `translate(${frame.x}px, ${frame.y}px) rotate(${frame.angle}rad)`, 'important');
                         continue;
                     }
 
@@ -2013,7 +2036,7 @@
                     while (diff > Math.PI) diff -= 2 * Math.PI;
                     const angle = frameF.angle + diff * weight;
 
-                    db.el.style.transform = `translate(${x}px, ${y}px) rotate(${angle}rad)`;
+                    db.el.style.setProperty('transform', `translate(${x}px, ${y}px) rotate(${angle}rad)`, 'important');
                 }
 
                 if (progress < 1) {
@@ -2039,9 +2062,12 @@
                     el.style.position = '';
                     el.style.left = '';
                     el.style.top = '';
+                    el.style.right = '';
+                    el.style.bottom = '';
                     el.style.margin = '';
                     el.style.width = '';
                     el.style.height = '';
+                    el.style.removeProperty('transform');
                     el.style.transform = '';
                     el.style.transition = '';
                     el.style.animation = '';
@@ -2107,6 +2133,7 @@
             document.body.classList.remove('cards-elements-falling');
             hasCrashed = false;
             cardsFallen = false;
+            isDropping = false;
             isRewinding = false;
             if (updateCardVisibilityGlobal) {
                 updateCardVisibilityGlobal(false);
@@ -2149,29 +2176,35 @@
         }
 
         function handleAirplaneClick(e) {
+            const now = Date.now();
             if (!hasCrashed) {
                 const clientX = e ? (e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : undefined)) : undefined;
                 const clientY = e ? (e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : undefined)) : undefined;
                 triggerCrash(clientX, clientY);
                 return;
             }
-            if (Date.now() - lastCrashTime < 350) return;
+
+            // 撞击掉落尚未稳定前（700ms 内）忽略点击
+            if (now - lastCrashTime < 700) return;
+
             if (e) {
-                e.preventDefault();
+                if (e.cancelable) e.preventDefault();
                 e.stopPropagation();
             }
 
             if (!cardsFallen) {
                 dropCardElements();
-            } else if (!isRewinding) {
+            } else if (!isRewinding && !isDropping) {
+                // 必须在完整掉落着陆后（至少 1600ms）才允许触发时光倒流，杜绝快速连击或误触打断掉落
+                if (now - lastDropStartTime < 1600) return;
                 startRewind();
             }
         }
 
         function handleCardClick(e) {
-            if (cardsFallen && isRewinding) {
+            if (cardsFallen || isDropping || isRewinding) {
                 if (e) {
-                    e.preventDefault();
+                    if (e.cancelable) e.preventDefault();
                     e.stopPropagation();
                 }
                 return;
@@ -2201,17 +2234,32 @@
             }
         }
 
-        // 移动端和桌面端全方位事件绑定，消除触摸穿透与点击延迟
+        // 移动端和桌面端全方位事件绑定，消除触摸穿透与双击误触发
         let lastInteractionTime = 0;
         function onAirplaneInteraction(e) {
             const now = Date.now();
-            if (now - lastInteractionTime < 300) return;
-            lastInteractionTime = now;
 
-            if (e.type === 'pointerdown' && e.pointerType === 'touch') {
-                if (e.cancelable) e.preventDefault();
+            if (e.type === 'pointerdown') {
+                if (e.pointerType === 'touch') {
+                    // 移动端轻触：记录触摸时间并执行，若在快速连击防抖期内则丢弃
+                    if (now - lastTouchHandledTime < 450) return;
+                    lastTouchHandledTime = now;
+                    handleAirplaneClick(e);
+                }
+                return; // 桌面端鼠标：等待原生 click 事件，不在 pointerdown 抢跑
             }
-            handleAirplaneClick(e);
+
+            if (e.type === 'click') {
+                // 移动端轻触后约 300ms~400ms 会派发模拟 click 事件，予以拦截丢弃
+                if (now - lastTouchHandledTime < 800) {
+                    if (e.cancelable) e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                }
+                if (now - lastInteractionTime < 450) return;
+                lastInteractionTime = now;
+                handleAirplaneClick(e);
+            }
         }
 
         airplane.addEventListener('pointerdown', onAirplaneInteraction);
