@@ -60,10 +60,91 @@
             gap: 12px;
         }
 
-        .cms-brand img {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
+        /* 顶部三明治菜单按钮 (替换原原Logo) */
+        .cms-menu-btn {
+            display: inline-flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4.5px;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: 8px;
+            background: rgba(30, 41, 59, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            color: #cbd5e1;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-sizing: border-box;
+            flex-shrink: 0;
+            outline: none;
+        }
+
+        .cms-menu-btn:hover {
+            background: rgba(51, 65, 85, 0.9);
+            border-color: rgba(56, 189, 248, 0.45);
+            color: #38bdf8;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.22);
+        }
+
+        .cms-menu-btn .hamburger-bar {
+            display: block;
+            width: 17px;
+            height: 2px;
+            background-color: currentColor;
+            border-radius: 2px;
+            transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: center;
+        }
+
+        /* 展开时的三明治按钮动画变叉 (✕) */
+        .cms-menu-btn.open {
+            background: rgba(56, 189, 248, 0.16);
+            border-color: rgba(56, 189, 248, 0.55);
+            color: #38bdf8;
+        }
+
+        .cms-menu-btn.open .hamburger-bar:nth-child(1) {
+            transform: translateY(6.5px) rotate(45deg);
+        }
+
+        .cms-menu-btn.open .hamburger-bar:nth-child(2) {
+            opacity: 0;
+            transform: scaleX(0);
+        }
+
+        .cms-menu-btn.open .hamburger-bar:nth-child(3) {
+            transform: translateY(-6.5px) rotate(-45deg);
+        }
+
+        .cms-nav-divider {
+            color: #475569;
+            font-size: 0.9rem;
+            font-weight: 300;
+            user-select: none;
+            margin: 0 2px;
+        }
+
+        .cms-current-tab-badge {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            padding: 3px 10px;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .cms-current-tab-badge:hover {
+            background: rgba(56, 189, 248, 0.18);
+            border-color: rgba(56, 189, 248, 0.45);
         }
 
         .cms-brand-title {
@@ -170,37 +251,156 @@
             font-size: 0.8rem;
         }
 
-        /* 标签导航栏 */
-        .cms-tabs-bar {
+        /* 下拉展开选项菜单 */
+        .cms-menu-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 28px;
+            width: 275px;
+            max-height: calc(100vh - 84px);
+            background: rgba(15, 23, 42, 0.96);
+            border: 1px solid rgba(56, 189, 248, 0.24);
+            border-radius: 12px;
+            box-shadow: 0 20px 42px -6px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 8px;
             display: flex;
-            gap: 6px;
-            padding: 10px 28px 0;
-            background: #0d1322;
-            border-bottom: 1px solid var(--border-color);
-            overflow-x: auto;
+            flex-direction: column;
+            gap: 3px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-6px) scale(0.98);
+            transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                        transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                        visibility 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+            overflow-y: auto;
+        }
+
+        .cms-menu-dropdown.open {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+
+        .cms-menu-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 10px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 3px;
+        }
+
+        .cms-menu-header-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .cms-menu-header-count {
+            font-size: 0.72rem;
+            color: #475569;
+            font-family: monospace;
+        }
+
+        .cms-menu-items {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
         }
 
         .cms-tab-item {
-            padding: 10px 18px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            border-bottom: 2px solid transparent;
-            cursor: pointer;
-            transition: all 0.2s ease;
             display: flex;
             align-items: center;
-            gap: 6px;
-            white-space: nowrap;
+            justify-content: space-between;
+            padding: 9px 12px;
+            border-radius: 8px;
+            color: #94a3b8;
+            font-size: 0.88rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.16s ease;
+            border: 1px solid transparent;
+            user-select: none;
         }
 
         .cms-tab-item:hover {
-            color: var(--text-main);
+            color: #f1f5f9;
+            background: rgba(30, 41, 59, 0.85);
+            border-color: rgba(255, 255, 255, 0.06);
+            transform: translateX(2px);
         }
 
         .cms-tab-item.active {
-            color: var(--primary);
-            border-bottom-color: var(--primary);
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.12);
+            border-color: rgba(56, 189, 248, 0.32);
+            font-weight: 600;
+        }
+
+        .tab-item-left {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .tab-item-icon {
+            font-size: 1.05rem;
+            line-height: 1;
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .tab-item-name {
+            font-size: 0.88rem;
+            letter-spacing: -0.01em;
+        }
+
+        .tab-item-badge {
+            font-size: 0.72rem;
+            padding: 2px 7px;
+            border-radius: 9999px;
+            background: rgba(30, 41, 59, 0.95);
+            color: #94a3b8;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+        }
+
+        .cms-tab-item.active .tab-item-badge {
+            background: rgba(56, 189, 248, 0.22);
+            color: #38bdf8;
+            border-color: rgba(56, 189, 248, 0.4);
+        }
+
+        /* 菜单遮罩层 */
+        .cms-menu-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            z-index: 99;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+            pointer-events: none;
+        }
+
+        .cms-menu-backdrop.open {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
         }
 
         /* 主体内容区 */
@@ -1366,9 +1566,9 @@
                 gap: 8px;
             }
 
-            .cms-brand img {
-                width: 28px;
-                height: 28px;
+            .cms-menu-btn {
+                width: 32px;
+                height: 32px;
             }
 
             .cms-brand-title {
@@ -1387,17 +1587,12 @@
                 gap: 8px;
             }
 
-            .cms-tabs-bar {
-                padding: 6px 12px 0;
-                gap: 4px;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-
-            .cms-tab-item {
-                padding: 8px 12px;
-                font-size: 0.85rem;
-                flex-shrink: 0;
+            .cms-menu-dropdown {
+                left: 12px;
+                right: 12px;
+                width: auto;
+                max-width: 320px;
+                top: calc(100% + 6px);
             }
 
             .cms-main {
@@ -1713,6 +1908,13 @@
                 box-sizing: border-box;
             }
         }
+
+        @media (max-width: 600px) {
+            .cms-nav-divider,
+            .cms-current-tab-badge {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1720,10 +1922,16 @@
     <!-- 顶部导航 -->
     <header class="cms-navbar">
         <div class="cms-brand">
-            <img src="/images/avatar.png" alt="Logo">
+            <button id="cms-menu-toggle" class="cms-menu-btn" title="展开功能选项" aria-label="展开功能选项" aria-expanded="false">
+                <span class="hamburger-bar"></span>
+                <span class="hamburger-bar"></span>
+                <span class="hamburger-bar"></span>
+            </button>
             <div class="cms-brand-title">
-                家宽导航 CMS
+                <span class="cms-brand-name">家宽导航 CMS</span>
                 <span id="cms-mode-badge" class="cms-badge badge-local">🟢 本地服务模式</span>
+                <span class="cms-nav-divider">/</span>
+                <span id="cms-current-tab-name" class="cms-current-tab-badge" title="点击切换模块">🗂️ 网站卡片管理</span>
             </div>
         </div>
         <div class="cms-nav-actions">
@@ -1735,20 +1943,77 @@
                 👁️ 预览
             </a>
         </div>
+
+        <!-- 功能选项下拉展开菜单 (三明治按钮点击后展开) -->
+        <div id="cms-menu-dropdown" class="cms-menu-dropdown" aria-hidden="true">
+            <div class="cms-menu-header">
+                <span class="cms-menu-header-title">管理选项</span>
+                <span class="cms-menu-header-count">9 个模块</span>
+            </div>
+            <nav class="cms-menu-items">
+                <div class="cms-tab-item active" data-tab="tab-cards">
+                    <span class="tab-item-left">
+                        <span class="tab-item-icon">🗂️</span>
+                        <span class="tab-item-name">网站卡片管理</span>
+                    </span>
+                    <span class="tab-item-badge" id="cards-count">0</span>
+                </div>
+                <div class="cms-tab-item" data-tab="tab-modal">
+                    <span class="tab-item-left">
+                        <span class="tab-item-icon">💡</span>
+                        <span class="tab-item-name">指南弹窗内容</span>
+                    </span>
+                </div>
+                <div class="cms-tab-item" data-tab="tab-faq">
+                    <span class="tab-item-left">
+                        <span class="tab-item-icon">❓</span>
+                        <span class="tab-item-name">首页 SEO FAQ</span>
+                    </span>
+                </div>
+                <div class="cms-tab-item" data-tab="tab-guides">
+                    <span class="tab-item-left">
+                        <span class="tab-item-icon">📚</span>
+                        <span class="tab-item-name">深度指南文章</span>
+                    </span>
+                    <span class="tab-item-badge" id="guides-count">0</span>
+                </div>
+                <div class="cms-tab-item" data-tab="tab-footer">
+                    <span class="tab-item-left">
+                        <span class="tab-item-icon">🔗</span>
+                        <span class="tab-item-name">底部友情链接</span>
+                    </span>
+                    <span class="tab-item-badge" id="footer-links-count">0</span>
+                </div>
+                <div class="cms-tab-item" data-tab="tab-icons">
+                    <span class="tab-item-left">
+                        <span class="tab-item-icon">🖼️</span>
+                        <span class="tab-item-name">图标资源库</span>
+                    </span>
+                </div>
+                <div class="cms-tab-item" data-tab="tab-health">
+                    <span class="tab-item-left">
+                        <span class="tab-item-icon">🩺</span>
+                        <span class="tab-item-name">链接健康体检</span>
+                    </span>
+                </div>
+                <div class="cms-tab-item" data-tab="tab-backup">
+                    <span class="tab-item-left">
+                        <span class="tab-item-icon">📦</span>
+                        <span class="tab-item-name">历史备份与回滚</span>
+                    </span>
+                </div>
+                <div class="cms-tab-item" data-tab="tab-online">
+                    <span class="tab-item-left">
+                        <span class="tab-item-icon">🌐</span>
+                        <span class="tab-item-name">在线授权与 Git</span>
+                    </span>
+                </div>
+            </nav>
+        </div>
     </header>
 
-    <!-- 选项卡导航栏 -->
-    <nav class="cms-tabs-bar">
-        <div class="cms-tab-item active" data-tab="tab-cards">🗂️ 网站卡片管理 (<span id="cards-count">0</span>)</div>
-        <div class="cms-tab-item" data-tab="tab-modal">💡 指南弹窗内容</div>
-        <div class="cms-tab-item" data-tab="tab-faq">❓ 首页 SEO FAQ</div>
-        <div class="cms-tab-item" data-tab="tab-guides">📚 深度指南文章 (<span id="guides-count">0</span>)</div>
-        <div class="cms-tab-item" data-tab="tab-footer">🔗 底部友情链接 (<span id="footer-links-count">0</span>)</div>
-        <div class="cms-tab-item" data-tab="tab-icons">🖼️ 图标资源库</div>
-        <div class="cms-tab-item" data-tab="tab-health">🩺 链接健康体检</div>
-        <div class="cms-tab-item" data-tab="tab-backup">📦 历史备份与回滚</div>
-        <div class="cms-tab-item" data-tab="tab-online">🌐 在线授权与 Git</div>
-    </nav>
+    <!-- 菜单背景遮罩层 -->
+    <div id="cms-menu-backdrop" class="cms-menu-backdrop"></div>
 
     <!-- 主体区域 -->
     <main class="cms-main">
@@ -2319,6 +2584,70 @@
                 }, 3000);
             }
 
+            // 顶部三明治菜单展开与收起交互
+            const cmsMenuToggle = document.getElementById('cms-menu-toggle');
+            const cmsMenuDropdown = document.getElementById('cms-menu-dropdown');
+            const cmsMenuBackdrop = document.getElementById('cms-menu-backdrop');
+            const cmsCurrentTabBadge = document.getElementById('cms-current-tab-name');
+
+            function openCmsMenu() {
+                if (!cmsMenuDropdown || !cmsMenuToggle) return;
+                cmsMenuToggle.classList.add('open');
+                cmsMenuToggle.setAttribute('aria-expanded', 'true');
+                cmsMenuDropdown.classList.add('open');
+                cmsMenuDropdown.setAttribute('aria-hidden', 'false');
+                if (cmsMenuBackdrop) cmsMenuBackdrop.classList.add('open');
+            }
+
+            function closeCmsMenu() {
+                if (!cmsMenuDropdown || !cmsMenuToggle) return;
+                cmsMenuToggle.classList.remove('open');
+                cmsMenuToggle.setAttribute('aria-expanded', 'false');
+                cmsMenuDropdown.classList.remove('open');
+                cmsMenuDropdown.setAttribute('aria-hidden', 'true');
+                if (cmsMenuBackdrop) cmsMenuBackdrop.classList.remove('open');
+            }
+
+            function toggleCmsMenu() {
+                if (cmsMenuDropdown && cmsMenuDropdown.classList.contains('open')) {
+                    closeCmsMenu();
+                } else {
+                    openCmsMenu();
+                }
+            }
+
+            if (cmsMenuToggle) {
+                cmsMenuToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleCmsMenu();
+                });
+            }
+
+            if (cmsCurrentTabBadge) {
+                cmsCurrentTabBadge.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleCmsMenu();
+                });
+            }
+
+            if (cmsMenuBackdrop) {
+                cmsMenuBackdrop.addEventListener('click', closeCmsMenu);
+            }
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && cmsMenuDropdown && cmsMenuDropdown.classList.contains('open')) {
+                    closeCmsMenu();
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (cmsMenuDropdown && cmsMenuDropdown.classList.contains('open')) {
+                    if (!cmsMenuDropdown.contains(e.target) && !cmsMenuToggle.contains(e.target)) {
+                        closeCmsMenu();
+                    }
+                }
+            });
+
             // 选项卡切换
             document.querySelectorAll('.cms-tab-item').forEach(tab => {
                 tab.addEventListener('click', () => {
@@ -2329,6 +2658,20 @@
                     const targetId = tab.dataset.tab;
                     const panel = document.getElementById(targetId);
                     if (panel) panel.classList.add('active');
+
+                    // 同步更新导航栏当前模块名称显示
+                    if (cmsCurrentTabBadge) {
+                        const iconEl = tab.querySelector('.tab-item-icon');
+                        const nameEl = tab.querySelector('.tab-item-name');
+                        if (iconEl && nameEl) {
+                            cmsCurrentTabBadge.innerHTML = `${iconEl.textContent} ${nameEl.textContent}`;
+                        } else {
+                            cmsCurrentTabBadge.textContent = tab.textContent.trim();
+                        }
+                    }
+
+                    // 切换选项后自动收起三明治菜单
+                    closeCmsMenu();
                 });
             });
 
