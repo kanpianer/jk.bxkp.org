@@ -25,7 +25,7 @@
 
 | 站点名称 | 推荐级别 | 特性标签 | 价格 / 规格起步 | 快速访问短链 | 官方直达链接 |
 | :--- | :---: | :--- | :--- | :--- | :--- |
-| **SS-ID** | ⭐ 重点推荐 | `专线` `非家宽` `新疆优化` | ¥20/月 100GB 起 | [jiakuan.link/ssid](https://jiakuan.link/ssid) | [直达官网](https://getssid.com/#/register?code=fdRMww9M) |
+| **SS-ID** | ⭐ 重点推荐 | `专线` `新疆优化` `非家宽` | ¥20/月 100GB 起 | [jiakuan.link/ssid](https://jiakuan.link/ssid) | [直达官网](https://getssid.com/#/register?code=fdRMww9M) |
 | **BiuBiu** | ⭐ 重点推荐 | `精品线路` `非家宽` | ¥26/月 50GB 起 | [jiakuan.link/biu](https://jiakuan.link/biu) | [直达官网](https://biubiu.one/#/register?code=9zhyjLWY) |
 | **CitrusLab** | ⭐ 重点推荐 | `Emby` `中转` | ¥12.9/月 80G 起 | [jiakuan.link/cl](https://jiakuan.link/cl) | [直达官网](http://cotota.app/register?aff=cyvpFwYf) |
 | **GLaDOS** | 精选 | `含专线` `非家宽` | ¥15/月 200GB 起 | [jiakuan.link/glados](https://jiakuan.link/glados) | [直达官网](https://glados.rocks) |
