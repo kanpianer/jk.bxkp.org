@@ -118,25 +118,17 @@
             transform: translateY(-6.5px) rotate(-45deg);
         }
 
-        .cms-nav-divider {
-            color: #475569;
-            font-size: 0.9rem;
-            font-weight: 300;
-            user-select: none;
-            margin: 0 2px;
-        }
-
         .cms-current-tab-badge {
-            font-size: 0.8rem;
+            font-size: 0.88rem;
             font-weight: 600;
             color: #38bdf8;
             background: rgba(56, 189, 248, 0.1);
             border: 1px solid rgba(56, 189, 248, 0.25);
-            padding: 3px 10px;
+            padding: 4px 11px;
             border-radius: 9999px;
             display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 5px;
             cursor: pointer;
             transition: all 0.2s ease;
             user-select: none;
@@ -1910,9 +1902,9 @@
         }
 
         @media (max-width: 600px) {
-            .cms-nav-divider,
             .cms-current-tab-badge {
-                display: none;
+                font-size: 0.8rem;
+                padding: 3px 8px;
             }
         }
     </style>
@@ -1928,14 +1920,11 @@
                 <span class="hamburger-bar"></span>
             </button>
             <div class="cms-brand-title">
-                <span class="cms-brand-name">家宽导航 CMS</span>
-                <span id="cms-mode-badge" class="cms-badge badge-local">🟢 本地服务模式</span>
-                <span class="cms-nav-divider">/</span>
                 <span id="cms-current-tab-name" class="cms-current-tab-badge" title="点击切换模块">🗂️ 网站卡片管理</span>
+                <span id="cms-mode-badge" class="cms-badge badge-local">🟢 本地服务模式</span>
             </div>
         </div>
         <div class="cms-nav-actions">
-            <span id="sw-version-display" style="font-size: 0.8rem; color: #64748b; font-family: monospace;">SW: v1.1.12</span>
             <button id="btn-save-all" class="btn btn-primary" title="保存所有更改并编译短链与静态跳板">
                 💾 应用
             </button>
@@ -3582,7 +3571,8 @@ ${defaultBody}
                 renderIconsLibrary();
                 renderPresetTagsPool();
                 if (isLocal) loadBackups();
-                document.getElementById('sw-version-display').textContent = `SW: ${cmsData.swVersion || 'v1.1.18'}`;
+                const swDisplay = document.getElementById('sw-version-display');
+                if (swDisplay) swDisplay.textContent = `SW: ${cmsData.swVersion || 'v1.1.18'}`;
             }
 
             // 1. 加载数据 (双模式智能适配：本地 /api/data 优先，公网静态文件直读降级)
