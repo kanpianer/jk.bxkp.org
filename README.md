@@ -45,11 +45,11 @@
 | **网际快车** | ⭐ 重点推荐 | `不限时` | ¥6.8 20GB 起 | [jiakuan.link/wjkc](https://jiakuan.link/wjkc) | [直达官网](https://QRBAPA.快车.com) |
 | **MESL** | ⭐ 重点推荐 | `专线` `新疆优化` | ¥50/月 500GB 起 | [jiakuan.link/mesl](https://jiakuan.link/mesl) | [直达官网](https://dash.makemesl.com/#/register?code=tMEAQMp0) |
 | **云帆** | 精选 | `含精品线路` `不限时` | ¥9.9/月 100GB 起 | [jiakuan.link/yf](https://jiakuan.link/yf) | [直达官网](https://fan.yunfan.app/#/register?code=c9LpBOig) |
+| **影子** | 精选 | `专线` `不限时` | ¥18.8/月 150GB 起 | [jiakuan.link/yz](https://jiakuan.link/yz) | [直达官网](https://fanq.club/register?code=9nmc9etr) |
 | **精靈學院** | 精选 | `精品线路` `Emby` `不限时` | ¥8/月 30GB 起 | [jiakuan.link/jlxy](https://jiakuan.link/jlxy) | [直达官网](https://ok.riolu.work/register?aff=EPW4XXSz) |
-| **EdNovas云** | 精选 | `专线` `回国` `Emby 成人服` | ¥30/月 100G 起 | [jiakuan.link/edn](https://jiakuan.link/edn) | [直达官网](https://www.ednovas.org/#/register?code=Mn36rnSN) |
-| **rancho** | 精选 | `专线` `Emby` | 68元/月 512GB 起 | [jiakuan.link/rancho](https://jiakuan.link/rancho) | [直达官网](https://mccloud.gay/#/register?code=jMKFtNbr) |
+| **EdNovas云** | 精选 | `回国` `精品线路` `Emby A片服` | ¥30/月 100G 起 | [jiakuan.link/edn](https://jiakuan.link/edn) | [直达官网](https://www.ednovas.org/#/register?code=Mn36rnSN) |
 | **仙路湾** | 精选 | `不限时` `含专线` | ¥10/月 50GB 起 | [jiakuan.link/xlw](https://jiakuan.link/xlw) | [直达官网](https://jsq.xlw.app/#/register?code=orbNNe3J) |
-| **大象网络** | 精选 | `精品线路` `不限时` | ¥35/月 300GB 起 | [jiakuan.link/dxwl](https://jiakuan.link/dxwl) | [直达官网](https://dx.elphantroute.com/app#/register?code=qxu83JG7) |
+| **Godetia** | 精选 | `专线` | ¥35/月 85GB 起 | [jiakuan.link/godetia](https://jiakuan.link/godetia) | [直达官网](https://ssltd.xyz/#/register?code=eUmnecoA) |
 
 ### VPS 推荐 (Virtual Private Server)
 
