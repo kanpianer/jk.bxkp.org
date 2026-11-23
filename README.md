@@ -32,8 +32,8 @@
 | **Bitz Net** | 精选 | `专线` `非家宽` | ¥ 69.99/季 80GB/月 起 | [jiakuan.link/bitz](https://jiakuan.link/bitz) | [直达官网](https://red.bnaffred.com/#/register?code=Qc3PL2kS) |
 | **E-IX** | 精选 | `专线` `非家宽` `新疆优化` | ¥25/月 150GB 起 | [jiakuan.link/eix](https://jiakuan.link/eix) | [直达官网](https://re.e-ix.com/#/register?code=w56accjm) |
 | **FTQ** | 精选 | `专线` `非家宽` | ¥29.99/月 128GB 起 | [jiakuan.link/ftq](https://jiakuan.link/ftq) | [直达官网](https://wwa.ftquser.com/#/register?code=dcPOkY00) |
+| **Just My Socks** | 精选 | `精品线路` `非家宽` | $5.88/月 500GB 起 | [jiakuan.link/jms](https://jiakuan.link/jms) | [直达官网](https://justmysocks5.net/members/aff.php?aff=39292) |
 | **SNTP** | 精选 | `专线` `非家宽` `Emby` | ¥18/月 100GB 起 | [jiakuan.link/sntp](https://jiakuan.link/sntp) | [直达官网](https://ncdn1.sntp.uk/auth/register?code=zsyVQ1fa) |
-| **青云梯** | 精选 | `专线` `非家宽` | ¥25/月 250GB 起 | [jiakuan.link/qyt](https://jiakuan.link/qyt) | [直达官网](https://inv02.qytaff.cc/register?aff=GaP2YyRn) |
 
 ### 机场推荐 (Airport)
 
